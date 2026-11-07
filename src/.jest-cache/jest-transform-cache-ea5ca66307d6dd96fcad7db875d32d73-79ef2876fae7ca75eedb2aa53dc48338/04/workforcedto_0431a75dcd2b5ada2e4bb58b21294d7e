@@ -1,0 +1,187 @@
+cb52667baffa6f17c61930f98deb2e2c
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DateRangeDto = exports.AssignmentDto = exports.HolidayDto = exports.ScheduleDto = exports.LocationDto = exports.STATES = void 0;
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
+exports.STATES = ['MY-01', 'MY-02', 'MY-03', 'MY-04', 'MY-05', 'MY-06', 'MY-07', 'MY-08', 'MY-09', 'MY-10', 'MY-11', 'MY-12', 'MY-13', 'MY-14', 'MY-15', 'MY-16'];
+class LocationDto {
+    constructor() {
+        this.timezone = 'Asia/Kuala_Lumpur';
+    }
+}
+exports.LocationDto = LocationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 30),
+    __metadata("design:type", String)
+], LocationDto.prototype, "code", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 150),
+    __metadata("design:type", String)
+], LocationDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: exports.STATES }),
+    (0, class_validator_1.IsIn)(exports.STATES),
+    __metadata("design:type", String)
+], LocationDto.prototype, "state", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 500),
+    __metadata("design:type", String)
+], LocationDto.prototype, "address", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 'Asia/Kuala_Lumpur' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", Object)
+], LocationDto.prototype, "timezone", void 0);
+class ScheduleDto {
+    constructor() {
+        this.breakMinutes = 60;
+        this.graceMinutes = 0;
+    }
+}
+exports.ScheduleDto = ScheduleDto;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 30),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "code", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 150),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: [1, 2, 3, 4, 5], description: 'UTC weekday indexes: Sunday=0, Saturday=6; applied to local calendar dates.' }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.ArrayUnique)(),
+    (0, class_validator_1.IsInt)({ each: true }),
+    (0, class_validator_1.Min)(0, { each: true }),
+    (0, class_validator_1.Max)(6, { each: true }),
+    __metadata("design:type", Array)
+], ScheduleDto.prototype, "workingDays", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 540 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(1439),
+    __metadata("design:type", Number)
+], ScheduleDto.prototype, "startMinute", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 1080 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(1439),
+    __metadata("design:type", Number)
+], ScheduleDto.prototype, "endMinute", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 60 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(720),
+    __metadata("design:type", Object)
+], ScheduleDto.prototype, "breakMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ default: 0 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(120),
+    __metadata("design:type", Object)
+], ScheduleDto.prototype, "graceMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "effectiveFrom", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "effectiveTo", void 0);
+class HolidayDto {
+}
+exports.HolidayDto = HolidayDto;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 150),
+    __metadata("design:type", String)
+], HolidayDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], HolidayDto.prototype, "startDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], HolidayDto.prototype, "endDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: [], description: 'Empty for national; otherwise Malaysian state codes.' }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayUnique)(),
+    (0, class_validator_1.IsIn)(exports.STATES, { each: true }),
+    __metadata("design:type", Array)
+], HolidayDto.prototype, "states", void 0);
+class AssignmentDto {
+}
+exports.AssignmentDto = AssignmentDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], AssignmentDto.prototype, "managerId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], AssignmentDto.prototype, "locationId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ nullable: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], AssignmentDto.prototype, "scheduleId", void 0);
+class DateRangeDto {
+}
+exports.DateRangeDto = DateRangeDto;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], DateRangeDto.prototype, "from", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-\d{2}$/),
+    __metadata("design:type", String)
+], DateRangeDto.prototype, "to", void 0);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHdvcmtmb3JjZVxcd29ya2ZvcmNlLmR0by50cyIsIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7QUFBQSw2Q0FBbUU7QUFFbkUscURBQTBKO0FBQzdJLFFBQUEsTUFBTSxHQUFHLENBQUMsT0FBTyxFQUFDLE9BQU8sRUFBQyxPQUFPLEVBQUMsT0FBTyxFQUFDLE9BQU8sRUFBQyxPQUFPLEVBQUMsT0FBTyxFQUFDLE9BQU8sRUFBQyxPQUFPLEVBQUMsT0FBTyxFQUFDLE9BQU8sRUFBQyxPQUFPLEVBQUMsT0FBTyxFQUFDLE9BQU8sRUFBQyxPQUFPLEVBQUMsT0FBTyxDQUFDLENBQUM7QUFDeEosTUFBYSxXQUFXO0lBQXhCO1FBS3VFLGFBQVEsR0FBRyxtQkFBbUIsQ0FBQztJQUN0RyxDQUFDO0NBQUE7QUFORCxrQ0FNQztBQUx5QztJQUF4QyxJQUFBLHFCQUFXLEdBQUU7SUFBRSxJQUFBLDBCQUFRLEdBQUU7SUFBRSxJQUFBLHdCQUFNLEVBQUMsQ0FBQyxFQUFDLEVBQUUsQ0FBQzs7eUNBQWM7QUFDWjtJQUF6QyxJQUFBLHFCQUFXLEdBQUU7SUFBRSxJQUFBLDBCQUFRLEdBQUU7SUFBRSxJQUFBLHdCQUFNLEVBQUMsQ0FBQyxFQUFDLEdBQUcsQ0FBQzs7eUNBQWM7QUFDYjtJQUF6QyxJQUFBLHFCQUFXLEVBQUMsRUFBQyxJQUFJLEVBQUMsY0FBTSxFQUFDLENBQUM7SUFBRSxJQUFBLHNCQUFJLEVBQUMsY0FBTSxDQUFDOzswQ0FBZTtBQUNRO0lBQS9ELElBQUEsNkJBQW1CLEdBQUU7SUFBRSxJQUFBLDRCQUFVLEdBQUU7SUFBRSxJQUFBLDBCQUFRLEdBQUU7SUFBRSxJQUFBLHdCQUFNLEVBQUMsQ0FBQyxFQUFDLEdBQUcsQ0FBQzs7NENBQWtCO0FBQ1g7SUFBckUsSUFBQSxxQkFBVyxFQUFDLEVBQUMsT0FBTyxFQUFDLG1CQUFtQixFQUFDLENBQUM7SUFBRSxJQUFB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QUFZLEVBQUMsRUFBQyxNQUFNLEVBQUMsSUFBSSxFQUFDLENBQUM7SUFBRSxJQUFBLHlCQUFPLEVBQUMscUJBQXFCLENBQUM7O3dDQUFZIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGFua2FcXE9uZURyaXZlXFxEb2N1bWVudHNcXHBhcnRcXHBheXJvbGxcXHBheXJvbGxiZVxcc3JjXFx3b3JrZm9yY2VcXHdvcmtmb3JjZS5kdG8udHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgQXBpUHJvcGVydHksIEFwaVByb3BlcnR5T3B0aW9uYWwgfSBmcm9tICdAbmVzdGpzL3N3YWdnZXInO1xuaW1wb3J0IHsgVHlwZSB9IGZyb20gJ2NsYXNzLXRyYW5zZm9ybWVyJztcbmltcG9ydCB7IEFycmF5Tm90RW1wdHksIEFycmF5VW5pcXVlLCBJc0FycmF5LCBJc0RhdGVTdHJpbmcsIElzSW4sIElzSW50LCBJc09wdGlvbmFsLCBJc1N0cmluZywgSXNVVUlELCBMZW5ndGgsIE1hdGNoZXMsIE1heCwgTWluIH0gZnJvbSAnY2xhc3MtdmFsaWRhdG9yJztcbmV4cG9ydCBjb25zdCBTVEFURVMgPSBbJ01ZLTAxJywnTVktMDInLCdNWS0wMycsJ01ZLTA0JywnTVktMDUnLCdNWS0wNicsJ01ZLTA3JywnTVktMDgnLCdNWS0wOScsJ01ZLTEwJywnTVktMTEnLCdNWS0xMicsJ01ZLTEzJywnTVktMTQnLCdNWS0xNScsJ01ZLTE2J107XG5leHBvcnQgY2xhc3MgTG9jYXRpb25EdG8ge1xuIEBBcGlQcm9wZXJ0eSgpIEBJc1N0cmluZygpIEBMZW5ndGgoMSwzMCkgY29kZTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eSgpIEBJc1N0cmluZygpIEBMZW5ndGgoMSwxNTApIG5hbWU6IHN0cmluZztcbiBAQXBpUHJvcGVydHkoe2VudW06U1RBVEVTfSkgQElzSW4oU1RBVEVTKSBzdGF0ZTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eU9wdGlvbmFsKCkgQElzT3B0aW9uYWwoKSBASXNTdHJpbmcoKSBATGVuZ3RoKDEsNTAwKSBhZGRyZXNzPzogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eSh7ZGVmYXVsdDonQXNpYS9LdWFsYV9MdW1wdXInfSkgQElzU3RyaW5nKCkgQExlbmd0aCgxLDgwKSB0aW1lem9uZSA9ICdBc2lhL0t1YWxhX0x1bXB1cic7XG59XG5leHBvcnQgY2xhc3MgU2NoZWR1bGVEdG8ge1xuIEBBcGlQcm9wZXJ0eSgpIEBJc1N0cmluZygpIEBMZW5ndGgoMSwzMCkgY29kZTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eSgpIEBJc1N0cmluZygpIEBMZW5ndGgoMSwxNTApIG5hbWU6IHN0cmluZztcbiBAQXBpUHJvcGVydHkoe2V4YW1wbGU6WzEsMiwzLDQsNV0sZGVzY3JpcHRpb246J1VUQyB3ZWVrZGF5IGluZGV4ZXM6IFN1bmRheT0wLCBTYXR1cmRheT02OyBhcHBsaWVkIHRvIGxvY2FsIGNhbGVuZGFyIGRhdGVzLid9KVxuIEBJc0FycmF5KCkgQEFycmF5Tm90RW1wdHkoKSBAQXJyYXlVbmlxdWUoKSBASXNJbnQoe2VhY2g6dHJ1ZX0pIEBNaW4oMCx7ZWFjaDp0cnVlfSkgQE1heCg2LHtlYWNoOnRydWV9KSB3b3JraW5nRGF5czogbnVtYmVyW107XG4gQEFwaVByb3BlcnR5KHtleGFtcGxlOjU0MH0pIEBJc0ludCgpIEBNaW4oMCkgQE1heCgxNDM5KSBzdGFydE1pbnV0ZTogbnVtYmVyO1xuIEBBcGlQcm9wZXJ0eSh7ZXhhbXBsZToxMDgwfSkgQElzSW50KCkgQE1pbigwKSBATWF4KDE0MzkpIGVuZE1pbnV0ZTogbnVtYmVyO1xuIEBBcGlQcm9wZXJ0eSh7ZGVmYXVsdDo2MH0pIEBJc0ludCgpIEBNaW4oMCkgQE1heCg3MjApIGJyZWFrTWludXRlcyA9IDYwO1xuIEBBcGlQcm9wZXJ0eSh7ZGVmYXVsdDowfSkgQElzSW50KCkgQE1pbigwKSBATWF4KDEyMCkgZ3JhY2VNaW51dGVzID0gMDtcbiBAQXBpUHJvcGVydHkoKSBASXNEYXRlU3RyaW5nKHtzdHJpY3Q6dHJ1ZX0pIEBNYXRjaGVzKC9eXFxkezR9LVxcZHsyfS1cXGR7Mn0kLykgZWZmZWN0aXZlRnJvbTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eU9wdGlvbmFsKCkgQElzT3B0aW9uYWwoKSBASXNEYXRlU3RyaW5nKHtzdHJpY3Q6dHJ1ZX0pIEBNYXRjaGVzKC9eXFxkezR9LVxcZHsyfS1cXGR7Mn0kLykgZWZmZWN0aXZlVG8/OiBzdHJpbmc7XG59XG5leHBvcnQgY2xhc3MgSG9saWRheUR0byB7XG4gQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLDE1MCkgbmFtZTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eSgpIEBJc0RhdGVTdHJpbmcoe3N0cmljdDp0cnVlfSkgQE1hdGNoZXMoL15cXGR7NH0tXFxkezJ9LVxcZHsyfSQvKSBzdGFydERhdGU6IHN0cmluZztcbiBAQXBpUHJvcGVydHkoKSBASXNEYXRlU3RyaW5nKHtzdHJpY3Q6dHJ1ZX0pIEBNYXRjaGVzKC9eXFxkezR9LVxcZHsyfS1cXGR7Mn0kLykgZW5kRGF0ZTogc3RyaW5nO1xuIEBBcGlQcm9wZXJ0eSh7ZXhhbXBsZTpbXSxkZXNjcmlwdGlvbjonRW1wdHkgZm9yIG5hdGlvbmFsOyBvdGhlcndpc2UgTWFsYXlzaWFuIHN0YXRlIGNvZGVzLid9KSBASXNBcnJheSgpIEBBcnJheVVuaXF1ZSgpIEBJc0luKFNUQVRFUyx7ZWFjaDp0cnVlfSkgc3RhdGVzOiBzdHJpbmdbXTtcbn1cbmV4cG9ydCBjbGFzcyBBc3NpZ25tZW50RHRvIHtcbiBAQXBpUHJvcGVydHlPcHRpb25hbCh7bnVsbGFibGU6dHJ1ZX0pIEBJc09wdGlvbmFsKCkgQElzVVVJRCgpIG1hbmFnZXJJZD86IHN0cmluZyB8IG51bGw7XG4gQEFwaVByb3BlcnR5T3B0aW9uYWwoe251bGxhYmxlOnRydWV9KSBASXNPcHRpb25hbCgpIEBJc1VVSUQoKSBsb2NhdGlvbklkPzogc3RyaW5nIHwgbnVsbDtcbiBAQXBpUHJvcGVydHlPcHRpb25hbCh7bnVsbGFibGU6dHJ1ZX0pIEBJc09wdGlvbmFsKCkgQElzVVVJRCgpIHNjaGVkdWxlSWQ/OiBzdHJpbmcgfCBudWxsO1xufVxuZXhwb3J0IGNsYXNzIERhdGVSYW5nZUR0byB7XG4gQEFwaVByb3BlcnR5KCkgQElzRGF0ZVN0cmluZyh7c3RyaWN0OnRydWV9KSBATWF0Y2hlcygvXlxcZHs0fS1cXGR7Mn0tXFxkezJ9JC8pIGZyb206IHN0cmluZztcbiBAQXBpUHJvcGVydHkoKSBASXNEYXRlU3RyaW5nKHtzdHJpY3Q6dHJ1ZX0pIEBNYXRjaGVzKC9eXFxkezR9LVxcZHsyfS1cXGR7Mn0kLykgdG86IHN0cmluZztcbn1cblxuIl0sInZlcnNpb24iOjN9

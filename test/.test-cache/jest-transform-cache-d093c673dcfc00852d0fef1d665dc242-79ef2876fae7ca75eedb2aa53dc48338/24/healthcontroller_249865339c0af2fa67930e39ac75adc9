@@ -1,0 +1,54 @@
+a0918ecaddb8b00993f9290c04dc0183
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.HealthController = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const auth_module_1 = require("./auth/auth.module");
+const database_module_1 = require("./database.module");
+let HealthController = class HealthController {
+    constructor(db) {
+        this.db = db;
+    }
+    live() {
+        return { data: { status: 'ok' } };
+    }
+    async ready() {
+        try {
+            await this.db.$queryRaw `SELECT 1`;
+            return { data: { status: 'ok' } };
+        }
+        catch {
+            throw new common_1.ServiceUnavailableException('Database not ready.');
+        }
+    }
+};
+exports.HealthController = HealthController;
+__decorate([
+    (0, common_1.Get)('live'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], HealthController.prototype, "live", null);
+__decorate([
+    (0, common_1.Get)('ready'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], HealthController.prototype, "ready", null);
+exports.HealthController = HealthController = __decorate([
+    (0, swagger_1.ApiTags)('health'),
+    (0, auth_module_1.Public)(),
+    (0, common_1.Controller)('health'),
+    __metadata("design:paramtypes", [database_module_1.Database])
+], HealthController);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXGhlYWx0aC5jb250cm9sbGVyLnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7OztBQUFBLDJDQUE4RTtBQUM5RSw2Q0FBMEM7QUFDMUMsb0RBQTRDO0FBQzVDLHVEQUE2QztBQUl0QyxJQUFNLGdCQUFnQixHQUF0QixNQUFNLGdCQUFnQjtJQUMzQixZQUFvQixFQUFZO1FBQVosT0FBRSxHQUFGLEVBQUUsQ0FBVTtJQUFHLENBQUM7SUFDdkIsSUFBSTtRQUNmLE9BQU8sRUFBRSxJQUFJLEVBQUUsRUFBRSxNQUFNLEVBQUUsSUFBSSxFQUFFLEVBQUUsQ0FBQztJQUNwQyxDQUFDO0lBQ21CLEFBQU4sS0FBSyxDQUFDLEtBQUs7UUFDdkIsSUFBSSxDQUFDO1lBQ0gsTUFBTSxJQUFJLENBQUMsRUFBRSxDQUFDLFNBQVMsQ0FBQSxVQUFVLENBQUM7WUFDbEMsT0FBTyxFQUFFLElBQUksRUFBRSxFQUFFLE1BQU0sRUFBRSxJQUFJLEVBQUUsRUFBRSxDQUFDO1FBQ3BDLENBQUM7UUFBQyxNQUFNLENBQUM7WUFDUCxNQUFNLElBQUksb0NBQTJCLENBQUMscUJBQXFCLENBQUMsQ0FBQztRQUMvRCxDQUFDO0lBQ0gsQ0FBQztDQUNGLENBQUE7QUFiWSw0Q0FBZ0I7QUFFZDtJQUFaLElBQUEsWUFBRyxFQUFDLE1BQU0sQ0FBQzs7Ozs0Q0FFWDtBQUNtQjtJQUFuQixJQUFBLFlBQUcsRUFBQyxPQUFPLENBQUM7Ozs7NkNBT1o7MkJBWlUsZ0JBQWdCO0lBSDVCLElBQUEsaUJBQU8sRUFBQyxRQUFRLENBQUM7SUFDakIsSUFBQSxvQkFBTSxHQUFFO0lBQ1IsSUFBQSxtQkFBVSxFQUFDLFFBQVEsQ0FBQztxQ0FFSywwQkFBUTtHQURyQixnQkFBZ0IsQ0FhNUIiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXGhlYWx0aC5jb250cm9sbGVyLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IENvbnRyb2xsZXIsIEdldCwgU2VydmljZVVuYXZhaWxhYmxlRXhjZXB0aW9uIH0gZnJvbSAnQG5lc3Rqcy9jb21tb24nO1xuaW1wb3J0IHsgQXBpVGFncyB9IGZyb20gJ0BuZXN0anMvc3dhZ2dlcic7XG5pbXBvcnQgeyBQdWJsaWMgfSBmcm9tICcuL2F1dGgvYXV0aC5tb2R1bGUnO1xuaW1wb3J0IHsgRGF0YWJhc2UgfSBmcm9tICcuL2RhdGFiYXNlLm1vZHVsZSc7XG5AQXBpVGFncygnaGVhbHRoJylcbkBQdWJsaWMoKVxuQENvbnRyb2xsZXIoJ2hlYWx0aCcpXG5leHBvcnQgY2xhc3MgSGVhbHRoQ29udHJvbGxlciB7XG4gIGNvbnN0cnVjdG9yKHByaXZhdGUgZGI6IERhdGFiYXNlKSB7fVxuICBAR2V0KCdsaXZlJykgbGl2ZSgpIHtcbiAgICByZXR1cm4geyBkYXRhOiB7IHN0YXR1czogJ29rJyB9IH07XG4gIH1cbiAgQEdldCgncmVhZHknKSBhc3luYyByZWFkeSgpIHtcbiAgICB0cnkge1xuICAgICAgYXdhaXQgdGhpcy5kYi4kcXVlcnlSYXdgU0VMRUNUIDFgO1xuICAgICAgcmV0dXJuIHsgZGF0YTogeyBzdGF0dXM6ICdvaycgfSB9O1xuICAgIH0gY2F0Y2gge1xuICAgICAgdGhyb3cgbmV3IFNlcnZpY2VVbmF2YWlsYWJsZUV4Y2VwdGlvbignRGF0YWJhc2Ugbm90IHJlYWR5LicpO1xuICAgIH1cbiAgfVxufVxuIl0sInZlcnNpb24iOjN9

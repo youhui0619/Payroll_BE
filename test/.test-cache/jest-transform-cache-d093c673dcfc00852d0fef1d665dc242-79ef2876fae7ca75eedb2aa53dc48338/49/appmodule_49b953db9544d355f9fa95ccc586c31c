@@ -1,0 +1,51 @@
+ebe1b89448f1eb76fc02e821b8f7eb13
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AppModule = void 0;
+const common_1 = require("@nestjs/common");
+const app_service_1 = require("./app.service");
+const database_module_1 = require("./database.module");
+const auth_module_1 = require("./auth/auth.module");
+const organization_module_1 = require("./organization/organization.module");
+const employees_module_1 = require("./employees/employees.module");
+const workforce_module_1 = require("./workforce/workforce.module");
+const attendance_module_1 = require("./attendance/attendance.module");
+const leave_module_1 = require("./leave/leave.module");
+const claims_module_1 = require("./claims/claims.module");
+const health_controller_1 = require("./health.controller");
+const files_module_1 = require("./files/files.module");
+const rules_module_1 = require("./payroll/rules.module");
+const reports_module_1 = require("./reports/reports.module");
+const payroll_module_1 = require("./payroll/payroll.module");
+const memberships_module_1 = require("./auth/memberships.module");
+let AppModule = class AppModule {
+};
+exports.AppModule = AppModule;
+exports.AppModule = AppModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            database_module_1.DatabaseModule,
+            auth_module_1.AuthModule,
+            organization_module_1.OrganizationModule,
+            employees_module_1.EmployeesModule,
+            workforce_module_1.WorkforceModule,
+            attendance_module_1.AttendanceModule,
+            leave_module_1.LeaveModule,
+            claims_module_1.ClaimsModule,
+            files_module_1.FilesModule,
+            rules_module_1.RulesModule,
+            reports_module_1.ReportsModule,
+            payroll_module_1.PayrollModule,
+            memberships_module_1.MembershipsModule,
+        ],
+        controllers: [health_controller_1.HealthController],
+        providers: [app_service_1.AppService],
+    })
+], AppModule);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXGFwcC5tb2R1bGUudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7O0FBQUEsMkNBQXdDO0FBQ3hDLCtDQUEyQztBQUMzQyx1REFBbUQ7QUFDbkQsb0RBQWdEO0FBQ2hELDRFQUF3RTtBQUN4RSxtRUFBK0Q7QUFDL0QsbUVBQStEO0FBQy9ELHNFQUFrRTtBQUNsRSx1REFBbUQ7QUFDbkQsMERBQXNEO0FBQ3RELDJEQUF1RDtBQUN2RCx1REFBbUQ7QUFDbkQseURBQXFEO0FBQ3JELDZEQUF5RDtBQUN6RCw2REFBeUQ7QUFDekQsa0VBQThEO0FBcUJ2RCxJQUFNLFNBQVMsR0FBZixNQUFNLFNBQVM7Q0FBRyxDQUFBO0FBQVosOEJBQVM7b0JBQVQsU0FBUztJQW5CckIsSUFBQSxlQUFNLEVBQUM7UUFDTixPQUFPLEVBQUU7WUFDUCxnQ0FBYztZQUNkLHdCQUFVO1lBQ1Ysd0NBQWtCO1lBQ2xCLGtDQUFlO1lBQ2Ysa0NBQWU7WUFDZixvQ0FBZ0I7WUFDaEIsMEJBQVc7WUFDWCw0QkFBWTtZQUNaLDBCQUFXO1lBQ1gsMEJBQVc7WUFDWCw4QkFBYTtZQUNiLDhCQUFhO1lBQ2Isc0NBQWlCO1NBQ2xCO1FBQ0QsV0FBVyxFQUFFLENBQUMsb0NBQWdCLENBQUM7UUFDL0IsU0FBUyxFQUFFLENBQUMsd0JBQVUsQ0FBQztLQUN4QixDQUFDO0dBQ1csU0FBUyxDQUFHIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGFua2FcXE9uZURyaXZlXFxEb2N1bWVudHNcXHBhcnRcXHBheXJvbGxcXHBheXJvbGxiZVxcc3JjXFxhcHAubW9kdWxlLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IE1vZHVsZSB9IGZyb20gJ0BuZXN0anMvY29tbW9uJztcbmltcG9ydCB7IEFwcFNlcnZpY2UgfSBmcm9tICcuL2FwcC5zZXJ2aWNlJztcbmltcG9ydCB7IERhdGFiYXNlTW9kdWxlIH0gZnJvbSAnLi9kYXRhYmFzZS5tb2R1bGUnO1xuaW1wb3J0IHsgQXV0aE1vZHVsZSB9IGZyb20gJy4vYXV0aC9hdXRoLm1vZHVsZSc7XG5pbXBvcnQgeyBPcmdhbml6YXRpb25Nb2R1bGUgfSBmcm9tICcuL29yZ2FuaXphdGlvbi9vcmdhbml6YXRpb24ubW9kdWxlJztcbmltcG9ydCB7IEVtcGxveWVlc01vZHVsZSB9IGZyb20gJy4vZW1wbG95ZWVzL2VtcGxveWVlcy5tb2R1bGUnO1xuaW1wb3J0IHsgV29ya2ZvcmNlTW9kdWxlIH0gZnJvbSAnLi93b3JrZm9yY2Uvd29ya2ZvcmNlLm1vZHVsZSc7XG5pbXBvcnQgeyBBdHRlbmRhbmNlTW9kdWxlIH0gZnJvbSAnLi9hdHRlbmRhbmNlL2F0dGVuZGFuY2UubW9kdWxlJztcbmltcG9ydCB7IExlYXZlTW9kdWxlIH0gZnJvbSAnLi9sZWF2ZS9sZWF2ZS5tb2R1bGUnO1xuaW1wb3J0IHsgQ2xhaW1zTW9kdWxlIH0gZnJvbSAnLi9jbGFpbXMvY2xhaW1zLm1vZHVsZSc7XG5pbXBvcnQgeyBIZWFsdGhDb250cm9sbGVyIH0gZnJvbSAnLi9oZWFsdGguY29udHJvbGxlcic7XG5pbXBvcnQgeyBGaWxlc01vZHVsZSB9IGZyb20gJy4vZmlsZXMvZmlsZXMubW9kdWxlJztcbmltcG9ydCB7IFJ1bGVzTW9kdWxlIH0gZnJvbSAnLi9wYXlyb2xsL3J1bGVzLm1vZHVsZSc7XG5pbXBvcnQgeyBSZXBvcnRzTW9kdWxlIH0gZnJvbSAnLi9yZXBvcnRzL3JlcG9ydHMubW9kdWxlJztcbmltcG9ydCB7IFBheXJvbGxNb2R1bGUgfSBmcm9tICcuL3BheXJvbGwvcGF5cm9sbC5tb2R1bGUnO1xuaW1wb3J0IHsgTWVtYmVyc2hpcHNNb2R1bGUgfSBmcm9tICcuL2F1dGgvbWVtYmVyc2hpcHMubW9kdWxlJztcblxuQE1vZHVsZSh7XG4gIGltcG9ydHM6IFtcbiAgICBEYXRhYmFzZU1vZHVsZSxcbiAgICBBdXRoTW9kdWxlLFxuICAgIE9yZ2FuaXphdGlvbk1vZHVsZSxcbiAgICBFbXBsb3llZXNNb2R1bGUsXG4gICAgV29ya2ZvcmNlTW9kdWxlLFxuICAgIEF0dGVuZGFuY2VNb2R1bGUsXG4gICAgTGVhdmVNb2R1bGUsXG4gICAgQ2xhaW1zTW9kdWxlLFxuICAgIEZpbGVzTW9kdWxlLFxuICAgIFJ1bGVzTW9kdWxlLFxuICAgIFJlcG9ydHNNb2R1bGUsXG4gICAgUGF5cm9sbE1vZHVsZSxcbiAgICBNZW1iZXJzaGlwc01vZHVsZSxcbiAgXSxcbiAgY29udHJvbGxlcnM6IFtIZWFsdGhDb250cm9sbGVyXSxcbiAgcHJvdmlkZXJzOiBbQXBwU2VydmljZV0sXG59KVxuZXhwb3J0IGNsYXNzIEFwcE1vZHVsZSB7fVxuIl0sInZlcnNpb24iOjN9

@@ -1,0 +1,41 @@
+5aa6465f2977828685f134cbb4ae22fc
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LoginLimitGuard = void 0;
+const common_1 = require("@nestjs/common");
+let LoginLimitGuard = class LoginLimitGuard {
+    constructor() {
+        this.windows = new Map();
+    }
+    canActivate(ctx) {
+        const req = ctx.switchToHttp().getRequest();
+        const now = Date.now(), key = req.ip ?? 'unknown';
+        for (const [ip, w] of this.windows)
+            if (w.expires <= now)
+                this.windows.delete(ip);
+        const prior = this.windows.get(key);
+        if (prior && prior.count >= 20)
+            throw new common_1.HttpException({
+                code: 'RATE_LIMITED',
+                message: 'Too many login attempts. Try again in 15 minutes.',
+            }, 429);
+        if (!prior && this.windows.size >= 10000)
+            throw new common_1.HttpException('Login capacity reached. Try later.', 429);
+        this.windows.set(key, {
+            count: (prior?.count ?? 0) + 1,
+            expires: prior?.expires ?? now + 15 * 60000,
+        });
+        return true;
+    }
+};
+exports.LoginLimitGuard = LoginLimitGuard;
+exports.LoginLimitGuard = LoginLimitGuard = __decorate([
+    (0, common_1.Injectable)()
+], LoginLimitGuard);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXGF1dGhcXGxvZ2luLWxpbWl0Lmd1YXJkLnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7OztBQUFBLDJDQUt3QjtBQUdqQixJQUFNLGVBQWUsR0FBckIsTUFBTSxlQUFlO0lBQXJCO1FBQ1ksWUFBTyxHQUFHLElBQUksR0FBRyxFQUFrQixDQUFDO0lBd0J2RCxDQUFDO0lBdkJDLFdBQVcsQ0FBQyxHQUFxQjtRQUMvQixNQUFNLEdBQUcsR0FBRyxHQUFHLENBQUMsWUFBWSxFQUFFLENBQUMsVUFBVSxFQUFrQixDQUFDO1FBQzVELE1BQU0sR0FBRyxHQUFHLElBQUksQ0FBQyxHQUFHLEVBQUUsRUFDcEIsR0FBRyxHQUFHLEdBQUcsQ0FBQyxFQUFFLElBQUksU0FBUyxDQUFDO1FBQzVCLEtBQUssTUFBTSxDQUFDLEVBQUUsRUFBRSxDQUFDLENBQUMsSUFBSSxJQUFJLENBQUMsT0FBTztZQUNoQyxJQUFJLENBQUMsQ0FBQyxPQUFPLElBQUksR0FBRztnQkFBRSxJQUFJLENBQUMsT0FBTyxDQUFDLE1BQU0sQ0FBQyxFQUFFLENBQUMsQ0FBQztRQUNoRCxNQUFNLEtBQUssR0FBRyxJQUFJLENBQUMsT0FBTyxDQUFDLEdBQUcsQ0FBQyxHQUFHLENBQUMsQ0FBQztRQUNwQyxJQUFJLEtBQUssSUFBSSxLQUFLLENBQUMsS0FBSyxJQUFJLEVBQUU7WUFDNUIsTUFBTSxJQUFJLHNCQUFhLENBQ3JCO2dCQUNFLElBQUksRUFBRSxjQUFjO2dCQUNwQixPQUFPLEVBQUUsbURBQW1EO2FBQzdELEVBQ0QsR0FBRyxDQUNKLENBQUM7UUFDSixJQUFJLENBQUMsS0FBSyxJQUFJLElBQUksQ0FBQyxPQUFPLENBQUMsSUFBSSxJQUFJLEtBQUs7WUFDdEMsTUFBTSxJQUFJLHNCQUFhLENBQUMsb0NBQW9DLEVBQUUsR0FBRyxDQUFDLENBQUM7UUFDckUsSUFBSSxDQUFDLE9BQU8sQ0FBQyxHQUFHLENBQUMsR0FBRyxFQUFFO1lBQ3BCLEtBQUssRUFBRSxDQUFDLEtBQUssRUFBRSxLQUFLLElBQUksQ0FBQyxDQUFDLEdBQUcsQ0FBQztZQUM5QixPQUFPLEVBQUUsS0FBSyxFQUFFLE9BQU8sSUFBSSxHQUFHLEdBQUcsRUFBRSxHQUFHLEtBQUs7U0FDNUMsQ0FBQyxDQUFDO1FBQ0gsT0FBTyxJQUFJLENBQUM7SUFDZCxDQUFDO0NBQ0YsQ0FBQTtBQXpCWSwwQ0FBZTswQkFBZixlQUFlO0lBRDNCLElBQUEsbUJBQVUsR0FBRTtHQUNBLGVBQWUsQ0F5QjNCIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGFua2FcXE9uZURyaXZlXFxEb2N1bWVudHNcXHBhcnRcXHBheXJvbGxcXHBheXJvbGxiZVxcc3JjXFxhdXRoXFxsb2dpbi1saW1pdC5ndWFyZC50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQge1xuICBDYW5BY3RpdmF0ZSxcbiAgRXhlY3V0aW9uQ29udGV4dCxcbiAgSHR0cEV4Y2VwdGlvbixcbiAgSW5qZWN0YWJsZSxcbn0gZnJvbSAnQG5lc3Rqcy9jb21tb24nO1xudHlwZSBXaW5kb3cgPSB7IGNvdW50OiBudW1iZXI7IGV4cGlyZXM6IG51bWJlciB9O1xuQEluamVjdGFibGUoKVxuZXhwb3J0IGNsYXNzIExvZ2luTGltaXRHdWFyZCBpbXBsZW1lbnRzIENhbkFjdGl2YXRlIHtcbiAgcHJpdmF0ZSByZWFkb25seSB3aW5kb3dzID0gbmV3IE1hcDxzdHJpbmcsIFdpbmRvdz4oKTtcbiAgY2FuQWN0aXZhdGUoY3R4OiBFeGVjdXRpb25Db250ZXh0KSB7XG4gICAgY29uc3QgcmVxID0gY3R4LnN3aXRjaFRvSHR0cCgpLmdldFJlcXVlc3Q8eyBpcDogc3RyaW5nIH0+KCk7XG4gICAgY29uc3Qgbm93ID0gRGF0ZS5ub3coKSxcbiAgICAgIGtleSA9IHJlcS5pcCA/PyAndW5rbm93bic7XG4gICAgZm9yIChjb25zdCBbaXAsIHddIG9mIHRoaXMud2luZG93cylcbiAgICAgIGlmICh3LmV4cGlyZXMgPD0gbm93KSB0aGlzLndpbmRvd3MuZGVsZXRlKGlwKTtcbiAgICBjb25zdCBwcmlvciA9IHRoaXMud2luZG93cy5nZXQoa2V5KTtcbiAgICBpZiAocHJpb3IgJiYgcHJpb3IuY291bnQgPj0gMjApXG4gICAgICB0aHJvdyBuZXcgSHR0cEV4Y2VwdGlvbihcbiAgICAgICAge1xuICAgICAgICAgIGNvZGU6ICdSQVRFX0xJTUlURUQnLFxuICAgICAgICAgIG1lc3NhZ2U6ICdUb28gbWFueSBsb2dpbiBhdHRlbXB0cy4gVHJ5IGFnYWluIGluIDE1IG1pbnV0ZXMuJyxcbiAgICAgICAgfSxcbiAgICAgICAgNDI5LFxuICAgICAgKTtcbiAgICBpZiAoIXByaW9yICYmIHRoaXMud2luZG93cy5zaXplID49IDEwMDAwKVxuICAgICAgdGhyb3cgbmV3IEh0dHBFeGNlcHRpb24oJ0xvZ2luIGNhcGFjaXR5IHJlYWNoZWQuIFRyeSBsYXRlci4nLCA0MjkpO1xuICAgIHRoaXMud2luZG93cy5zZXQoa2V5LCB7XG4gICAgICBjb3VudDogKHByaW9yPy5jb3VudCA/PyAwKSArIDEsXG4gICAgICBleHBpcmVzOiBwcmlvcj8uZXhwaXJlcyA/PyBub3cgKyAxNSAqIDYwMDAwLFxuICAgIH0pO1xuICAgIHJldHVybiB0cnVlO1xuICB9XG59XG4iXSwidmVyc2lvbiI6M30=

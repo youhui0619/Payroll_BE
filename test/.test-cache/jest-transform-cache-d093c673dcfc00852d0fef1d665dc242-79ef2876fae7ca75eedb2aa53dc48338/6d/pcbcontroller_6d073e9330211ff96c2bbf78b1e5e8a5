@@ -1,0 +1,199 @@
+382d586face6ebeb09675e7c9d8e7a98
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PcbController = exports.PcbPreviewDto = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
+const auth_module_1 = require("../auth/auth.module");
+const pcb_calculator_1 = require("./pcb-calculator");
+const tp1_reliefs_1 = require("./tp1-reliefs");
+const tp1_dto_1 = require("./tp1.dto");
+class PcbPreviewDto {
+}
+exports.PcbPreviewDto = PcbPreviewDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: [2026] }),
+    (0, class_validator_1.IsIn)([2026]),
+    __metadata("design:type", Number)
+], PcbPreviewDto.prototype, "year", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 12 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(12),
+    __metadata("design:type", Number)
+], PcbPreviewDto.prototype, "month", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['RESIDENT', 'NON_RESIDENT'] }),
+    (0, class_validator_1.IsIn)(['RESIDENT', 'NON_RESIDENT']),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "residency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: [1, 2, 3] }),
+    (0, class_validator_1.IsIn)([1, 2, 3]),
+    __metadata("design:type", Number)
+], PcbPreviewDto.prototype, "category", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '5500.00',
+        description: 'Current normal taxable remuneration after exemptions.',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "normal", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '0.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "additional", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '605.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "normalEpf", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '0.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "additionalEpf", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '0.00',
+        description: 'Prior taxable income this year, including TP3.',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "accumulatedIncome", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '0.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "accumulatedEpf", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '0.00',
+        description: 'Prior MTD, excluding CP38 and voluntary additional withholding.',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "accumulatedMtd", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '0.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "accumulatedZakat", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: '0.00' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "currentZakat", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '15000.00',
+        description: 'Already verified D+S+DU+SU+QC+LP, excluding EPF. Preview does not validate TP1/TP3 or relief eligibility.',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], PcbPreviewDto.prototype, "qualifyingReliefs", void 0);
+class PcbPreviewDataDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], PcbPreviewDataDto.prototype, "amount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: 'object', additionalProperties: true }),
+    __metadata("design:type", Object)
+], PcbPreviewDataDto.prototype, "trace", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", String)
+], PcbPreviewDataDto.prototype, "sourceSha256", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['ORIGINAL_PDF'] }),
+    __metadata("design:type", String)
+], PcbPreviewDataDto.prototype, "checksumKind", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: [String] }),
+    __metadata("design:type", Array)
+], PcbPreviewDataDto.prototype, "limitations", void 0);
+class PcbPreviewResponseDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: PcbPreviewDataDto }),
+    __metadata("design:type", PcbPreviewDataDto)
+], PcbPreviewResponseDto.prototype, "data", void 0);
+let PcbController = class PcbController {
+    tp1Preview(input) {
+        return { data: (0, tp1_reliefs_1.calculateTp1Reliefs)(input) };
+    }
+    preview(input) {
+        return {
+            data: {
+                ...(0, pcb_calculator_1.calculatePcb)(input),
+                sourceSha256: pcb_calculator_1.PCB_SOURCE_SHA256,
+                checksumKind: 'ORIGINAL_PDF',
+                limitations: [
+                    'Standard resident/non-resident formula only; REP, knowledge-worker and C-suite regimes are not supported.',
+                    'Input exemptions, relief eligibility and TP1/TP3 reconciliation must be verified separately.',
+                    'Worked examples pass; full LHDN conformance and approval remain pending.',
+                ],
+            },
+        };
+    }
+};
+exports.PcbController = PcbController;
+__decorate([
+    (0, common_1.Post)('tp1-preview'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Preview 2026 cumulative TP1 expense deductions and shared annual caps',
+        description: 'Requires reviewed eligible amounts and existing spouse/mandatory-EPF deduction context. Does not verify receipts or recurring eligibility, save claims, or calculate D1 rebates.',
+    }),
+    (0, swagger_1.ApiCreatedResponse)({ type: tp1_dto_1.Tp1PreviewResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [tp1_dto_1.Tp1PreviewDto]),
+    __metadata("design:returntype", void 0)
+], PcbController.prototype, "tp1Preview", null);
+__decorate([
+    (0, common_1.Post)('preview'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Preview 2026 standard PCB from normalized inputs',
+        description: 'Read-only calculation. No employee records or payroll totals are changed. Special tax regimes and relief eligibility resolution remain pending.',
+    }),
+    (0, swagger_1.ApiCreatedResponse)({ type: PcbPreviewResponseDto }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [PcbPreviewDto]),
+    __metadata("design:returntype", void 0)
+], PcbController.prototype, "preview", null);
+exports.PcbController = PcbController = __decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiTags)('statutory-rules'),
+    (0, auth_module_1.Roles)('OWNER', 'FINANCE'),
+    (0, common_1.Controller)('statutory/pcb')
+], PcbController);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHBheXJvbGxcXHBjYi5jb250cm9sbGVyLnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7OztBQUFBLDJDQUF3RDtBQUN4RCw2Q0FNeUI7QUFDekIscURBQTJFO0FBQzNFLHFEQUE0QztBQUM1QyxxREFBNkU7QUFDN0UsK0NBQW9EO0FBQ3BELHVDQUFpRTtBQUVqRSxNQUFhLGFBQWE7Q0FpRXpCO0FBakVELHNDQWlFQztBQWhFOEM7SUFBNUMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsSUFBSSxFQUFFLENBQUMsSUFBSSxDQUFDLEVBQUUsQ0FBQztJQUFFLElBQUEsc0JBQUksRUFBQyxDQUFDLElBQUksQ0FBQyxDQUFDOzsyQ0FBYztBQUsxRDtJQUpDLElBQUEscUJBQVcsRUFBQyxFQUFFLE9BQU8sRUFBRSxDQUFDLEVBQUUsT0FBTyxFQUFFLEVBQUUsRUFBRSxDQUFDO0lBQ3hDLElBQUEsdUJBQUssR0FBRTtJQUNQLElBQUEscUJBQUcsRUFBQyxDQUFDLENBQUM7SUFDTixJQUFBLHFCQUFHLEVBQUMsRUFBRSxDQUFDOzs0Q0FDTTtBQUdkO0lBRkMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsSUFBSSxFQUFFLENBQUMsVUFBVSxFQUFFLGNBQWMsQ0FBQyxFQUFFLENBQUM7SUFDbkQsSUFBQSxzQkFBSSxFQUFDLENBQUMsVUFBVSxFQUFFLGNBQWMsQ0FBQyxDQUFDOztnREFDSTtBQUNZO0lBQWxELElBQUEscUJBQVcsRUFBQyxFQUFFLElBQUksRUFBRSxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLEVBQUUsQ0FBQztJQUFFLElBQUEsc0JBQUksRUFBQyxDQUFDLENBQUMsRUFBRSxDQUFDLEVBQUUsQ0FBQyxDQUFDLENBQUM7OytDQUFxQjtBQU92RTtJQU5DLElBQUEscUJBQVcsRUFBQztRQUNYLE9BQU8sRUFBRSxTQUFTO1FBQ2xCLFdBQVcsRUFBRSx1REFBdUQ7S0FDckUsQ0FBQztJQUNELElBQUEsMEJBQVEsR0FBRTtJQUNWLElBQUEseUJBQU8sRUFBQyx3QkFBd0IsQ0FBQzs7NkNBQ25CO0FBSWY7SUFIQyxJQUFBLHFCQUFXLEVBQUMsRUFBRSxPQUFPLEVBQUUsTUFBTSxFQUFFLENBQUM7SUFDaEMsSUFBQSwwQkFBUSxHQUFFO0lBQ1YsSUFBQSx5QkFBTyxFQUFDLHdCQUF3QixDQUFDOztpREFDZjtBQUluQjtJQUhDLElBQUEscUJBQVcsRUFBQyxFQUFFLE9BQU8sRUFBRSxRQUFRLEVBQUUsQ0FBQztJQUNsQyxJQUFBLDBCQUFRLEdBQUU7SUFDVixJQUFBLHlCQUFPLEVBQUMsd0JBQXdCLENBQUM7O2dEQUNoQjtBQUlsQjtJQUhDLElBQUEscUJBQVcsRUFBQyxFQUFFLE9BQU8sRUFBRSxNQUFNLEVBQUUsQ0FBQztJQUNoQyxJQUFBLDBCQUFRLEdBQUU7SUFDVixJQUFBLHlCQUFPLEVBQUMsd0JBQXdCLENBQUM7O29EQUNaO0FBT3RCO0lBTkMsSUFBQSxxQkFBVyxFQUFDO1FBQ1gsT0FBTyxFQUFFLE1BQU07UUFDZixXQUFXLEVBQUUsZ0RBQWdEO0tBQzlELENBQUM7SUFDRCxJQUFBLDBCQUFRLEdBQUU7SUFDVixJQUFBLHlCQUFPLEVBQUMsd0JBQXdCLENBQUM7O3dEQUNSO0FBSTFCO0lBSEMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsT0FBTyxFQUFFLE1BQU0sRUFBRSxDQUFDO0lBQ2hDLElBQUEsMEJBQVEsR0FBRTtJQUNWLElBQUEseUJBQU8sRUFBQyx3QkFBd0IsQ0FBQzs7cURBQ1g7QUFRdkI7SUFQQyxJQUFBLHFCQUFXLEVBQUM7UUFDWCxPQUFPLEVBQUUsTUFBTTtRQUNmLFdBQVcsRUFDVCxpRUFBaUU7S0FDcEUsQ0FBQztJQUNELElBQUEsMEJBQVEsR0FBRTtJQUNWLElBQUEseUJBQU8sRUFBQyx3QkFBd0IsQ0FBQzs7cURBQ1g7QUFJdkI7SUFIQyxJQUFBLHFCQUFXLEVBQUMsRUFBRSxPQUFPLEVBQUUsTUFBTSxFQUFFLENBQUM7SUFDaEMsSUFBQSwwQkFBUSxHQUFFO0lBQ1YsSUFBQSx5QkFBTyxFQUFDLHdCQUF3QixDQUFDOzt1REFDVDtBQUl6QjtJQUhDLElBQUEscUJBQVcsRUFBQyxFQUFFLE9BQU8sRUFBRSxNQUFNLEVBQUUsQ0FBQztJQUNoQyxJQUFBLDBCQUFRLEdBQUU7SUFDVixJQUFBLHlCQUFPLEVBQUMsd0JBQXdCLENBQUM7O21EQUNiO0FBUXJCO0lBUEMsSUFBQSxxQkFBVyxFQUFDO1FBQ1gsT0FBTyxFQUFFLFVBQVU7UUFDbkIsV0FBVyxFQUNULDJHQUEyRztLQUM5RyxDQUFDO0lBQ0QsSUFBQSwwQkFBUSxHQUFFO0lBQ1YsSUFBQSx5QkFBTyxFQUFDLHdCQUF3QixDQUFDOzt3REFDUjtBQUU1QixNQUFNLGlCQUFpQjtDQVN0QjtBQVJnQjtJQUFkLElBQUEscUJBQVcsR0FBRTs7aURBQWdCO0FBQytCO0lBQTVELElBQUEscUJBQVcsRUFBQyxFQUFFLElBQUksRUFBRSxRQUFRLEVBQUUsb0JBQW9CLEVBQUUsSUFBSSxFQUFFLENBQUM7O2dEQUcxRDtBQUNhO0lBQWQsSUFBQSxxQkFBVyxHQUFFOzt1REFBc0I7QUFDSztJQUF4QyxJQUFBLHFCQUFXLEVBQUMsRUFBRSxJQUFJLEVBQUUsQ0FBQyxjQUFjLENBQUMsRUFBRSxDQUFDOzt1REFBc0I7QUFDN0I7SUFBaEMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsSUFBSSxFQUFFLENBQUMsTUFBTSxDQUFDLEVBQUUsQ0FBQzs7c0RBQXVCO0FBRXpELE1BQU0scUJBQXFCO0NBRTFCO0FBRDJDO0lBQXpDLElBQUEscUJBQVcsRUFBQyxFQUFFLElBQUksRUFBRSxpQkFBaUIsRUFBRSxDQUFDOzhCQUFPLGlCQUFpQjttREFBQztBQU03RCxJQUFNLGFBQWEsR0FBbkIsTUFBTSxhQUFhO0lBU3hCLFVBQVUsQ0FBUyxLQUFvQjtRQUNyQyxPQUFPLEVBQUUsSUFBSSxFQUFFLElBQUEsaUNBQW1CLEVBQUMsS0FBSyxDQUFDLEVBQUUsQ0FBQztJQUM5QyxDQUFDO0lBUUQsT0FBTyxDQUFTLEtBQW9CO1FBQ2xDLE9BQU87WUFDTCxJQUFJLEVBQUU7Z0JBQ0osR0FBRyxJQUFBLDZCQUFZLEVBQUMsS0FBSyxDQUFDO2dCQUN0QixZQUFZLEVBQUUsa0NBQWlCO2dCQUMvQixZQUFZLEVBQUUsY0FBYztnQkFDNUIsV0FBVyxFQUFFO29CQUNYLDJHQUEyRztvQkFDM0csOEZBQThGO29CQUM5RiwwRUFBMEU7aUJBQzNFO2FBQ0Y7U0FDRixDQUFDO0lBQ0osQ0FBQztDQUNGLENBQUE7QUFqQ1ksc0NBQWE7QUFTeEI7SUFSQyxJQUFBLGFBQUksRUFBQyxhQUFhLENBQUM7SUFDbkIsSUFBQSxzQkFBWSxFQUFDO1FBQ1osT0FBTyxFQUNMLHVFQUF1RTtRQUN6RSxXQUFXLEVBQ1Qsa0xBQWtMO0tBQ3JMLENBQUM7SUFDRCxJQUFBLDRCQUFrQixFQUFDLEVBQUUsSUFBSSxFQUFFLCtCQUFxQixFQUFFLENBQUM7SUFDeEMsV0FBQSxJQUFBLGFBQUksR0FBRSxDQUFBOztxQ0FBUSx1QkFBYTs7K0NBRXRDO0FBUUQ7SUFQQyxJQUFBLGFBQUksRUFBQyxTQUFTLENBQUM7SUFDZixJQUFBLHNCQUFZLEVBQUM7UUFDWixPQUFPLEVBQUUsa0RBQWtEO1FBQzNELFdBQVcsRUFDVCxpSkFBaUo7S0FDcEosQ0FBQztJQUNELElBQUEsNEJBQWtCLEVBQUMsRUFBRSxJQUFJLEVBQUUscUJBQXFCLEVBQUUsQ0FBQztJQUMzQyxXQUFBLElBQUEsYUFBSSxHQUFFLENBQUE7O3FDQUFRLGFBQWE7OzRDQWFuQzt3QkFoQ1UsYUFBYTtJQUp6QixJQUFBLHVCQUFhLEdBQUU7SUFDZixJQUFBLGlCQUFPLEVBQUMsaUJBQWlCLENBQUM7SUFDMUIsSUFBQSxtQkFBSyxFQUFDLE9BQU8sRUFBRSxTQUFTLENBQUM7SUFDekIsSUFBQSxtQkFBVSxFQUFDLGVBQWUsQ0FBQztHQUNmLGFBQWEsQ0FpQ3pCIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGFua2FcXE9uZURyaXZlXFxEb2N1bWVudHNcXHBhcnRcXHBheXJvbGxcXHBheXJvbGxiZVxcc3JjXFxwYXlyb2xsXFxwY2IuY29udHJvbGxlci50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBCb2R5LCBDb250cm9sbGVyLCBQb3N0IH0gZnJvbSAnQG5lc3Rqcy9jb21tb24nO1xuaW1wb3J0IHtcbiAgQXBpQmVhcmVyQXV0aCxcbiAgQXBpQ3JlYXRlZFJlc3BvbnNlLFxuICBBcGlPcGVyYXRpb24sXG4gIEFwaVByb3BlcnR5LFxuICBBcGlUYWdzLFxufSBmcm9tICdAbmVzdGpzL3N3YWdnZXInO1xuaW1wb3J0IHsgSXNJbiwgSXNJbnQsIElzU3RyaW5nLCBNYXRjaGVzLCBNYXgsIE1pbiB9IGZyb20gJ2NsYXNzLXZhbGlkYXRvcic7XG5pbXBvcnQgeyBSb2xlcyB9IGZyb20gJy4uL2F1dGgvYXV0aC5tb2R1bGUnO1xuaW1wb3J0IHsgY2FsY3VsYXRlUGNiLCBQY2JJbnB1dCwgUENCX1NPVVJDRV9TSEEyNTYgfSBmcm9tICcuL3BjYi1jYWxjdWxhdG9yJztcbmltcG9ydCB7IGNhbGN1bGF0ZVRwMVJlbGllZnMgfSBmcm9tICcuL3RwMS1yZWxpZWZzJztcbmltcG9ydCB7IFRwMVByZXZpZXdEdG8sIFRwMVByZXZpZXdSZXNwb25zZUR0byB9IGZyb20gJy4vdHAxLmR0byc7XG5cbmV4cG9ydCBjbGFzcyBQY2JQcmV2aWV3RHRvIGltcGxlbWVudHMgUGNiSW5wdXQge1xuICBAQXBpUHJvcGVydHkoeyBlbnVtOiBbMjAyNl0gfSkgQElzSW4oWzIwMjZdKSB5ZWFyOiBudW1iZXI7XG4gIEBBcGlQcm9wZXJ0eSh7IG1pbmltdW06IDEsIG1heGltdW06IDEyIH0pXG4gIEBJc0ludCgpXG4gIEBNaW4oMSlcbiAgQE1heCgxMilcbiAgbW9udGg6IG51bWJlcjtcbiAgQEFwaVByb3BlcnR5KHsgZW51bTogWydSRVNJREVOVCcsICdOT05fUkVTSURFTlQnXSB9KVxuICBASXNJbihbJ1JFU0lERU5UJywgJ05PTl9SRVNJREVOVCddKVxuICByZXNpZGVuY3k6ICdSRVNJREVOVCcgfCAnTk9OX1JFU0lERU5UJztcbiAgQEFwaVByb3BlcnR5KHsgZW51bTogWzEsIDIsIDNdIH0pIEBJc0luKFsxLCAyLCAzXSkgY2F0ZWdvcnk6IDEgfCAyIHwgMztcbiAgQEFwaVByb3BlcnR5KHtcbiAgICBleGFtcGxlOiAnNTUwMC4wMCcsXG4gICAgZGVzY3JpcHRpb246ICdDdXJyZW50IG5vcm1hbCB0YXhhYmxlIHJlbXVuZXJhdGlvbiBhZnRlciBleGVtcHRpb25zLicsXG4gIH0pXG4gIEBJc1N0cmluZygpXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgbm9ybWFsOiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IGV4YW1wbGU6ICcwLjAwJyB9KVxuICBASXNTdHJpbmcoKVxuICBATWF0Y2hlcygvXlxcZHsxLDEyfShcXC5cXGR7MSwyfSk/JC8pXG4gIGFkZGl0aW9uYWw6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZXhhbXBsZTogJzYwNS4wMCcgfSlcbiAgQElzU3RyaW5nKClcbiAgQE1hdGNoZXMoL15cXGR7MSwxMn0oXFwuXFxkezEsMn0pPyQvKVxuICBub3JtYWxFcGY6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZXhhbXBsZTogJzAuMDAnIH0pXG4gIEBJc1N0cmluZygpXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgYWRkaXRpb25hbEVwZjogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoe1xuICAgIGV4YW1wbGU6ICcwLjAwJyxcbiAgICBkZXNjcmlwdGlvbjogJ1ByaW9yIHRheGFibGUgaW5jb21lIHRoaXMgeWVhciwgaW5jbHVkaW5nIFRQMy4nLFxuICB9KVxuICBASXNTdHJpbmcoKVxuICBATWF0Y2hlcygvXlxcZHsxLDEyfShcXC5cXGR7MSwyfSk/JC8pXG4gIGFjY3VtdWxhdGVkSW5jb21lOiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IGV4YW1wbGU6ICcwLjAwJyB9KVxuICBASXNTdHJpbmcoKVxuICBATWF0Y2hlcygvXlxcZHsxLDEyfShcXC5cXGR7MSwyfSk/JC8pXG4gIGFjY3VtdWxhdGVkRXBmOiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7XG4gICAgZXhhbXBsZTogJzAuMDAnLFxuICAgIGRlc2NyaXB0aW9uOlxuICAgICAgJ1ByaW9yIE1URCwgZXhjbHVkaW5nIENQMzggYW5kIHZvbHVudGFyeSBhZGRpdGlvbmFsIHdpdGhob2xkaW5nLicsXG4gIH0pXG4gIEBJc1N0cmluZygpXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgYWNjdW11bGF0ZWRNdGQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZXhhbXBsZTogJzAuMDAnIH0pXG4gIEBJc1N0cmluZygpXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgYWNjdW11bGF0ZWRaYWthdDogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoeyBleGFtcGxlOiAnMC4wMCcgfSlcbiAgQElzU3RyaW5nKClcbiAgQE1hdGNoZXMoL15cXGR7MSwxMn0oXFwuXFxkezEsMn0pPyQvKVxuICBjdXJyZW50WmFrYXQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHtcbiAgICBleGFtcGxlOiAnMTUwMDAuMDAnLFxuICAgIGRlc2NyaXB0aW9uOlxuICAgICAgJ0FscmVhZHkgdmVyaWZpZWQgRCtTK0RVK1NVK1FDK0xQLCBleGNsdWRpbmcgRVBGLiBQcmV2aWV3IGRvZXMgbm90IHZhbGlkYXRlIFRQMS9UUDMgb3IgcmVsaWVmIGVsaWdpYmlsaXR5LicsXG4gIH0pXG4gIEBJc1N0cmluZygpXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgcXVhbGlmeWluZ1JlbGllZnM6IHN0cmluZztcbn1cbmNsYXNzIFBjYlByZXZpZXdEYXRhRHRvIHtcbiAgQEFwaVByb3BlcnR5KCkgYW1vdW50OiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IHR5cGU6ICdvYmplY3QnLCBhZGRpdGlvbmFsUHJvcGVydGllczogdHJ1ZSB9KSB0cmFjZTogUmVjb3JkPFxuICAgIHN0cmluZyxcbiAgICB1bmtub3duXG4gID47XG4gIEBBcGlQcm9wZXJ0eSgpIHNvdXJjZVNoYTI1Njogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoeyBlbnVtOiBbJ09SSUdJTkFMX1BERiddIH0pIGNoZWNrc3VtS2luZDogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoeyB0eXBlOiBbU3RyaW5nXSB9KSBsaW1pdGF0aW9uczogc3RyaW5nW107XG59XG5jbGFzcyBQY2JQcmV2aWV3UmVzcG9uc2VEdG8ge1xuICBAQXBpUHJvcGVydHkoeyB0eXBlOiBQY2JQcmV2aWV3RGF0YUR0byB9KSBkYXRhOiBQY2JQcmV2aWV3RGF0YUR0bztcbn1cbkBBcGlCZWFyZXJBdXRoKClcbkBBcGlUYWdzKCdzdGF0dXRvcnktcnVsZXMnKVxuQFJvbGVzKCdPV05FUicsICdGSU5BTkNFJylcbkBDb250cm9sbGVyKCdzdGF0dXRvcnkvcGNiJylcbmV4cG9ydCBjbGFzcyBQY2JDb250cm9sbGVyIHtcbiAgQFBvc3QoJ3RwMS1wcmV2aWV3JylcbiAgQEFwaU9wZXJhdGlvbih7XG4gICAgc3VtbWFyeTpcbiAgICAgICdQcmV2aWV3IDIwMjYgY3VtdWxhdGl2ZSBUUDEgZXhwZW5zZSBkZWR1Y3Rpb25zIGFuZCBzaGFyZWQgYW5udWFsIGNhcHMnLFxuICAgIGRlc2NyaXB0aW9uOlxuICAgICAgJ1JlcXVpcmVzIHJldmlld2VkIGVsaWdpYmxlIGFtb3VudHMgYW5kIGV4aXN0aW5nIHNwb3VzZS9tYW5kYXRvcnktRVBGIGRlZHVjdGlvbiBjb250ZXh0LiBEb2VzIG5vdCB2ZXJpZnkgcmVjZWlwdHMgb3IgcmVjdXJyaW5nIGVsaWdpYmlsaXR5LCBzYXZlIGNsYWltcywgb3IgY2FsY3VsYXRlIEQxIHJlYmF0ZXMuJyxcbiAgfSlcbiAgQEFwaUNyZWF0ZWRSZXNwb25zZSh7IHR5cGU6IFRwMVByZXZpZXdSZXNwb25zZUR0byB9KVxuICB0cDFQcmV2aWV3KEBCb2R5KCkgaW5wdXQ6IFRwMVByZXZpZXdEdG8pIHtcbiAgICByZXR1cm4geyBkYXRhOiBjYWxjdWxhdGVUcDFSZWxpZWZzKGlucHV0KSB9O1xuICB9XG4gIEBQb3N0KCdwcmV2aWV3JylcbiAgQEFwaU9wZXJhdGlvbih7XG4gICAgc3VtbWFyeTogJ1ByZXZpZXcgMjAyNiBzdGFuZGFyZCBQQ0IgZnJvbSBub3JtYWxpemVkIGlucHV0cycsXG4gICAgZGVzY3JpcHRpb246XG4gICAgICAnUmVhZC1vbmx5IGNhbGN1bGF0aW9uLiBObyBlbXBsb3llZSByZWNvcmRzIG9yIHBheXJvbGwgdG90YWxzIGFyZSBjaGFuZ2VkLiBTcGVjaWFsIHRheCByZWdpbWVzIGFuZCByZWxpZWYgZWxpZ2liaWxpdHkgcmVzb2x1dGlvbiByZW1haW4gcGVuZGluZy4nLFxuICB9KVxuICBAQXBpQ3JlYXRlZFJlc3BvbnNlKHsgdHlwZTogUGNiUHJldmlld1Jlc3BvbnNlRHRvIH0pXG4gIHByZXZpZXcoQEJvZHkoKSBpbnB1dDogUGNiUHJldmlld0R0bykge1xuICAgIHJldHVybiB7XG4gICAgICBkYXRhOiB7XG4gICAgICAgIC4uLmNhbGN1bGF0ZVBjYihpbnB1dCksXG4gICAgICAgIHNvdXJjZVNoYTI1NjogUENCX1NPVVJDRV9TSEEyNTYsXG4gICAgICAgIGNoZWNrc3VtS2luZDogJ09SSUdJTkFMX1BERicsXG4gICAgICAgIGxpbWl0YXRpb25zOiBbXG4gICAgICAgICAgJ1N0YW5kYXJkIHJlc2lkZW50L25vbi1yZXNpZGVudCBmb3JtdWxhIG9ubHk7IFJFUCwga25vd2xlZGdlLXdvcmtlciBhbmQgQy1zdWl0ZSByZWdpbWVzIGFyZSBub3Qgc3VwcG9ydGVkLicsXG4gICAgICAgICAgJ0lucHV0IGV4ZW1wdGlvbnMsIHJlbGllZiBlbGlnaWJpbGl0eSBhbmQgVFAxL1RQMyByZWNvbmNpbGlhdGlvbiBtdXN0IGJlIHZlcmlmaWVkIHNlcGFyYXRlbHkuJyxcbiAgICAgICAgICAnV29ya2VkIGV4YW1wbGVzIHBhc3M7IGZ1bGwgTEhETiBjb25mb3JtYW5jZSBhbmQgYXBwcm92YWwgcmVtYWluIHBlbmRpbmcuJyxcbiAgICAgICAgXSxcbiAgICAgIH0sXG4gICAgfTtcbiAgfVxufVxuIl0sInZlcnNpb24iOjN9

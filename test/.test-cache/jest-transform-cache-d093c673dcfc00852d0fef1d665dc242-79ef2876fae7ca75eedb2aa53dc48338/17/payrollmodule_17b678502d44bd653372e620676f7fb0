@@ -1,0 +1,195 @@
+aa5466ba6233abd0c84262bac69d789d
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PayrollModule = exports.PayrollController = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const auth_module_1 = require("../auth/auth.module");
+const page_dto_1 = require("../common/page.dto");
+const payroll_dto_1 = require("./payroll.dto");
+const payroll_service_1 = require("./payroll.service");
+const component_definitions_module_1 = require("./component-definitions.module");
+const payroll_inputs_module_1 = require("./payroll-inputs.module");
+const input_preview_service_1 = require("./input-preview.service");
+const input_preview_dto_1 = require("./input-preview.dto");
+const claim_allocation_module_1 = require("./claim-allocation.module");
+const tax_openings_module_1 = require("./tax-openings.module");
+let PayrollController = class PayrollController {
+    constructor(service, inputs) {
+        this.service = service;
+        this.inputs = inputs;
+    }
+    inputPreview(r, id, employeeId) {
+        return this.inputs.preview(r.membership, id, employeeId);
+    }
+    settings(r) {
+        return this.service.settings(r.membership);
+    }
+    saveSettings(r, d) {
+        return this.service.saveSettings(r.membership, d);
+    }
+    profile(r, id) {
+        return this.service.profile(r.membership, id);
+    }
+    saveProfile(r, id, d) {
+        return this.service.saveProfile(r.membership, id, d);
+    }
+    profileHistory(r, id, q) {
+        return this.service.profileHistory(r.membership, id, q);
+    }
+    create(r, d) {
+        return this.service.create(r.membership, d);
+    }
+    list(r, q) {
+        return this.service.list(r.membership, q);
+    }
+    detail(r, id) {
+        return this.service.detail(r.membership, id);
+    }
+    preflight(r, id) {
+        return this.service.preflight(r.membership, id);
+    }
+};
+exports.PayrollController = PayrollController;
+__decorate([
+    (0, common_1.Get)('payroll/runs/:id/employees/:employeeId/input-preview'),
+    (0, swagger_1.ApiOkResponse)({ type: input_preview_dto_1.InputPreviewResponseDto }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Preview resolved salary, unpaid leave and manual inputs for one draft-run employee',
+        description: 'Requires BASIC earning definition and, when applicable, UNPAID_LEAVE deduction definition with matching statutory bases. Includes allocated approved claims. Returns wage bases, source traces and non-PCB contribution previews using effective profile categories and active rulesets. Missing rules appear as issues. PCB, final net and overtime remain pending; no calculation is persisted.',
+    }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "inputPreview", null);
+__decorate([
+    (0, common_1.Get)('payroll/settings'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "settings", null);
+__decorate([
+    (0, common_1.Put)('payroll/settings'),
+    (0, auth_module_1.Roles)('OWNER'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, payroll_dto_1.PayrollSettingsDto]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "saveSettings", null);
+__decorate([
+    (0, common_1.Get)('employees/:id/payroll-profile'),
+    (0, auth_module_1.Roles)('OWNER', 'HR', 'FINANCE'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Read the latest recorded profile revision, including future scheduled changes',
+    }),
+    (0, swagger_1.ApiOkResponse)({ type: payroll_dto_1.PayrollProfileResponseDto }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "profile", null);
+__decorate([
+    (0, common_1.Put)('employees/:id/payroll-profile'),
+    (0, auth_module_1.Roles)('OWNER', 'HR'),
+    (0, swagger_1.ApiOkResponse)({ type: payroll_dto_1.PayrollProfileResponseDto }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Append an effective-month category and participation revision',
+    }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, payroll_dto_1.PayrollProfileDto]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "saveProfile", null);
+__decorate([
+    (0, common_1.Get)('employees/:id/payroll-profile/history'),
+    (0, auth_module_1.Roles)('OWNER', 'HR', 'FINANCE'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Read immutable category and participation revisions, newest first',
+    }),
+    (0, swagger_1.ApiOkResponse)({ type: payroll_dto_1.PayrollProfileHistoryDto }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, page_dto_1.PageDto]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "profileHistory", null);
+__decorate([
+    (0, common_1.Post)('payroll/runs'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, payroll_dto_1.CreatePayrollDto]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('payroll/runs'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, page_dto_1.PageDto]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('payroll/runs/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "detail", null);
+__decorate([
+    (0, common_1.Get)('payroll/runs/:id/preflight'),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Report setup gaps; calculation remains unavailable until statutory and payroll engines are implemented.',
+    }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PayrollController.prototype, "preflight", null);
+exports.PayrollController = PayrollController = __decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiTags)('payroll'),
+    (0, auth_module_1.Roles)('OWNER', 'FINANCE'),
+    (0, common_1.Controller)(),
+    __metadata("design:paramtypes", [payroll_service_1.PayrollService,
+        input_preview_service_1.InputPreviewService])
+], PayrollController);
+let PayrollModule = class PayrollModule {
+};
+exports.PayrollModule = PayrollModule;
+exports.PayrollModule = PayrollModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            component_definitions_module_1.ComponentDefinitionsModule,
+            payroll_inputs_module_1.PayrollInputsModule,
+            claim_allocation_module_1.ClaimAllocationModule,
+            tax_openings_module_1.TaxOpeningsModule,
+        ],
+        controllers: [PayrollController],
+        providers: [payroll_service_1.PayrollService, input_preview_service_1.InputPreviewService],
+    })
+], PayrollModule);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHBheXJvbGxcXHBheXJvbGwubW9kdWxlLnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7OztBQUFBLDJDQVd3QjtBQUN4Qiw2Q0FLeUI7QUFDekIscURBQTJEO0FBQzNELGlEQUE2QztBQUM3QywrQ0FNdUI7QUFDdkIsdURBQW1EO0FBQ25ELGlGQUE0RTtBQUM1RSxtRUFBOEQ7QUFDOUQsbUVBQThEO0FBQzlELDJEQUE4RDtBQUM5RCx1RUFBa0U7QUFDbEUsK0RBQTBEO0FBTW5ELElBQU0saUJBQWlCLEdBQXZCLE1BQU0saUJBQWlCO0lBQzVCLFlBQ1UsT0FBdUIsRUFDdkIsTUFBMkI7UUFEM0IsWUFBTyxHQUFQLE9BQU8sQ0FBZ0I7UUFDdkIsV0FBTSxHQUFOLE1BQU0sQ0FBcUI7SUFDbEMsQ0FBQztJQVNKLFlBQVksQ0FDSCxDQUFnQixFQUNLLEVBQVUsRUFDRixVQUFrQjtRQUV0RCxPQUFPLElBQUksQ0FBQyxNQUFNLENBQUMsT0FBTyxDQUFDLENBQUMsQ0FBQyxVQUFVLEVBQUUsRUFBRSxFQUFFLFVBQVUsQ0FBQyxDQUFDO0lBQzNELENBQUM7SUFDd0IsUUFBUSxDQUFRLENBQWdCO1FBQ3ZELE9BQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxRQUFRLENBQUMsQ0FBQyxDQUFDLFVBQVUsQ0FBQyxDQUFDO0lBQzdDLENBQUM7SUFDd0MsWUFBWSxDQUM1QyxDQUFnQixFQUNmLENBQXFCO1FBRTdCLE9BQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxZQUFZLENBQUMsQ0FBQyxDQUFDLFVBQVUsRUFBRSxDQUFDLENBQUMsQ0FBQztJQUNwRCxDQUFDO0lBUUQsT0FBTyxDQUFRLENBQWdCLEVBQThCLEVBQVU7UUFDckUsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLEVBQUUsQ0FBQyxDQUFDO0lBQ2hELENBQUM7SUFP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T0FBTyxFQUNMLHlHQUF5RztLQUM1RyxDQUFDO0lBQ1MsV0FBQSxJQUFBLFlBQUcsR0FBRSxDQUFBO0lBQW9CLFdBQUEsSUFBQSxjQUFLLEVBQUMsSUFBSSxFQUFFLHNCQUFhLENBQUMsQ0FBQTs7OztrREFFN0Q7NEJBeEZVLGlCQUFpQjtJQUo3QixJQUFBLHVCQUFhLEdBQUU7SUFDZixJQUFBLGlCQUFPLEVBQUMsU0FBUyxDQUFDO0lBQ2xCLElBQUEsbUJBQUssRUFBQyxPQUFPLEVBQUUsU0FBUyxDQUFDO0lBQ3pCLElBQUEsbUJBQVUsR0FBRTtxQ0FHUSxnQ0FBYztRQUNmLDJDQUFtQjtHQUgxQixpQkFBaUIsQ0F5RjdCO0FBWU0sSUFBTSxhQUFhLEdBQW5CLE1BQU0sYUFBYTtDQUFHLENBQUE7QUFBaEIsc0NBQWE7d0JBQWIsYUFBYTtJQVZ6QixJQUFBLGVBQU0sRUFBQztRQUNOLE9BQU8sRUFBRTtZQUNQLHlEQUEwQjtZQUMxQiwyQ0FBbUI7WUFDbkIsK0NBQXFCO1lBQ3JCLHVDQUFpQjtTQUNsQjtRQUNELFdBQVcsRUFBRSxDQUFDLGlCQUFpQixDQUFDO1FBQ2hDLFNBQVMsRUFBRSxDQUFDLGdDQUFjLEVBQUUsMkNBQW1CLENBQUM7S0FDakQsQ0FBQztHQUNXLGFBQWEsQ0FBRyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJDOlxcVXNlcnNcXHRhbmthXFxPbmVEcml2ZVxcRG9jdW1lbnRzXFxwYXJ0XFxwYXlyb2xsXFxwYXlyb2xsYmVcXHNyY1xccGF5cm9sbFxccGF5cm9sbC5tb2R1bGUudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHtcbiAgQm9keSxcbiAgQ29udHJvbGxlcixcbiAgR2V0LFxuICBNb2R1bGUsXG4gIFBhcmFtLFxuICBQYXJzZVVVSURQaXBlLFxuICBQb3N0LFxuICBQdXQsXG4gIFF1ZXJ5LFxuICBSZXEsXG59IGZyb20gJ0BuZXN0anMvY29tbW9uJztcbmltcG9ydCB7XG4gIEFwaUJlYXJlckF1dGgsXG4gIEFwaU9rUmVzcG9uc2UsXG4gIEFwaU9wZXJhdGlvbixcbiAgQXBpVGFncyxcbn0gZnJvbSAnQG5lc3Rqcy9zd2FnZ2VyJztcbmltcG9ydCB7IFJvbGVzLCBUZW5hbnRSZXF1ZXN0IH0gZnJvbSAnLi4vYXV0aC9hdXRoLm1vZHVsZSc7XG5pbXBvcnQgeyBQYWdlRHRvIH0gZnJvbSAnLi4vY29tbW9uL3BhZ2UuZHRvJztcbmltcG9ydCB7XG4gIENyZWF0ZVBheXJvbGxEdG8sXG4gIFBheXJvbGxQcm9maWxlRHRvLFxuICBQYXlyb2xsU2V0dGluZ3NEdG8sXG4gIFBheXJvbGxQcm9maWxlSGlzdG9yeUR0byxcbiAgUGF5cm9sbFByb2ZpbGVSZXNwb25zZUR0byxcbn0gZnJvbSAnLi9wYXlyb2xsLmR0byc7XG5pbXBvcnQgeyBQYXlyb2xsU2VydmljZSB9IGZyb20gJy4vcGF5cm9sbC5zZXJ2aWNlJztcbmltcG9ydCB7IENvbXBvbmVudERlZmluaXRpb25zTW9kdWxlIH0gZnJvbSAnLi9jb21wb25lbnQtZGVmaW5pdGlvbnMubW9kdWxlJztcbmltcG9ydCB7IFBheXJvbGxJbnB1dHNNb2R1bGUgfSBmcm9tICcuL3BheXJvbGwtaW5wdXRzLm1vZHVsZSc7XG5pbXBvcnQgeyBJbnB1dFByZXZpZXdTZXJ2aWNlIH0gZnJvbSAnLi9pbnB1dC1wcmV2aWV3LnNlcnZpY2UnO1xuaW1wb3J0IHsgSW5wdXRQcmV2aWV3UmVzcG9uc2VEdG8gfSBmcm9tICcuL2lucHV0LXByZXZpZXcuZHRvJztcbmltcG9ydCB7IENsYWltQWxsb2NhdGlvbk1vZHVsZSB9IGZyb20gJy4vY2xhaW0tYWxsb2NhdGlvbi5tb2R1bGUnO1xuaW1wb3J0IHsgVGF4T3BlbmluZ3NNb2R1bGUgfSBmcm9tICcuL3RheC1vcGVuaW5ncy5tb2R1bGUnO1xuXG5AQXBpQmVhcmVyQXV0aCgpXG5AQXBpVGFncygncGF5cm9sbCcpXG5AUm9sZXMoJ09XTkVSJywgJ0ZJTkFOQ0UnKVxuQENvbnRyb2xsZXIoKVxuZXhwb3J0IGNsYXNzIFBheXJvbGxDb250cm9sbGVyIHtcbiAgY29uc3RydWN0b3IoXG4gICAgcHJpdmF0ZSBzZXJ2aWNlOiBQYXlyb2xsU2VydmljZSxcbiAgICBwcml2YXRlIGlucHV0czogSW5wdXRQcmV2aWV3U2VydmljZSxcbiAgKSB7fVxuICBAR2V0KCdwYXlyb2xsL3J1bnMvOmlkL2VtcGxveWVlcy86ZW1wbG95ZWVJZC9pbnB1dC1wcmV2aWV3JylcbiAgQEFwaU9rUmVzcG9uc2UoeyB0eXBlOiBJbnB1dFByZXZpZXdSZXNwb25zZUR0byB9KVxuICBAQXBpT3BlcmF0aW9uKHtcbiAgICBzdW1tYXJ5OlxuICAgICAgJ1ByZXZpZXcgcmVzb2x2ZWQgc2FsYXJ5LCB1bnBhaWQgbGVhdmUgYW5kIG1hbnVhbCBpbnB1dHMgZm9yIG9uZSBkcmFmdC1ydW4gZW1wbG95ZWUnLFxuICAgIGRlc2NyaXB0aW9uOlxuICAgICAgJ1JlcXVpcmVzIEJBU0lDIGVhcm5pbmcgZGVmaW5pdGlvbiBhbmQsIHdoZW4gYXBwbGljYWJsZSwgVU5QQUlEX0xFQVZFIGRlZHVjdGlvbiBkZWZpbml0aW9uIHdpdGggbWF0Y2hpbmcgc3RhdHV0b3J5IGJhc2VzLiBJbmNsdWRlcyBhbGxvY2F0ZWQgYXBwcm92ZWQgY2xhaW1zLiBSZXR1cm5zIHdhZ2UgYmFzZXMsIHNvdXJjZSB0cmFjZXMgYW5kIG5vbi1QQ0IgY29udHJpYnV0aW9uIHByZXZpZXdzIHVzaW5nIGVmZmVjdGl2ZSBwcm9maWxlIGNhdGVnb3JpZXMgYW5kIGFjdGl2ZSBydWxlc2V0cy4gTWlzc2luZyBydWxlcyBhcHBlYXIgYXMgaXNzdWVzLiBQQ0IsIGZpbmFsIG5ldCBhbmQgb3ZlcnRpbWUgcmVtYWluIHBlbmRpbmc7IG5vIGNhbGN1bGF0aW9uIGlzIHBlcnNpc3RlZC4nLFxuICB9KVxuICBpbnB1dFByZXZpZXcoXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQFBhcmFtKCdpZCcsIFBhcnNlVVVJRFBpcGUpIGlkOiBzdHJpbmcsXG4gICAgQFBhcmFtKCdlbXBsb3llZUlkJywgUGFyc2VVVUlEUGlwZSkgZW1wbG95ZWVJZDogc3RyaW5nLFxuICApIHtcbiAgICByZXR1cm4gdGhpcy5pbnB1dHMucHJldmlldyhyLm1lbWJlcnNoaXAsIGlkLCBlbXBsb3llZUlkKTtcbiAgfVxuICBAR2V0KCdwYXlyb2xsL3NldHRpbmdzJykgc2V0dGluZ3MoQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QpIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLnNldHRpbmdzKHIubWVtYmVyc2hpcCk7XG4gIH1cbiAgQFB1dCgncGF5cm9sbC9zZXR0aW5ncycpIEBSb2xlcygnT1dORVInKSBzYXZlU2V0dGluZ3MoXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQEJvZHkoKSBkOiBQYXlyb2xsU2V0dGluZ3NEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2Uuc2F2ZVNldHRpbmdzKHIubWVtYmVyc2hpcCwgZCk7XG4gIH1cbiAgQEdldCgnZW1wbG95ZWVzLzppZC9wYXlyb2xsLXByb2ZpbGUnKVxuICBAUm9sZXMoJ09XTkVSJywgJ0hSJywgJ0ZJTkFOQ0UnKVxuICBAQXBpT3BlcmF0aW9uKHtcbiAgICBzdW1tYXJ5OlxuICAgICAgJ1JlYWQgdGhlIGxhdGVzdCByZWNvcmRlZCBwcm9maWxlIHJldmlzaW9uLCBpbmNsdWRpbmcgZnV0dXJlIHNjaGVkdWxlZCBjaGFuZ2VzJyxcbiAgfSlcbiAgQEFwaU9rUmVzcG9uc2UoeyB0eXBlOiBQYXlyb2xsUHJvZmlsZVJlc3BvbnNlRHRvIH0pXG4gIHByb2ZpbGUoQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsIEBQYXJhbSgnaWQnLCBQYXJzZVVVSURQaXBlKSBpZDogc3RyaW5nKSB7XG4gICAgcmV0dXJuIHRoaXMuc2VydmljZS5wcm9maWxlKHIubWVtYmVyc2hpcCwgaWQpO1xuICB9XG4gIEBQdXQoJ2VtcGxveWVlcy86aWQvcGF5cm9sbC1wcm9maWxlJylcbiAgQFJvbGVzKCdPV05FUicsICdIUicpXG4gIEBBcGlPa1Jlc3BvbnNlKHsgdHlwZTogUGF5cm9sbFByb2ZpbGVSZXNwb25zZUR0byB9KVxuICBAQXBpT3BlcmF0aW9uKHtcbiAgICBzdW1tYXJ5OiAnQXBwZW5kIGFuIGVmZmVjdGl2ZS1tb250aCBjYXRlZ29yeSBhbmQgcGFydGljaXBhdGlvbiByZXZpc2lvbicsXG4gIH0pXG4gIHNhdmVQcm9maWxlKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBQYXJhbSgnaWQnLCBQYXJzZVVVSURQaXBlKSBpZDogc3RyaW5nLFxuICAgIEBCb2R5KCkgZDogUGF5cm9sbFByb2ZpbGVEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2Uuc2F2ZVByb2ZpbGUoci5tZW1iZXJzaGlwLCBpZCwgZCk7XG4gIH1cbiAgQEdldCgnZW1wbG95ZWVzLzppZC9wYXlyb2xsLXByb2ZpbGUvaGlzdG9yeScpXG4gIEBSb2xlcygnT1dORVInLCAnSFInLCAnRklOQU5DRScpXG4gIEBBcGlPcGVyYXRpb24oe1xuICAgIHN1bW1hcnk6XG4gICAgICAnUmVhZCBpbW11dGFibGUgY2F0ZWdvcnkgYW5kIHBhcnRpY2lwYXRpb24gcmV2aXNpb25zLCBuZXdlc3QgZmlyc3QnLFxuICB9KVxuICBAQXBpT2tSZXNwb25zZSh7IHR5cGU6IFBheXJvbGxQcm9maWxlSGlzdG9yeUR0byB9KVxuICBwcm9maWxlSGlzdG9yeShcbiAgICBAUmVxKCkgcjogVGVuYW50UmVxdWVzdCxcbiAgICBAUGFyYW0oJ2lkJywgUGFyc2VVVUlEUGlwZSkgaWQ6IHN0cmluZyxcbiAgICBAUXVlcnkoKSBxOiBQYWdlRHRvLFxuICApIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLnByb2ZpbGVIaXN0b3J5KHIubWVtYmVyc2hpcCwgaWQsIHEpO1xuICB9XG4gIEBQb3N0KCdwYXlyb2xsL3J1bnMnKSBjcmVhdGUoXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQEJvZHkoKSBkOiBDcmVhdGVQYXlyb2xsRHRvLFxuICApIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLmNyZWF0ZShyLm1lbWJlcnNoaXAsIGQpO1xuICB9XG4gIEBHZXQoJ3BheXJvbGwvcnVucycpIGxpc3QoQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsIEBRdWVyeSgpIHE6IFBhZ2VEdG8pIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLmxpc3Qoci5tZW1iZXJzaGlwLCBxKTtcbiAgfVxuICBAR2V0KCdwYXlyb2xsL3J1bnMvOmlkJykgZGV0YWlsKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBQYXJhbSgnaWQnLCBQYXJzZVVVSURQaXBlKSBpZDogc3RyaW5nLFxuICApIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLmRldGFpbChyLm1lbWJlcnNoaXAsIGlkKTtcbiAgfVxuICBAR2V0KCdwYXlyb2xsL3J1bnMvOmlkL3ByZWZsaWdodCcpXG4gIEBBcGlPcGVyYXRpb24oe1xuICAgIHN1bW1hcnk6XG4gICAgICAnUmVwb3J0IHNldHVwIGdhcHM7IGNhbGN1bGF0aW9uIHJlbWFpbnMgdW5hdmFpbGFibGUgdW50aWwgc3RhdHV0b3J5IGFuZCBwYXlyb2xsIGVuZ2luZXMgYXJlIGltcGxlbWVudGVkLicsXG4gIH0pXG4gIHByZWZsaWdodChAUmVxKCkgcjogVGVuYW50UmVxdWVzdCwgQFBhcmFtKCdpZCcsIFBhcnNlVVVJRFBpcGUpIGlkOiBzdHJpbmcpIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLnByZWZsaWdodChyLm1lbWJlcnNoaXAsIGlkKTtcbiAgfVxufVxuXG5ATW9kdWxlKHtcbiAgaW1wb3J0czogW1xuICAgIENvbXBvbmVudERlZmluaXRpb25zTW9kdWxlLFxuICAgIFBheXJvbGxJbnB1dHNNb2R1bGUsXG4gICAgQ2xhaW1BbGxvY2F0aW9uTW9kdWxlLFxuICAgIFRheE9wZW5pbmdzTW9kdWxlLFxuICBdLFxuICBjb250cm9sbGVyczogW1BheXJvbGxDb250cm9sbGVyXSxcbiAgcHJvdmlkZXJzOiBbUGF5cm9sbFNlcnZpY2UsIElucHV0UHJldmlld1NlcnZpY2VdLFxufSlcbmV4cG9ydCBjbGFzcyBQYXlyb2xsTW9kdWxlIHt9XG4iXSwidmVyc2lvbiI6M30=

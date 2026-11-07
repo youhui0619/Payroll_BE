@@ -1,0 +1,176 @@
+3bcf4b26cc04a0da756226435f41b833
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PayrollProfileHistoryDto = exports.PayrollProfileResponseDto = exports.PayrollProfileVersionDto = exports.CreatePayrollDto = exports.PayrollProfileDto = exports.PayrollSettingsDto = void 0;
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
+class PayrollSettingsDto {
+}
+exports.PayrollSettingsDto = PayrollSettingsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 31 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(31),
+    __metadata("design:type", Number)
+], PayrollSettingsDto.prototype, "cutoffDay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 31 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(31),
+    __metadata("design:type", Number)
+], PayrollSettingsDto.prototype, "payDay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['MYR'] }),
+    (0, class_validator_1.IsIn)(['MYR']),
+    __metadata("design:type", String)
+], PayrollSettingsDto.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Require an approver other than the payroll creator.',
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], PayrollSettingsDto.prototype, "makerChecker", void 0);
+class PayrollProfileDto {
+}
+exports.PayrollProfileDto = PayrollProfileDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        format: 'date',
+        description: 'First day of the contribution month. Same-month corrections append a revision.',
+    }),
+    (0, class_validator_1.IsDateString)({ strict: true }),
+    (0, class_validator_1.Matches)(/^\d{4}-\d{2}-01$/),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "effectiveFrom", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ enum: ['ENROLLED', 'OPTED_OUT', 'MANDATORY', 'NOT_ELIGIBLE'] }),
+    (0, class_validator_1.IsIn)(['ENROLLED', 'OPTED_OUT', 'MANDATORY', 'NOT_ELIGIBLE']),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "lindungParticipation", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reason and reference supporting this category/participation change.',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 1000),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "reason", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "epfCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "socsoCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "eisCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "lindungCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "pcbCategory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 80),
+    __metadata("design:type", String)
+], PayrollProfileDto.prototype, "hrdCategory", void 0);
+class CreatePayrollDto {
+}
+exports.CreatePayrollDto = CreatePayrollDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 2000, maximum: 2200 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(2000),
+    (0, class_validator_1.Max)(2200),
+    __metadata("design:type", Number)
+], CreatePayrollDto.prototype, "year", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 12 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(12),
+    __metadata("design:type", Number)
+], CreatePayrollDto.prototype, "month", void 0);
+class PayrollProfileVersionDto extends PayrollProfileDto {
+}
+exports.PayrollProfileVersionDto = PayrollProfileVersionDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], PayrollProfileVersionDto.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], PayrollProfileVersionDto.prototype, "companyId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], PayrollProfileVersionDto.prototype, "employeeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Number)
+], PayrollProfileVersionDto.prototype, "revision", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], PayrollProfileVersionDto.prototype, "recordedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'date-time' }),
+    __metadata("design:type", String)
+], PayrollProfileVersionDto.prototype, "createdAt", void 0);
+class PayrollProfileResponseDto {
+}
+exports.PayrollProfileResponseDto = PayrollProfileResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: PayrollProfileVersionDto, nullable: true }),
+    __metadata("design:type", PayrollProfileVersionDto)
+], PayrollProfileResponseDto.prototype, "data", void 0);
+class PayrollProfileHistoryDto {
+}
+exports.PayrollProfileHistoryDto = PayrollProfileHistoryDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: [PayrollProfileVersionDto] }),
+    __metadata("design:type", Array)
+], PayrollProfileHistoryDto.prototype, "data", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        type: 'object',
+        properties: {
+            page: { type: 'integer' },
+            pageSize: { type: 'integer' },
+            total: { type: 'integer' },
+            totalPages: { type: 'integer' },
+        },
+    }),
+    __metadata("design:type", Object)
+], PayrollProfileHistoryDto.prototype, "meta", void 0);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHBheXJvbGxcXHBheXJvbGwuZHRvLnRzIiwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7OztBQUFBLDZDQUE4QztBQUM5QyxxREFVeUI7QUFFekIsTUFBYSxrQkFBa0I7Q0FpQjlCO0FBakJELGdEQWlCQztBQVpDO0lBSkMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsT0FBTyxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsRUFBRSxFQUFFLENBQUM7SUFDeEMsSUFBQSx1QkFBSyxHQUFFO0lBQ1AsSUFBQSxxQkFBRyxFQUFDLENBQUMsQ0FBQztJQUNOLElBQUEscUJBQUcsRUFBQyxFQUFFLENBQUM7O3FEQUNVO0FBS2xCO0lBSkMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsT0FBTyxFQUFFLENBQUMsRUFBRSxPQUFPLEVBQUUsRUFBRSxFQUFFLENBQUM7SUFDeEMsSUFBQSx1QkFBSyxHQUFFO0lBQ1AsSUFBQSxxQkFBRyxFQUFDLENBQUMsQ0FBQztJQUNOLElBQUEscUJBQUcsRUFBQyxFQUFFLENBQUM7O2tEQUNPO0FBQ2dDO0lBQTlDLElBQUEscUJBQVcsRUFBQyxFQUFFLElBQUksRUFBRSxDQUFDLEtBQUssQ0FBQyxFQUFFLENBQUM7SUFBRSxJQUFBLHNCQUFJLEVBQUMsQ0FBQyxLQUFLLENBQUMsQ0FBQzs7b0RBQWtCO0FBS2hFO0lBSkMsSUFBQSxxQkFBVyxFQUFDO1FBQ1gsV0FBVyxFQUFFLHFEQUFxRDtLQUNuRSxDQUFDO0lBQ0QsSUFBQSwyQkFBUyxHQUFFOzt3REFDVTtBQUd4QixNQUFhLGlCQUFpQjtDQXlCN0I7QUF6QkQsOENBeUJDO0FBakJDO0lBUEMsSUFBQSxxQkFBVyxFQUFDO1FBQ1gsTUFBTSxFQUFFLE1BQU07UUFDZCxXQUFXLEVBQ1QsZ0ZBQWdGO0tBQ25GLENBQUM7SUFDRCxJQUFBLDhCQUFZLEVBQUMsRUFBRSxNQUFNLEVBQUUsSUFBSSxFQUFFLENBQUM7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UUFBUSxFQUFFLElBQUksRUFBRSxDQUFDOzhCQUMxRCx3QkFBd0I7dURBQVE7QUFFeEMsTUFBYSx3QkFBd0I7Q0FhcEM7QUFiRCw0REFhQztBQVhDO0lBREMsSUFBQSxxQkFBVyxFQUFDLEVBQUUsSUFBSSxFQUFFLENBQUMsd0JBQXdCLENBQUMsRUFBRSxDQUFDOztzREFDakI7QUFVakM7SUFUQyxJQUFBLHFCQUFXLEVBQUM7UUFDWCxJQUFJLEVBQUUsUUFBUTtRQUNkLFVBQVUsRUFBRTtZQUNWLElBQUksRUFBRSxFQUFFLElBQUksRUFBRSxTQUFTLEVBQUU7WUFDekIsUUFBUSxFQUFFLEVBQUUsSUFBSSxFQUFFLFNBQVMsRUFBRTtZQUM3QixLQUFLLEVBQUUsRUFBRSxJQUFJLEVBQUUsU0FBUyxFQUFFO1lBQzFCLFVBQVUsRUFBRSxFQUFFLElBQUksRUFBRSxTQUFTLEVBQUU7U0FDaEM7S0FDRixDQUFDOztzREFDMkIiLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHBheXJvbGxcXHBheXJvbGwuZHRvLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IEFwaVByb3BlcnR5IH0gZnJvbSAnQG5lc3Rqcy9zd2FnZ2VyJztcbmltcG9ydCB7XG4gIElzQm9vbGVhbixcbiAgSXNEYXRlU3RyaW5nLFxuICBJc0luLFxuICBJc0ludCxcbiAgSXNTdHJpbmcsXG4gIExlbmd0aCxcbiAgTWF4LFxuICBNaW4sXG4gIE1hdGNoZXMsXG59IGZyb20gJ2NsYXNzLXZhbGlkYXRvcic7XG5cbmV4cG9ydCBjbGFzcyBQYXlyb2xsU2V0dGluZ3NEdG8ge1xuICBAQXBpUHJvcGVydHkoeyBtaW5pbXVtOiAxLCBtYXhpbXVtOiAzMSB9KVxuICBASXNJbnQoKVxuICBATWluKDEpXG4gIEBNYXgoMzEpXG4gIGN1dG9mZkRheTogbnVtYmVyO1xuICBAQXBpUHJvcGVydHkoeyBtaW5pbXVtOiAxLCBtYXhpbXVtOiAzMSB9KVxuICBASXNJbnQoKVxuICBATWluKDEpXG4gIEBNYXgoMzEpXG4gIHBheURheTogbnVtYmVyO1xuICBAQXBpUHJvcGVydHkoeyBlbnVtOiBbJ01ZUiddIH0pIEBJc0luKFsnTVlSJ10pIGN1cnJlbmN5OiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7XG4gICAgZGVzY3JpcHRpb246ICdSZXF1aXJlIGFuIGFwcHJvdmVyIG90aGVyIHRoYW4gdGhlIHBheXJvbGwgY3JlYXRvci4nLFxuICB9KVxuICBASXNCb29sZWFuKClcbiAgbWFrZXJDaGVja2VyOiBib29sZWFuO1xufVxuXG5leHBvcnQgY2xhc3MgUGF5cm9sbFByb2ZpbGVEdG8ge1xuICBAQXBpUHJvcGVydHkoe1xuICAgIGZvcm1hdDogJ2RhdGUnLFxuICAgIGRlc2NyaXB0aW9uOlxuICAgICAgJ0ZpcnN0IGRheSBvZiB0aGUgY29udHJpYnV0aW9uIG1vbnRoLiBTYW1lLW1vbnRoIGNvcnJlY3Rpb25zIGFwcGVuZCBhIHJldmlzaW9uLicsXG4gIH0pXG4gIEBJc0RhdGVTdHJpbmcoeyBzdHJpY3Q6IHRydWUgfSlcbiAgQE1hdGNoZXMoL15cXGR7NH0tXFxkezJ9LTAxJC8pXG4gIGVmZmVjdGl2ZUZyb206IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZW51bTogWydFTlJPTExFRCcsICdPUFRFRF9PVVQnLCAnTUFOREFUT1JZJywgJ05PVF9FTElHSUJMRSddIH0pXG4gIEBJc0luKFsnRU5ST0xMRUQnLCAnT1BURURfT1VUJywgJ01BTkRBVE9SWScsICdOT1RfRUxJR0lCTEUnXSlcbiAgbGluZHVuZ1BhcnRpY2lwYXRpb246IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHtcbiAgICBkZXNjcmlwdGlvbjpcbiAgICAgICdSZWFzb24gYW5kIHJlZmVyZW5jZSBzdXBwb3J0aW5nIHRoaXMgY2F0ZWdvcnkvcGFydGljaXBhdGlvbiBjaGFuZ2UuJyxcbiAgfSlcbiAgQElzU3RyaW5nKClcbiAgQExlbmd0aCgxLCAxMDAwKVxuICByZWFzb246IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLCA4MCkgZXBmQ2F0ZWdvcnk6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLCA4MCkgc29jc29DYXRlZ29yeTogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoKSBASXNTdHJpbmcoKSBATGVuZ3RoKDEsIDgwKSBlaXNDYXRlZ29yeTogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoKSBASXNTdHJpbmcoKSBATGVuZ3RoKDEsIDgwKSBsaW5kdW5nQ2F0ZWdvcnk6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLCA4MCkgcGNiQ2F0ZWdvcnk6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLCA4MCkgaHJkQ2F0ZWdvcnk6IHN0cmluZztcbn1cblxuZXhwb3J0IGNsYXNzIENyZWF0ZVBheXJvbGxEdG8ge1xuICBAQXBpUHJvcGVydHkoeyBtaW5pbXVtOiAyMDAwLCBtYXhpbXVtOiAyMjAwIH0pXG4gIEBJc0ludCgpXG4gIEBNaW4oMjAwMClcbiAgQE1heCgyMjAwKVxuICB5ZWFyOiBudW1iZXI7XG4gIEBBcGlQcm9wZXJ0eSh7IG1pbmltdW06IDEsIG1heGltdW06IDEyIH0pXG4gIEBJc0ludCgpXG4gIEBNaW4oMSlcbiAgQE1heCgxMilcbiAgbW9udGg6IG51bWJlcjtcbn1cblxuZXhwb3J0IGNsYXNzIFBheXJvbGxQcm9maWxlVmVyc2lvbkR0byBleHRlbmRzIFBheXJvbGxQcm9maWxlRHRvIHtcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgaWQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgY29tcGFueUlkOiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IGZvcm1hdDogJ3V1aWQnIH0pIGVtcGxveWVlSWQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgcmV2aXNpb246IG51bWJlcjtcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgcmVjb3JkZWRCeTogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoeyBmb3JtYXQ6ICdkYXRlLXRpbWUnIH0pIGNyZWF0ZWRBdDogc3RyaW5nO1xufVxuZXhwb3J0IGNsYXNzIFBheXJvbGxQcm9maWxlUmVzcG9uc2VEdG8ge1xuICBAQXBpUHJvcGVydHkoeyB0eXBlOiBQYXlyb2xsUHJvZmlsZVZlcnNpb25EdG8sIG51bGxhYmxlOiB0cnVlIH0pXG4gIGRhdGE6IFBheXJvbGxQcm9maWxlVmVyc2lvbkR0byB8IG51bGw7XG59XG5leHBvcnQgY2xhc3MgUGF5cm9sbFByb2ZpbGVIaXN0b3J5RHRvIHtcbiAgQEFwaVByb3BlcnR5KHsgdHlwZTogW1BheXJvbGxQcm9maWxlVmVyc2lvbkR0b10gfSlcbiAgZGF0YTogUGF5cm9sbFByb2ZpbGVWZXJzaW9uRHRvW107XG4gIEBBcGlQcm9wZXJ0eSh7XG4gICAgdHlwZTogJ29iamVjdCcsXG4gICAgcHJvcGVydGllczoge1xuICAgICAgcGFnZTogeyB0eXBlOiAnaW50ZWdlcicgfSxcbiAgICAgIHBhZ2VTaXplOiB7IHR5cGU6ICdpbnRlZ2VyJyB9LFxuICAgICAgdG90YWw6IHsgdHlwZTogJ2ludGVnZXInIH0sXG4gICAgICB0b3RhbFBhZ2VzOiB7IHR5cGU6ICdpbnRlZ2VyJyB9LFxuICAgIH0sXG4gIH0pXG4gIG1ldGE6IFJlY29yZDxzdHJpbmcsIG51bWJlcj47XG59XG4iXSwidmVyc2lvbiI6M30=

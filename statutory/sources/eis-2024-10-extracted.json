@@ -1,0 +1,395 @@
+{
+  "sourceUrl": "https://www.perkeso.gov.my/images/dokumen/151124-Rate%20Contribution%20ACT%20800.pdf",
+  "retrievedDate": "2026-10-30",
+  "extraction": "Transcribed from rendered official one-page table. Rows 1-64; final above-RM6000 row is represented by the ceiling.",
+  "rules": {
+    "kind": "TABLE",
+    "ceiling": "6000.00",
+    "bands": [
+      {
+        "lower": "0.00",
+        "upper": "30.00",
+        "employee": "0.05",
+        "employer": "0.05"
+      },
+      {
+        "lower": "30.00",
+        "upper": "50.00",
+        "employee": "0.10",
+        "employer": "0.10"
+      },
+      {
+        "lower": "50.00",
+        "upper": "70.00",
+        "employee": "0.15",
+        "employer": "0.15"
+      },
+      {
+        "lower": "70.00",
+        "upper": "100.00",
+        "employee": "0.20",
+        "employer": "0.20"
+      },
+      {
+        "lower": "100.00",
+        "upper": "140.00",
+        "employee": "0.25",
+        "employer": "0.25"
+      },
+      {
+        "lower": "140.00",
+        "upper": "200.00",
+        "employee": "0.35",
+        "employer": "0.35"
+      },
+      {
+        "lower": "200.00",
+        "upper": "300.00",
+        "employee": "0.50",
+        "employer": "0.50"
+      },
+      {
+        "lower": "300.00",
+        "upper": "400.00",
+        "employee": "0.70",
+        "employer": "0.70"
+      },
+      {
+        "lower": "400.00",
+        "upper": "500.00",
+        "employee": "0.90",
+        "employer": "0.90"
+      },
+      {
+        "lower": "500.00",
+        "upper": "600.00",
+        "employee": "1.10",
+        "employer": "1.10"
+      },
+      {
+        "lower": "600.00",
+        "upper": "700.00",
+        "employee": "1.30",
+        "employer": "1.30"
+      },
+      {
+        "lower": "700.00",
+        "upper": "800.00",
+        "employee": "1.50",
+        "employer": "1.50"
+      },
+      {
+        "lower": "800.00",
+        "upper": "900.00",
+        "employee": "1.70",
+        "employer": "1.70"
+      },
+      {
+        "lower": "900.00",
+        "upper": "1000.00",
+        "employee": "1.90",
+        "employer": "1.90"
+      },
+      {
+        "lower": "1000.00",
+        "upper": "1100.00",
+        "employee": "2.10",
+        "employer": "2.10"
+      },
+      {
+        "lower": "1100.00",
+        "upper": "1200.00",
+        "employee": "2.30",
+        "employer": "2.30"
+      },
+      {
+        "lower": "1200.00",
+        "upper": "1300.00",
+        "employee": "2.50",
+        "employer": "2.50"
+      },
+      {
+        "lower": "1300.00",
+        "upper": "1400.00",
+        "employee": "2.70",
+        "employer": "2.70"
+      },
+      {
+        "lower": "1400.00",
+        "upper": "1500.00",
+        "employee": "2.90",
+        "employer": "2.90"
+      },
+      {
+        "lower": "1500.00",
+        "upper": "1600.00",
+        "employee": "3.10",
+        "employer": "3.10"
+      },
+      {
+        "lower": "1600.00",
+        "upper": "1700.00",
+        "employee": "3.30",
+        "employer": "3.30"
+      },
+      {
+        "lower": "1700.00",
+        "upper": "1800.00",
+        "employee": "3.50",
+        "employer": "3.50"
+      },
+      {
+        "lower": "1800.00",
+        "upper": "1900.00",
+        "employee": "3.70",
+        "employer": "3.70"
+      },
+      {
+        "lower": "1900.00",
+        "upper": "2000.00",
+        "employee": "3.90",
+        "employer": "3.90"
+      },
+      {
+        "lower": "2000.00",
+        "upper": "2100.00",
+        "employee": "4.10",
+        "employer": "4.10"
+      },
+      {
+        "lower": "2100.00",
+        "upper": "2200.00",
+        "employee": "4.30",
+        "employer": "4.30"
+      },
+      {
+        "lower": "2200.00",
+        "upper": "2300.00",
+        "employee": "4.50",
+        "employer": "4.50"
+      },
+      {
+        "lower": "2300.00",
+        "upper": "2400.00",
+        "employee": "4.70",
+        "employer": "4.70"
+      },
+      {
+        "lower": "2400.00",
+        "upper": "2500.00",
+        "employee": "4.90",
+        "employer": "4.90"
+      },
+      {
+        "lower": "2500.00",
+        "upper": "2600.00",
+        "employee": "5.10",
+        "employer": "5.10"
+      },
+      {
+        "lower": "2600.00",
+        "upper": "2700.00",
+        "employee": "5.30",
+        "employer": "5.30"
+      },
+      {
+        "lower": "2700.00",
+        "upper": "2800.00",
+        "employee": "5.50",
+        "employer": "5.50"
+      },
+      {
+        "lower": "2800.00",
+        "upper": "2900.00",
+        "employee": "5.70",
+        "employer": "5.70"
+      },
+      {
+        "lower": "2900.00",
+        "upper": "3000.00",
+        "employee": "5.90",
+        "employer": "5.90"
+      },
+      {
+        "lower": "3000.00",
+        "upper": "3100.00",
+        "employee": "6.10",
+        "employer": "6.10"
+      },
+      {
+        "lower": "3100.00",
+        "upper": "3200.00",
+        "employee": "6.30",
+        "employer": "6.30"
+      },
+      {
+        "lower": "3200.00",
+        "upper": "3300.00",
+        "employee": "6.50",
+        "employer": "6.50"
+      },
+      {
+        "lower": "3300.00",
+        "upper": "3400.00",
+        "employee": "6.70",
+        "employer": "6.70"
+      },
+      {
+        "lower": "3400.00",
+        "upper": "3500.00",
+        "employee": "6.90",
+        "employer": "6.90"
+      },
+      {
+        "lower": "3500.00",
+        "upper": "3600.00",
+        "employee": "7.10",
+        "employer": "7.10"
+      },
+      {
+        "lower": "3600.00",
+        "upper": "3700.00",
+        "employee": "7.30",
+        "employer": "7.30"
+      },
+      {
+        "lower": "3700.00",
+        "upper": "3800.00",
+        "employee": "7.50",
+        "employer": "7.50"
+      },
+      {
+        "lower": "3800.00",
+        "upper": "3900.00",
+        "employee": "7.70",
+        "employer": "7.70"
+      },
+      {
+        "lower": "3900.00",
+        "upper": "4000.00",
+        "employee": "7.90",
+        "employer": "7.90"
+      },
+      {
+        "lower": "4000.00",
+        "upper": "4100.00",
+        "employee": "8.10",
+        "employer": "8.10"
+      },
+      {
+        "lower": "4100.00",
+        "upper": "4200.00",
+        "employee": "8.30",
+        "employer": "8.30"
+      },
+      {
+        "lower": "4200.00",
+        "upper": "4300.00",
+        "employee": "8.50",
+        "employer": "8.50"
+      },
+      {
+        "lower": "4300.00",
+        "upper": "4400.00",
+        "employee": "8.70",
+        "employer": "8.70"
+      },
+      {
+        "lower": "4400.00",
+        "upper": "4500.00",
+        "employee": "8.90",
+        "employer": "8.90"
+      },
+      {
+        "lower": "4500.00",
+        "upper": "4600.00",
+        "employee": "9.10",
+        "employer": "9.10"
+      },
+      {
+        "lower": "4600.00",
+        "upper": "4700.00",
+        "employee": "9.30",
+        "employer": "9.30"
+      },
+      {
+        "lower": "4700.00",
+        "upper": "4800.00",
+        "employee": "9.50",
+        "employer": "9.50"
+      },
+      {
+        "lower": "4800.00",
+        "upper": "4900.00",
+        "employee": "9.70",
+        "employer": "9.70"
+      },
+      {
+        "lower": "4900.00",
+        "upper": "5000.00",
+        "employee": "9.90",
+        "employer": "9.90"
+      },
+      {
+        "lower": "5000.00",
+        "upper": "5100.00",
+        "employee": "10.10",
+        "employer": "10.10"
+      },
+      {
+        "lower": "5100.00",
+        "upper": "5200.00",
+        "employee": "10.30",
+        "employer": "10.30"
+      },
+      {
+        "lower": "5200.00",
+        "upper": "5300.00",
+        "employee": "10.50",
+        "employer": "10.50"
+      },
+      {
+        "lower": "5300.00",
+        "upper": "5400.00",
+        "employee": "10.70",
+        "employer": "10.70"
+      },
+      {
+        "lower": "5400.00",
+        "upper": "5500.00",
+        "employee": "10.90",
+        "employer": "10.90"
+      },
+      {
+        "lower": "5500.00",
+        "upper": "5600.00",
+        "employee": "11.10",
+        "employer": "11.10"
+      },
+      {
+        "lower": "5600.00",
+        "upper": "5700.00",
+        "employee": "11.30",
+        "employer": "11.30"
+      },
+      {
+        "lower": "5700.00",
+        "upper": "5800.00",
+        "employee": "11.50",
+        "employer": "11.50"
+      },
+      {
+        "lower": "5800.00",
+        "upper": "5900.00",
+        "employee": "11.70",
+        "employer": "11.70"
+      },
+      {
+        "lower": "5900.00",
+        "upper": "6000.00",
+        "employee": "11.90",
+        "employer": "11.90"
+      }
+    ]
+  }
+}

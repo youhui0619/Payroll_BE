@@ -1,0 +1,19 @@
+{
+  "sourceUrl": "https://www.kwsp.gov.my/en/employer/responsibilities/mandatory-contribution",
+  "scheduleUrl": "https://www.kwsp.gov.my/documents/d/guest/third_schedule_from_-1-october-2025",
+  "retrievedDate": "2026-10-31",
+  "extraction": "Numeric formulas and examples transcribed from official contribution guidance, examples 2.1 through 2.4. The combined raw contribution is rounded to the next ringgit. Allocation of the residual to the employer or employee is not specified by these examples.",
+  "rates": {
+    "A": { "employeeRate": "0.11", "employerRate": "0.12" },
+    "C": { "employeeRate": "0.055", "employerRate": "0.06" },
+    "E": { "employeeRate": "0.00", "employerRate": "0.04" },
+    "F": { "employeeRate": "0.02", "employerRate": "0.02" }
+  },
+  "examples": [
+    { "part": "A", "wages": "21250.00", "employee": "2337.50", "employer": "2550.00", "total": "4888.00" },
+    { "part": "C", "wages": "21250.00", "employee": "1168.75", "employer": "1275.00", "total": "2444.00" },
+    { "part": "E", "wages": "21250.00", "employee": "0.00", "employer": "850.00", "total": "850.00" },
+    { "part": "F", "wages": "3250.00", "employee": "65.00", "employer": "65.00", "total": "130.00" },
+    { "part": "F", "wages": "6710.00", "employee": "134.20", "employer": "134.20", "total": "269.00" }
+  ]
+}

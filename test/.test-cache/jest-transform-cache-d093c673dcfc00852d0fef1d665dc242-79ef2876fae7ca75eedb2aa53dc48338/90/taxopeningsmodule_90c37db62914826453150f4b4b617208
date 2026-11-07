@@ -1,0 +1,253 @@
+ee8bb9517dc14fd3775d1a8206d5a22c
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TaxOpeningsModule = exports.TaxOpeningsController = exports.TaxOpeningsService = exports.TaxOpeningQueryDto = exports.TaxOpeningDto = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
+const client_1 = require("@prisma/client");
+const database_module_1 = require("../database.module");
+const auth_module_1 = require("../auth/auth.module");
+const domain_1 = require("../common/domain");
+const page_dto_1 = require("../common/page.dto");
+class TaxOpeningDto {
+}
+exports.TaxOpeningDto = TaxOpeningDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 2000, maximum: 2200 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(2000),
+    (0, class_validator_1.Max)(2200),
+    __metadata("design:type", Number)
+], TaxOpeningDto.prototype, "year", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ minimum: 1, maximum: 12 }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(12),
+    __metadata("design:type", Number)
+], TaxOpeningDto.prototype, "effectiveMonth", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Cumulative current-year taxable remuneration from previous employers only; replacement total, not delta.',
+    }),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "taxableIncome", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Previous-employer employee EPF before annual cap.',
+    }),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "employeeEpf", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Previous-employer MTD excluding CP38 and voluntary extra withholding.',
+    }),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "mtd", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.Matches)(/^\d{1,12}(\.\d{1,2})?$/),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "zakat", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Reference to reviewed TP3/supporting records.' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 500),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "evidenceReference", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.Length)(1, 1000),
+    __metadata("design:type", String)
+], TaxOpeningDto.prototype, "reason", void 0);
+class TaxOpeningQueryDto extends page_dto_1.PageDto {
+}
+exports.TaxOpeningQueryDto = TaxOpeningQueryDto;
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(2000),
+    (0, class_validator_1.Max)(2200),
+    __metadata("design:type", Number)
+], TaxOpeningQueryDto.prototype, "year", void 0);
+class TaxOpeningVersionDto extends TaxOpeningDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], TaxOpeningVersionDto.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], TaxOpeningVersionDto.prototype, "companyId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], TaxOpeningVersionDto.prototype, "employeeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)(),
+    __metadata("design:type", Number)
+], TaxOpeningVersionDto.prototype, "revision", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'uuid' }),
+    __metadata("design:type", String)
+], TaxOpeningVersionDto.prototype, "recordedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ format: 'date-time' }),
+    __metadata("design:type", String)
+], TaxOpeningVersionDto.prototype, "createdAt", void 0);
+class TaxOpeningResponseDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: TaxOpeningVersionDto }),
+    __metadata("design:type", TaxOpeningVersionDto)
+], TaxOpeningResponseDto.prototype, "data", void 0);
+class TaxOpeningHistoryDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: [TaxOpeningVersionDto] }),
+    __metadata("design:type", Array)
+], TaxOpeningHistoryDto.prototype, "data", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: 'object', additionalProperties: { type: 'integer' } }),
+    __metadata("design:type", Object)
+], TaxOpeningHistoryDto.prototype, "meta", void 0);
+let TaxOpeningsService = class TaxOpeningsService {
+    constructor(db) {
+        this.db = db;
+    }
+    async save(m, employeeId, d) {
+        if (!d.reason.trim() || !d.evidenceReference.trim())
+            (0, domain_1.fail)('TAX_EVIDENCE_REQUIRED', 'Provide a review reference and reason.', 400);
+        if (new client_1.Prisma.Decimal(d.employeeEpf).gt(d.taxableIncome))
+            (0, domain_1.fail)('INVALID_TAX_OPENING', 'Previous-employer EPF cannot exceed declared taxable income.', 400);
+        return this.db.$transaction(async (tx) => {
+            if (!(await tx.employee.findUnique({
+                where: { companyId_id: { companyId: m.companyId, id: employeeId } },
+            })))
+                throw new common_1.NotFoundException();
+            const latest = await tx.employeeTaxOpening.findFirst({
+                where: { companyId: m.companyId, employeeId, year: d.year },
+                orderBy: { revision: 'desc' },
+            });
+            if (latest && d.effectiveMonth < latest.effectiveMonth)
+                (0, domain_1.fail)('TAX_OPENING_HISTORY_ORDER', 'A replacement cannot precede the latest effective month.', 409);
+            if (await tx.payrollRun.count({
+                where: {
+                    companyId: m.companyId,
+                    year: d.year,
+                    month: { gte: d.effectiveMonth },
+                    status: { not: 'DRAFT' },
+                },
+            }))
+                (0, domain_1.fail)('PAYROLL_PERIOD_LOCKED', 'This revision affects calculated or finalized payroll.', 409);
+            const data = await tx.employeeTaxOpening.create({
+                data: {
+                    ...d,
+                    reason: d.reason.trim(),
+                    evidenceReference: d.evidenceReference.trim(),
+                    companyId: m.companyId,
+                    employeeId,
+                    revision: (latest?.revision ?? 0) + 1,
+                    recordedBy: m.userId,
+                },
+            });
+            await (0, domain_1.audit)(tx, m, 'EMPLOYEE_TAX_OPENING_RECORDED', data.id);
+            return { data };
+        }, { isolationLevel: 'Serializable' });
+    }
+    async history(m, employeeId, q) {
+        if (!(await this.db.employee.findUnique({
+            where: { companyId_id: { companyId: m.companyId, id: employeeId } },
+        })))
+            throw new common_1.NotFoundException();
+        const where = { companyId: m.companyId, employeeId, year: q.year };
+        const [data, total] = await this.db.$transaction([
+            this.db.employeeTaxOpening.findMany({
+                where,
+                orderBy: { revision: 'desc' },
+                skip: (q.page - 1) * q.pageSize,
+                take: q.pageSize,
+            }),
+            this.db.employeeTaxOpening.count({ where }),
+        ]);
+        return (0, page_dto_1.paginated)(data, total, q);
+    }
+};
+exports.TaxOpeningsService = TaxOpeningsService;
+exports.TaxOpeningsService = TaxOpeningsService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [database_module_1.Database])
+], TaxOpeningsService);
+let TaxOpeningsController = class TaxOpeningsController {
+    constructor(service) {
+        this.service = service;
+    }
+    save(r, id, d) {
+        return this.service.save(r.membership, id, d);
+    }
+    history(r, id, q) {
+        return this.service.history(r.membership, id, q);
+    }
+};
+exports.TaxOpeningsController = TaxOpeningsController;
+__decorate([
+    (0, common_1.Post)(),
+    (0, auth_module_1.Roles)('OWNER', 'FINANCE'),
+    (0, swagger_1.ApiCreatedResponse)({ type: TaxOpeningResponseDto }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Append reviewed previous-employer YTD totals; corrections replace totals, not add to them',
+    }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, TaxOpeningDto]),
+    __metadata("design:returntype", void 0)
+], TaxOpeningsController.prototype, "save", null);
+__decorate([
+    (0, common_1.Get)(),
+    (0, swagger_1.ApiOkResponse)({ type: TaxOpeningHistoryDto }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, TaxOpeningQueryDto]),
+    __metadata("design:returntype", void 0)
+], TaxOpeningsController.prototype, "history", null);
+exports.TaxOpeningsController = TaxOpeningsController = __decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiTags)('employee-tax-inputs'),
+    (0, auth_module_1.Roles)('OWNER', 'HR', 'FINANCE'),
+    (0, common_1.Controller)('employees/:employeeId/tax-openings'),
+    __metadata("design:paramtypes", [TaxOpeningsService])
+], TaxOpeningsController);
+let TaxOpeningsModule = class TaxOpeningsModule {
+};
+exports.TaxOpeningsModule = TaxOpeningsModule;
+exports.TaxOpeningsModule = TaxOpeningsModule = __decorate([
+    (0, common_1.Module)({
+        controllers: [TaxOpeningsController],
+        providers: [TaxOpeningsService],
+    })
+], TaxOpeningsModule);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHBheXJvbGxcXHRheC1vcGVuaW5ncy5tb2R1bGUudHMiLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsMkNBWXdCO0FBQ3hCLDZDQU95QjtBQUN6QixxREFBNkU7QUFDN0UseURBQXlDO0FBQ3pDLDJDQUFvRDtBQUNwRCx3REFBOEM7QUFDOUMscURBQTJEO0FBQzNELDZDQUErQztBQUMvQyxpREFBd0Q7QUFFeEQsTUFBYSxhQUFhO0NBa0N6QjtBQWxDRCxzQ0FrQ0M7QUE3QkM7SUFKQyxJQUFBLHFCQUFXLEVBQUMsRUFBRSxPQUFPLEVBQUUsSUFBSSxFQUFFLE9BQU8sRUFBRSxJQUFJLEVBQUUsQ0FBQztJQUM3QyxJQUFBLHVCQUFLLEdBQUU7SUFDUCxJQUFBLHFCQUFHLEVBQUMsSUFBSSxDQUFDO0lBQ1QsSUFBQSxxQkFBRyxFQUFDLElBQUksQ0FBQzs7MkNBQ0c7QUFLYjtJQUpDLElBQUEscUJBQVcsRUFBQyxFQUFFLE9BQU8sRUFBRSxDQUFDLEVBQUUsT0FBTyxFQUFFLEVBQUUsRUFBRSxDQUFDO0lBQ3hDLElBQUEsdUJBQUssR0FBRTtJQUNQLElBQUEscUJBQUcsRUFBQyxDQUFDLENBQUM7SUFDTixJQUFBLHFCQUFHLEVBQUMsRUFBRSxDQUFDOztxREFDZTtBQU12QjtJQUxDLElBQUEscUJBQVcsRUFBQztRQUNYLFdBQVcsRUFDVCwwR0FBMEc7S0FDN0csQ0FBQztJQUNELElBQUEseUJBQU8sRUFBQyx3QkFBd0IsQ0FBQzs7b0RBQ1o7QUFLdEI7SUFKQyxJQUFBLHFCQUFXLEVBQUM7UUFDWCxXQUFXLEVBQUUsbURBQW1EO0tBQ2pFLENBQUM7SUFDRCxJQUFBLHlCQUFPLEVBQUMsd0JBQXdCLENBQUM7O2tEQUNkO0FBTXBCO0lBTEMsSUFBQSxxQkFBVyxFQUFDO1FBQ1gsV0FBVyxFQUNULHVFQUF1RTtLQUMxRSxDQUFDO0lBQ0QsSUFBQSx5QkFB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Q25ELElBQUEsc0JBQVksRUFBQztRQUNaLE9BQU8sRUFDTCwyRkFBMkY7S0FDOUYsQ0FBQztJQUVDLFdBQUEsSUFBQSxZQUFHLEdBQUUsQ0FBQTtJQUNMLFdBQUEsSUFBQSxjQUFLLEVBQUMsWUFBWSxFQUFFLHNCQUFhLENBQUMsQ0FBQTtJQUNsQyxXQUFBLElBQUEsYUFBSSxHQUFFLENBQUE7O3FEQUFJLGFBQWE7O2lEQUd6QjtBQUdEO0lBRkMsSUFBQSxZQUFHLEdBQUU7SUFDTCxJQUFBLHVCQUFhLEVBQUMsRUFBRSxJQUFJLEVBQUUsb0JBQW9CLEVBQUUsQ0FBQztJQUUzQyxXQUFBLElBQUEsWUFBRyxHQUFFLENBQUE7SUFDTCxXQUFBLElBQUEsY0FBSyxFQUFDLFlBQVksRUFBRSxzQkFBYSxDQUFDLENBQUE7SUFDbEMsV0FBQSxJQUFBLGNBQUssR0FBRSxDQUFBOztxREFBSSxrQkFBa0I7O29EQUcvQjtnQ0F4QlUscUJBQXFCO0lBSmpDLElBQUEsdUJBQWEsR0FBRTtJQUNmLElBQUEsaUJBQU8sRUFBQyxxQkFBcUIsQ0FBQztJQUM5QixJQUFBLG1CQUFLLEVBQUMsT0FBTyxFQUFFLElBQUksRUFBRSxTQUFTLENBQUM7SUFDL0IsSUFBQSxtQkFBVSxFQUFDLG9DQUFvQyxDQUFDO3FDQUVsQixrQkFBa0I7R0FEcEMscUJBQXFCLENBeUJqQztBQUtNLElBQU0saUJBQWlCLEdBQXZCLE1BQU0saUJBQWlCO0NBQUcsQ0FBQTtBQUFwQiw4Q0FBaUI7NEJBQWpCLGlCQUFpQjtJQUo3QixJQUFBLGVBQU0sRUFBQztRQUNOLFdBQVcsRUFBRSxDQUFDLHFCQUFxQixDQUFDO1FBQ3BDLFNBQVMsRUFBRSxDQUFDLGtCQUFrQixDQUFDO0tBQ2hDLENBQUM7R0FDVyxpQkFBaUIsQ0FBRyIsIm5hbWVzIjpbXSwic291cmNlcyI6WyJDOlxcVXNlcnNcXHRhbmthXFxPbmVEcml2ZVxcRG9jdW1lbnRzXFxwYXJ0XFxwYXlyb2xsXFxwYXlyb2xsYmVcXHNyY1xccGF5cm9sbFxcdGF4LW9wZW5pbmdzLm1vZHVsZS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQge1xuICBCb2R5LFxuICBDb250cm9sbGVyLFxuICBHZXQsXG4gIEluamVjdGFibGUsXG4gIE1vZHVsZSxcbiAgTm90Rm91bmRFeGNlcHRpb24sXG4gIFBhcmFtLFxuICBQYXJzZVVVSURQaXBlLFxuICBQb3N0LFxuICBRdWVyeSxcbiAgUmVxLFxufSBmcm9tICdAbmVzdGpzL2NvbW1vbic7XG5pbXBvcnQge1xuICBBcGlCZWFyZXJBdXRoLFxuICBBcGlDcmVhdGVkUmVzcG9uc2UsXG4gIEFwaU9rUmVzcG9uc2UsXG4gIEFwaU9wZXJhdGlvbixcbiAgQXBpUHJvcGVydHksXG4gIEFwaVRhZ3MsXG59IGZyb20gJ0BuZXN0anMvc3dhZ2dlcic7XG5pbXBvcnQgeyBJc0ludCwgSXNTdHJpbmcsIExlbmd0aCwgTWF0Y2hlcywgTWF4LCBNaW4gfSBmcm9tICdjbGFzcy12YWxpZGF0b3InO1xuaW1wb3J0IHsgVHlwZSB9IGZyb20gJ2NsYXNzLXRyYW5zZm9ybWVyJztcbmltcG9ydCB7IE1lbWJlcnNoaXAsIFByaXNtYSB9IGZyb20gJ0BwcmlzbWEvY2xpZW50JztcbmltcG9ydCB7IERhdGFiYXNlIH0gZnJvbSAnLi4vZGF0YWJhc2UubW9kdWxlJztcbmltcG9ydCB7IFJvbGVzLCBUZW5hbnRSZXF1ZXN0IH0gZnJvbSAnLi4vYXV0aC9hdXRoLm1vZHVsZSc7XG5pbXBvcnQgeyBhdWRpdCwgZmFpbCB9IGZyb20gJy4uL2NvbW1vbi9kb21haW4nO1xuaW1wb3J0IHsgUGFnZUR0bywgcGFnaW5hdGVkIH0gZnJvbSAnLi4vY29tbW9uL3BhZ2UuZHRvJztcblxuZXhwb3J0IGNsYXNzIFRheE9wZW5pbmdEdG8ge1xuICBAQXBpUHJvcGVydHkoeyBtaW5pbXVtOiAyMDAwLCBtYXhpbXVtOiAyMjAwIH0pXG4gIEBJc0ludCgpXG4gIEBNaW4oMjAwMClcbiAgQE1heCgyMjAwKVxuICB5ZWFyOiBudW1iZXI7XG4gIEBBcGlQcm9wZXJ0eSh7IG1pbmltdW06IDEsIG1heGltdW06IDEyIH0pXG4gIEBJc0ludCgpXG4gIEBNaW4oMSlcbiAgQE1heCgxMilcbiAgZWZmZWN0aXZlTW9udGg6IG51bWJlcjtcbiAgQEFwaVByb3BlcnR5KHtcbiAgICBkZXNjcmlwdGlvbjpcbiAgICAgICdDdW11bGF0aXZlIGN1cnJlbnQteWVhciB0YXhhYmxlIHJlbXVuZXJhdGlvbiBmcm9tIHByZXZpb3VzIGVtcGxveWVycyBvbmx5OyByZXBsYWNlbWVudCB0b3RhbCwgbm90IGRlbHRhLicsXG4gIH0pXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgdGF4YWJsZUluY29tZTogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoe1xuICAgIGRlc2NyaXB0aW9uOiAnUHJldmlvdXMtZW1wbG95ZXIgZW1wbG95ZWUgRVBGIGJlZm9yZSBhbm51YWwgY2FwLicsXG4gIH0pXG4gIEBNYXRjaGVzKC9eXFxkezEsMTJ9KFxcLlxcZHsxLDJ9KT8kLylcbiAgZW1wbG95ZWVFcGY6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHtcbiAgICBkZXNjcmlwdGlvbjpcbiAgICAgICdQcmV2aW91cy1lbXBsb3llciBNVEQgZXhjbHVkaW5nIENQMzggYW5kIHZvbHVudGFyeSBleHRyYSB3aXRoaG9sZGluZy4nLFxuICB9KVxuICBATWF0Y2hlcygvXlxcZHsxLDEyfShcXC5cXGR7MSwyfSk/JC8pXG4gIG10ZDogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoKSBATWF0Y2hlcygvXlxcZHsxLDEyfShcXC5cXGR7MSwyfSk/JC8pIHpha2F0OiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IGRlc2NyaXB0aW9uOiAnUmVmZXJlbmNlIHRvIHJldmlld2VkIFRQMy9zdXBwb3J0aW5nIHJlY29yZHMuJyB9KVxuICBASXNTdHJpbmcoKVxuICBATGVuZ3RoKDEsIDUwMClcbiAgZXZpZGVuY2VSZWZlcmVuY2U6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgQElzU3RyaW5nKCkgQExlbmd0aCgxLCAxMDAwKSByZWFzb246IHN0cmluZztcbn1cbmV4cG9ydCBjbGFzcyBUYXhPcGVuaW5nUXVlcnlEdG8gZXh0ZW5kcyBQYWdlRHRvIHtcbiAgQEFwaVByb3BlcnR5KClcbiAgQFR5cGUoKCkgPT4gTnVtYmVyKVxuICBASXNJbnQoKVxuICBATWluKDIwMDApXG4gIEBNYXgoMjIwMClcbiAgeWVhcjogbnVtYmVyO1xufVxuY2xhc3MgVGF4T3BlbmluZ1ZlcnNpb25EdG8gZXh0ZW5kcyBUYXhPcGVuaW5nRHRvIHtcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgaWQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgY29tcGFueUlkOiBzdHJpbmc7XG4gIEBBcGlQcm9wZXJ0eSh7IGZvcm1hdDogJ3V1aWQnIH0pIGVtcGxveWVlSWQ6IHN0cmluZztcbiAgQEFwaVByb3BlcnR5KCkgcmV2aXNpb246IG51bWJlcjtcbiAgQEFwaVByb3BlcnR5KHsgZm9ybWF0OiAndXVpZCcgfSkgcmVjb3JkZWRCeTogc3RyaW5nO1xuICBAQXBpUHJvcGVydHkoeyBmb3JtYXQ6ICdkYXRlLXRpbWUnIH0pIGNyZWF0ZWRBdDogc3RyaW5nO1xufVxuY2xhc3MgVGF4T3BlbmluZ1Jlc3BvbnNlRHRvIHtcbiAgQEFwaVByb3BlcnR5KHsgdHlwZTogVGF4T3BlbmluZ1ZlcnNpb25EdG8gfSkgZGF0YTogVGF4T3BlbmluZ1ZlcnNpb25EdG87XG59XG5jbGFzcyBUYXhPcGVuaW5nSGlzdG9yeUR0byB7XG4gIEBBcGlQcm9wZXJ0eSh7IHR5cGU6IFtUYXhPcGVuaW5nVmVyc2lvbkR0b10gfSkgZGF0YTogVGF4T3BlbmluZ1ZlcnNpb25EdG9bXTtcbiAgQEFwaVByb3BlcnR5KHsgdHlwZTogJ29iamVjdCcsIGFkZGl0aW9uYWxQcm9wZXJ0aWVzOiB7IHR5cGU6ICdpbnRlZ2VyJyB9IH0pXG4gIG1ldGE6IFJlY29yZDxzdHJpbmcsIG51bWJlcj47XG59XG5ASW5qZWN0YWJsZSgpXG5leHBvcnQgY2xhc3MgVGF4T3BlbmluZ3NTZXJ2aWNlIHtcbiAgY29uc3RydWN0b3IocHJpdmF0ZSBkYjogRGF0YWJhc2UpIHt9XG4gIGFzeW5jIHNhdmUobTogTWVtYmVyc2hpcCwgZW1wbG95ZWVJZDogc3RyaW5nLCBkOiBUYXhPcGVuaW5nRHRvKSB7XG4gICAgaWYgKCFkLnJlYXNvbi50cmltKCkgfHwgIWQuZXZpZGVuY2VSZWZlcmVuY2UudHJpbSgpKVxuICAgICAgZmFpbChcbiAgICAgICAgJ1RBWF9FVklERU5DRV9SRVFVSVJFRCcsXG4gICAgICAgICdQcm92aWRlIGEgcmV2aWV3IHJlZmVyZW5jZSBhbmQgcmVhc29uLicsXG4gICAgICAgIDQwMCxcbiAgICAgICk7XG4gICAgaWYgKG5ldyBQcmlzbWEuRGVjaW1hbChkLmVtcGxveWVlRXBmKS5ndChkLnRheGFibGVJbmNvbWUpKVxuICAgICAgZmFpbChcbiAgICAgICAgJ0lOVkFMSURfVEFYX09QRU5JTkcnLFxuICAgICAgICAnUHJldmlvdXMtZW1wbG95ZXIgRVBGIGNhbm5vdCBleGNlZWQgZGVjbGFyZWQgdGF4YWJsZSBpbmNvbWUuJyxcbiAgICAgICAgNDAwLFxuICAgICAgKTtcbiAgICByZXR1cm4gdGhpcy5kYi4kdHJhbnNhY3Rpb24oXG4gICAgICBhc3luYyAodHgpID0+IHtcbiAgICAgICAgaWYgKFxuICAgICAgICAgICEoYXdhaXQgdHguZW1wbG95ZWUuZmluZFVuaXF1ZSh7XG4gICAgICAgICAgICB3aGVyZTogeyBjb21wYW55SWRfaWQ6IHsgY29tcGFueUlkOiBtLmNvbXBhbnlJZCwgaWQ6IGVtcGxveWVlSWQgfSB9LFxuICAgICAgICAgIH0pKVxuICAgICAgICApXG4gICAgICAgICAgdGhyb3cgbmV3IE5vdEZvdW5kRXhjZXB0aW9uKCk7XG4gICAgICAgIGNvbnN0IGxhdGVzdCA9IGF3YWl0IHR4LmVtcGxveWVlVGF4T3BlbmluZy5maW5kRmlyc3Qoe1xuICAgICAgICAgIHdoZXJlOiB7IGNvbXBhbnlJZDogbS5jb21wYW55SWQsIGVtcGxveWVlSWQsIHllYXI6IGQueWVhciB9LFxuICAgICAgICAgIG9yZGVyQnk6IHsgcmV2aXNpb246ICdkZXNjJyB9LFxuICAgICAgICB9KTtcbiAgICAgICAgaWYgKGxhdGVzdCAmJiBkLmVmZmVjdGl2ZU1vbnRoIDwgbGF0ZXN0LmVmZmVjdGl2ZU1vbnRoKVxuICAgICAgICAgIGZhaWwoXG4gICAgICAgICAgICAnVEFYX09QRU5JTkdfSElTVE9SWV9PUkRFUicsXG4gICAgICAgICAgICAnQSByZXBsYWNlbWVudCBjYW5ub3QgcHJlY2VkZSB0aGUgbGF0ZXN0IGVmZmVjdGl2ZSBtb250aC4nLFxuICAgICAgICAgICAgNDA5LFxuICAgICAgICAgICk7XG4gICAgICAgIGlmIChcbiAgICAgICAgICBhd2FpdCB0eC5wYXlyb2xsUnVuLmNvdW50KHtcbiAgICAgICAgICAgIHdoZXJlOiB7XG4gICAgICAgICAgICAgIGNvbXBhbnlJZDogbS5jb21wYW55SWQsXG4gICAgICAgICAgICAgIHllYXI6IGQueWVhcixcbiAgICAgICAgICAgICAgbW9udGg6IHsgZ3RlOiBkLmVmZmVjdGl2ZU1vbnRoIH0sXG4gICAgICAgICAgICAgIHN0YXR1czogeyBub3Q6ICdEUkFGVCcgfSxcbiAgICAgICAgICAgIH0sXG4gICAgICAgICAgfSlcbiAgICAgICAgKVxuICAgICAgICAgIGZhaWwoXG4gICAgICAgICAgICAnUEFZUk9MTF9QRVJJT0RfTE9DS0VEJyxcbiAgICAgICAgICAgICdUaGlzIHJldmlzaW9uIGFmZmVjdHMgY2FsY3VsYXRlZCBvciBmaW5hbGl6ZWQgcGF5cm9sbC4nLFxuICAgICAgICAgICAgNDA5LFxuICAgICAgICAgICk7XG4gICAgICAgIGNvbnN0IGRhdGEgPSBhd2FpdCB0eC5lbXBsb3llZVRheE9wZW5pbmcuY3JlYXRlKHtcbiAgICAgICAgICBkYXRhOiB7XG4gICAgICAgICAgICAuLi5kLFxuICAgICAgICAgICAgcmVhc29uOiBkLnJlYXNvbi50cmltKCksXG4gICAgICAgICAgICBldmlkZW5jZVJlZmVyZW5jZTogZC5ldmlkZW5jZVJlZmVyZW5jZS50cmltKCksXG4gICAgICAgICAgICBjb21wYW55SWQ6IG0uY29tcGFueUlkLFxuICAgICAgICAgICAgZW1wbG95ZWVJZCxcbiAgICAgICAgICAgIHJldmlzaW9uOiAobGF0ZXN0Py5yZXZpc2lvbiA/PyAwKSArIDEsXG4gICAgICAgICAgICByZWNvcmRlZEJ5OiBtLnVzZXJJZCxcbiAgICAgICAgICB9LFxuICAgICAgICB9KTtcbiAgICAgICAgYXdhaXQgYXVkaXQodHgsIG0sICdFTVBMT1lFRV9UQVhfT1BFTklOR19SRUNPUkRFRCcsIGRhdGEuaWQpO1xuICAgICAgICByZXR1cm4geyBkYXRhIH07XG4gICAgICB9LFxuICAgICAgeyBpc29sYXRpb25MZXZlbDogJ1NlcmlhbGl6YWJsZScgfSxcbiAgICApO1xuICB9XG4gIGFzeW5jIGhpc3RvcnkobTogTWVtYmVyc2hpcCwgZW1wbG95ZWVJZDogc3RyaW5nLCBxOiBUYXhPcGVuaW5nUXVlcnlEdG8pIHtcbiAgICBpZiAoXG4gICAgICAhKGF3YWl0IHRoaXMuZGIuZW1wbG95ZWUuZmluZFVuaXF1ZSh7XG4gICAgICAgIHdoZXJlOiB7IGNvbXBhbnlJZF9pZDogeyBjb21wYW55SWQ6IG0uY29tcGFueUlkLCBpZDogZW1wbG95ZWVJZCB9IH0sXG4gICAgICB9KSlcbiAgICApXG4gICAgICB0aHJvdyBuZXcgTm90Rm91bmRFeGNlcHRpb24oKTtcbiAgICBjb25zdCB3aGVyZSA9IHsgY29tcGFueUlkOiBtLmNvbXBhbnlJZCwgZW1wbG95ZWVJZCwgeWVhcjogcS55ZWFyIH07XG4gICAgY29uc3QgW2RhdGEsIHRvdGFsXSA9IGF3YWl0IHRoaXMuZGIuJHRyYW5zYWN0aW9uKFtcbiAgICAgIHRoaXMuZGIuZW1wbG95ZWVUYXhPcGVuaW5nLmZpbmRNYW55KHtcbiAgICAgICAgd2hlcmUsXG4gICAgICAgIG9yZGVyQnk6IHsgcmV2aXNpb246ICdkZXNjJyB9LFxuICAgICAgICBza2lwOiAocS5wYWdlIC0gMSkgKiBxLnBhZ2VTaXplLFxuICAgICAgICB0YWtlOiBxLnBhZ2VTaXplLFxuICAgICAgfSksXG4gICAgICB0aGlzLmRiLmVtcGxveWVlVGF4T3BlbmluZy5jb3VudCh7IHdoZXJlIH0pLFxuICAgIF0pO1xuICAgIHJldHVybiBwYWdpbmF0ZWQoZGF0YSwgdG90YWwsIHEpO1xuICB9XG59XG5AQXBpQmVhcmVyQXV0aCgpXG5AQXBpVGFncygnZW1wbG95ZWUtdGF4LWlucHV0cycpXG5AUm9sZXMoJ09XTkVSJywgJ0hSJywgJ0ZJTkFOQ0UnKVxuQENvbnRyb2xsZXIoJ2VtcGxveWVlcy86ZW1wbG95ZWVJZC90YXgtb3BlbmluZ3MnKVxuZXhwb3J0IGNsYXNzIFRheE9wZW5pbmdzQ29udHJvbGxlciB7XG4gIGNvbnN0cnVjdG9yKHByaXZhdGUgc2VydmljZTogVGF4T3BlbmluZ3NTZXJ2aWNlKSB7fVxuICBAUG9zdCgpXG4gIEBSb2xlcygnT1dORVInLCAnRklOQU5DRScpXG4gIEBBcGlDcmVhdGVkUmVzcG9uc2UoeyB0eXBlOiBUYXhPcGVuaW5nUmVzcG9uc2VEdG8gfSlcbiAgQEFwaU9wZXJhdGlvbih7XG4gICAgc3VtbWFyeTpcbiAgICAgICdBcHBlbmQgcmV2aWV3ZWQgcHJldmlvdXMtZW1wbG95ZXIgWVREIHRvdGFsczsgY29ycmVjdGlvbnMgcmVwbGFjZSB0b3RhbHMsIG5vdCBhZGQgdG8gdGhlbScsXG4gIH0pXG4gIHNhdmUoXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQFBhcmFtKCdlbXBsb3llZUlkJywgUGFyc2VVVUlEUGlwZSkgaWQ6IHN0cmluZyxcbiAgICBAQm9keSgpIGQ6IFRheE9wZW5pbmdEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2Uuc2F2ZShyLm1lbWJlcnNoaXAsIGlkLCBkKTtcbiAgfVxuICBAR2V0KClcbiAgQEFwaU9rUmVzcG9uc2UoeyB0eXBlOiBUYXhPcGVuaW5nSGlzdG9yeUR0byB9KVxuICBoaXN0b3J5KFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBQYXJhbSgnZW1wbG95ZWVJZCcsIFBhcnNlVVVJRFBpcGUpIGlkOiBzdHJpbmcsXG4gICAgQFF1ZXJ5KCkgcTogVGF4T3BlbmluZ1F1ZXJ5RHRvLFxuICApIHtcbiAgICByZXR1cm4gdGhpcy5zZXJ2aWNlLmhpc3Rvcnkoci5tZW1iZXJzaGlwLCBpZCwgcSk7XG4gIH1cbn1cbkBNb2R1bGUoe1xuICBjb250cm9sbGVyczogW1RheE9wZW5pbmdzQ29udHJvbGxlcl0sXG4gIHByb3ZpZGVyczogW1RheE9wZW5pbmdzU2VydmljZV0sXG59KVxuZXhwb3J0IGNsYXNzIFRheE9wZW5pbmdzTW9kdWxlIHt9XG4iXSwidmVyc2lvbiI6M30=

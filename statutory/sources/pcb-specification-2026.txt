@@ -1,0 +1,3012 @@
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+LEMBAGA HASIL DALAM NEGERI MALAYSIA 
+ 
+ 
+ 
+ 
+ 
+ 
+AMENDMENT TO: 
+SPECIFICATION FOR 
+MONTHLY TAX DEDUCTION (MTD) 
+CALCULATIONS USING 
+COMPUTERIZED CALCULATION 
+FOR 
+2026 
+ 
+Updated : 01 January 2026 
+
+1 
+ 
+ 
+ 
+ 
+ 
+ 
+TABLE OF CONTENTS 
+ 
+A. INTRODUCTION          - 2 
+B.       PROCEDURE FOR VERIFICATION OF COMPUTERIZED CALCULATION METHOD- 3 
+C.  AMENDMENT TO SPECIFICATION FOR MTD CALCULATIONS USING COMPUTERIZED 
+CALCULATION METHOD FOR YEAR 2026      - 4 
+D. MONTHLY TAX DEDUCTION (MTD) FOR COMPUTERIZED CALCULATION  - 9 
+ a. NON-RESIDENT EMPLOYEE …………………………………………………………...............- 9 
+ b. RESIDENT EMPLOYEE 
+   1)  Computerized calculation for Normal Remuneration ………………………………..…- 9 
+   2)  Computerized calculation for Additional Remuneration .…..………………….….……- 11 
+   3)  Computerized calculation for An Approved Individual Under The REP………....……- 13 
+   4)  Computerized calculation for Knowledge Worker in The Specified Region...…….….- 15 
+     5)  Computerized calculation for An Individual Resident and Holds C Suite Position…...- 17 
+E. TERMS AND CONDITIONS        - 19 
+F. EXHIBIT           - 37 
+  a. EXHIBIT 1 – Form TP1 (1/2026)  
+ b. EXHIBIT 2 – Form TP3 (1/2026) 
+ c. EXHIBIT 3 – Form PCB 2(II)  
+ d. EXHIBIT 4 – Specification Format for MTD Text File Data 
+ e. EXHIBIT 5 – Example of Calculation 
+ 
+  
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2 
+ 
+ 
+ 
+ 
+ 
+A. INTRODUCTION 
+ 
+ 
+According to the provision under Rule 3, Income Tax (Deduction from Remuneration) Rules 1994 
+(MTD Rules), the Schedule under Income Tax (Deduction from Remuneration) (Amendment) Rules 
+2014 is part of the MTD specification. 
+ 
+An employer who uses the computerized payroll system provided by the software provider or, 
+developed or customised by the employer should in accordance with computerized calculation 
+specifications to determine Monthly Tax Deduction (MTD). Inland Revenue Board of Malaysia (IRBM) 
+should review and issue verification/approval letter to software providers/employers who comply with 
+MTD specification. 
+ 
+This booklet is to provide guideline and MTD verification procedure for software provider or 
+employers who developed or customized their payroll system. 
+3 
+ 
+ 
+ 
+ 
+ 
+B. PROCEDURE FOR VERIFICATION OF COMPUTERIZED CALCULATION METHOD 
+ 
+ 
+1. Software providers/employers must comply with specification and provides accurate answer 
+and calculation for all question of testing formula/specification of MTD calculation through 
+email. 
+ 
+2. IRBM shall arrange appointment (if necessary) to verify software providers/employers 
+payroll system if all the answer provided is accurate. 
+ 
+3. IRBM shall issue verification/approval letter for MTD calculation to software 
+providers/employers if all answer and calculation presented is comply with the specification. 
+ 
+4. Employers who using the computerized payroll system provided by software 
+providers/employers who complied with the MTD calculation specifications (from year 
+2012 to 2025) need NOT obtain further verification from IRBM. 
+ 
+5. IRBM will upload the list of software providers/employers (update biweekly) who complied 
+with the MTD calculation specifications in IRBM website. 
+6. Please forward application using company’s letterhead to:  
+Pengarah 
+Lembaga Hasil Dalam Negeri Malaysia  
+Jabatan Pungutan Hasil 
+Aras 15, Menara Hasil 
+Persiaran Rimba Permai Cyber 8 
+Peti Surat 11833 
+63000 Cyberjaya  
+Selangor Darul Ehsan 
+[Attn: Bahagian Pembangunan Sistem (BPS)] 
+ 
+or email to: 
+ 
+ask_payrollMTD@hasil.gov.my 
+ 
+4 
+ 
+ 
+ 
+ 
+ 
+C. AMENDMENT TO SPECIFICATION FOR MTD CALCULATIONS USING COMPUTERIZED 
+CALCULATION METHOD FOR YEAR 2026 
+ 
+ 
+ 
+This amendment provides clarification in relation to Budget 2026. Amendments for computerized 
+calculation method of Monthly Tax Deduction (MTD) 2026 are as follows: 
+ 
+ 
+1. EXPANSION OF TAX RELIEF FOR MEDICAL TREATMENT EXPENSES - VACCINATION EXPENSES 
+ 
+Current Treatment 
+Individual income tax relief of up to RM1,000 is provided for vaccination expenses for self, husband / wife or 
+children covering the following vaccines: 
+i. Pneumococcal; 
+ii. Human papillomavirus (HPV); 
+iii. Influenza; 
+iv. Rotavirus; 
+v. Varicella; 
+vi. Meningococcal; 
+vii. Tetanus, diphtheria, and acellular pertussis (Tdap); and 
+viii. Coronavirus Disease 2019 (COVID-19). 
+ 
+Proposal 
+The provision is amended to expand the scope of individual income tax relief for vaccinations under subparagraph 
+46(1)(g)(iii) to cover all types of vaccines that are registered and approved for use by the National Pharrmaceutical 
+Regulatory Agency (NPRA), Ministry of Health. The list of vaccines that are registered and approved for use can 
+be obtained from the official NPRA website. 
+ 
+Effective Date: 
+From year of assessment 2026 
+ 
+ 
+2.  EXPANSION OF TAX RELIEF ON MEDICAL TREATMENT, SPECIAL NEEDS AND CARER EXPENSES 
+FOR PARENTS / GRANDPARENTS 
+ 
+Current Treatment  
+The current provision grants tax relief for a full medical check-up for parents / grandparents, which includes any 
+vaccination without the requirement for registration and appr oval by the relevant Ministry. The allowable claim 
+amount for a full medical check-up for parents / grandparents is limited to RM1,000.  
+ 
+Proposal  
+To further support the national health system’s aspiration of prioritising disease prevention over treatment and to 
+promote vaccination as a key preventive healthcare measure, it is proposed types of vaccines eligible for 
+individual income tax relief be expanded to cover all vaccines registered and approved for use by the National 
+Pharrmaceutical Regulatory Agency (NPRA), Ministry of Health. 
+ 
+Effective Date: 
+From year of assessment 2026 
+Notice: 
+ 
+All software providers/employers who obtained verification for MTD from year 2012 
+to 2025 should apply the amendment to the specification for MTD Computerized 
+Calculations pursuant to Budget 2025 to their payroll system without obtaining 
+further verification for MTD 2026 from IRBM. 
+5 
+ 
+ 
+ 
+ 
+ 
+3.  REVIEW OF TAX RELIEF FOR CHILD CARE FEES PAID TO A REGISTERED CHILD CARE CENTRES / 
+KINDERGARTENS FOR A CHILD AGED 6 YEARS AND BELOW  
+ 
+Current Treatment  
+Individual income tax relief of up to RM2,000 is given on fees paid for childcare of children aged up to 6 years old 
+at the following eligible childcare premises: 
+i. Childcare Centres (TASKA) registered with the Department of Social Welfare (JKM); or 
+ii. Kindergartens (TADIKA) registered with the Ministry of Education Malaysia (KPM). 
+A further time bound tax relief of RM1,000 was introduced from the year of assessment  2020 to 2027. Both tax 
+reliefs can be claimed by either parent. 
+ 
+Proposal 
+To support working parents requiring childcare and after-school transit facilities, it is proposed individual income 
+tax relief for childcare fee be reviewed as follows: 
+i. The further time bound tax relief of RM1,000 be made permanent and combined with the existing permanent 
+Relief of RM2,000, resulting in a total claimable tax relief at RM3,000; and 
+ii. the eligible childcare premises be expanded to include daily care centres or after -school transit centres 
+registered with Department of Social Welfare (JKM) for children aged up to 12 years old. 
+ 
+Effective Date: 
+From year of assessment 2026 
+ 
+ 
+4.  REVIEW OF TAX RELIEF FOR PREMIUM OF LIFE, EDUCATION AND MEDICAL INSURANCES 
+ 
+Current Treatment  
+Individual income tax relief is provided as follows: 
+i. life insurance premiums or takaful contributions for self, husband / wife up to RM3,000; and 
+ii. education and medical insurance premiums for self, husband / wife or children up to RM4,000. 
+ 
+Proposal  
+To further encourage the uptake of life insurance or takaful contributions for children,it is proposed: 
+i. the scope of individual income tax relief of up to RM3,000 for life insurance premiums or takaful contributions 
+for self, husband / wife be expanded to include children; and 
+ii. the eligibility criteria for insured children for the purpose of claiming individual income tax relief on life insurance 
+premiums / takaful contribution, education and medical insurance premiums be determined as follows: 
+a. aged below 18 and unmarried; 
+b. aged 18 and above, unmarried and pursuing tertiary education; or 
+c. no age limit for unmarried disabled children. 
+ 
+Effective Date: 
+From year of assessment 2026 
+ 
+ 
+5. INCREASE TAX RELIEF  FOR MEDICAL TREATMENT EXPENSES ON EARLY INTERVENTION 
+PROGRAMMES OR REHABILITATION TREATMENT FOR CHILDREN WITH LEARNING DISABILITIES 
+ 
+Current Treatment  
+Individual income tax relief is given for various types of medical treatment expenses for self, husband / wife or 
+children including diagnostic examinations, early intervention programmes, and continuous rehabilitation 
+treatment for children with learning disabilities aged 18 and below, limited to RM6,000. 
+ 
+Proposal  
+To continue supporting early intervention programmes and rehabilitation treatment for children with learning 
+disabilities, it is proposed that the individual income tax relief limit for expenses related to diagnostic examinations, 
+early intervention programmes, and rehabilitation treatment for children under 18 years of age with learning 
+6 
+ 
+ 
+ 
+ 
+ 
+disabilities such as autism, attention deficit hyperactivity disorder (ADHD), global devel opmental delay (GDD), 
+intellectual disability, Down syndrome, and specific learning disabilities be increased from RM6,000 to RM10,000. 
+ 
+Effective Date: 
+From year of assessment 2026 
+ 
+ 
+6. EXPANSION ON INDIVIDUAL INCOME TAX RELIEF FOR EXPENSES ON ADMISSION FEES TO TOURIST 
+CENTRES AND CULTURAL PROGRAMMES 
+ 
+Current Treatment 
+Individual income tax relief of up to RM1,000 was provided from the year of assessment 2020 to 2022 on the 
+following expenses: 
+i. accommodation fees at premises registered with the Ministry of Tourism, Arts and Culture (MOTAC); 
+ii. admission fees to tourist attractions; and 
+iii. purchase of domestic tourism packages through licensed travel agents registered with MOTAC. 
+ 
+Proposal 
+The proposal is to provide tax relief of up to RM1,000 on expen ses for admission fees to the following:  
+i. tourist attractions such as museums, theme parks, national parks, marine parks, wildlife parks, zoos, and 
+geoparks;  
+ii. cultural and arts programmes. 
+ 
+Effective Date: 
+For the year of assessment 2026 
+ 
+ 
+7. EXPANSION OF TAX RELIEF FOR INCOME TAX RELIEF FOR ENVIRONMENTAL SUSTAINABILITY AND 
+HOME SAFETY-RELATED EXPENDITURE 
+ 
+Current Treatment 
+Individual income tax relief of up to RM2,500 is provided for environmental  sustainability-related expenses as 
+follows: 
+i. purchase, rental and installation cost including hire-purchase equipment or subscription fees for electric vehicle 
+charging facilities from the year of assessment 2022 to 2027; and 
+ii. purchase of household food composting machine, subject to the claim is allowable once within a period of 3 
+years from the year of assessment 2025 to 2027. 
+ 
+Proposal 
+To promote sustainable and safe lifestyles through the adoption of green technology and smart safety systems, 
+it is proposed scope of individual income tax rel ief of up to RM2,500 for expenses on electric vehicle charging 
+facilities and food composting machines be expanded to include: 
+i. household food waste grinders; and 
+ii. Closed-Circuit Television (CCTV) for home use. 
+The tax relief claim for the purchase of  food waste grinders and / or CCTV is allowed once within a period of 2 
+years of assessment. 
+ 
+Effective Date 
+For the year of assessment 2026 and 2027. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+7 
+ 
+ 
+ 
+ 
+ 
+ 
+In line with the Budget 2026 as above, there is no amendment to the MTD formula. However, there are some 
+amendments of deduction items on Form TP1(2026) and TP3(2026). 
+ 
+1. Form TP1  
+ 
+i. Amendment on TP1 form “ Bahagian C ” to reschedule the item and inputting the new 
+changes as propose below: 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+8 
+ 
+ 
+ 
+ 
+ 
+2. Form TP3  
+ 
+i. Amendment on TP 3 form “ Bahagian D” to reschedule the item and inputting the new 
+changes as propose below: 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+
+9 
+ 
+ 
+ 
+ 
+ 
+D. MONTHLY TAX DEDUCTION (MTD) FOR COMPUTERIZED CALCULATION 
+The MTD calculation depends on the residence status of the employee. There are 2 types of residence 
+status as follows: 
+ 
+a.  NON-RESIDENT EMPLOYEE 
+ 
+MTD of an employee who is not resident or not known to be resident in Malaysia shall be calculated 
+at the rate of 30 % of his remuneration. 
+ 
+Example: Employee is not resident in calendar year 2024.  
+ Total monthly remuneration : RM3,000.00 
+ MTD calculation  : RM3,000.00 x 30% 
+ Total MTD   : RM900.00 
+ 
+ 
+A non-resident employee is eligible to get tax exemption on allowances, benefits and perquisites as stated 
+on pages 21 and 22 in this document. The exempt income shall be excluded from the remuneration 
+for MTD purposes. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+b. RESIDENT EMPLOYEE 
+ 
+MTD of an employee who is resident or known to be resident in Malaysia is derived after deducting 
+all allowable deductions under the Income Tax Act (ITA), 1967. 
+ 
+MTD formula is categorized into five (5) formulas. The employer may change the category of 
+remuneration based on the approval from the IRBM. The formulas are: 
+ 
+ 1)  Computerized calculation for Normal Remuneration 
+2) Computerized calculation for Additional Remuneration 
+3) Computerized calculation for An Approved Individual Under The Returning Expert Program 
+(REP) 
+4) Computerized calculation for Knowledge Workers in The Specified Region 
+5) Computerized calculation for An Individual Resident who is not a citizen and holds C Suite 
+position in an approved company 
+ 
+ 
+1. COMPUTERIZED CALCULATION FOR NORMAL REMUNERATION 
+“Normal remuneration means fixed monthly remuneration paid to the employee whether the amount 
+paid is fixed or variable as specified in the contract of service in writing or otherwise; 
+- If the employee has no salary and only receives a commission, the commission paid is considered 
+as remuneration. 
+- If the monthly salary is paid on a daily or hourly basis, the total monthly salary paid is considered as 
+remuneration. 
+- If the monthly salary changes due to the change in currency values, the total monthly salary paid is 
+also considered as remuneration. 
+Note: 
+With effect from August 2017, MTD for resident on foreign workers is applicable to employees 
+with an employment contract of or more than 182 days i.e. covering holders of the Visit Pass 
+(Temporary Employment) [VP(TE)] as well as expatriates. 
+ 
+10 
+ 
+ 
+ 
+ 
+ 
+The amount of Monthly Tax Deduction based on Computerized Calculation is determined in accordance 
+with the following formula: 
+ 
+Monthly Tax 
+Deduction for 
+the current 
+month 
+=  [(P – M) R + B] – (Z + X) 
+n + 1 
+Net Monthly 
+Tax Deduction 
+=   Monthly Tax Deduction for the current month – zakat for the current month 
+Where P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] –   [D + S + DU + SU + 
+QC + (∑LP + LP1)] 
+P Total chargeable income for a year; 
+∑(Y – K) Total accumulated net normal remuneration and net additional remuneration 
+for the current year, paid to an employee prior to the current month, including 
+net normal remuneration and net additional remuneration paid by previous 
+employer, if any; 
+Y Total   accumulated   gross   normal   remuneration   and   gross   additional 
+remuneration for the current year, paid to an employee prior to the current 
+month, including   gross   normal   remuneration   and   gross   additional 
+remuneration paid by previous employer, if any; 
+ K Total contribution to Employees Provident Fund or other approved scheme 
+paid in respect of Y, if any, subject to the total qualifying amount per year; 
+Y1 Gross normal remuneration for the current month; 
+K1 Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Y1, subject to the total qualifying amount per year; 
+Y2 Estimated remuneration as Y1 for the subsequent months; 
+K2 Estimated balance of total contribution to Employees Provident Fund or other 
+approved scheme paid for the balance of qualifying months [[Total qualifying 
+amount per year – (K + K1 + Kt)] / n] or K1, whichever is lower; 
+Yt – Kt Net additional remuneration for the current month; 
+Yt Gross additional remuneration for the current month; 
+Kt Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Yt, subject to the total qualifying amount per year; 
+  
+* K + K1 + K2 + Kt not exceeding the total qualifying amount per year; 
+**∑(Yt – Kt) only applies to calculation of Monthly Tax Deduction for additional remuneration; 
+ 
+n Balance of month in a year; 
+n + 1 Balance of month in a year, including current month; 
+D Deduction for individual; 
+S Deduction for husband or wife; 
+DU Deduction for disabled person; 
+SU Deduction for disabled husband or wife; 
+Q Deduction for qualifying children; 
+C Number of qualifying children; 
+Value of D, S and C are determined as follows: 
+(i) Category 1 = Single: 
+Value of D = Deduction for individual, S = 0 and C = 0; 
+11 
+ 
+ 
+ 
+ 
+ 
+(ii) Category 2 = Married and husband or wife is not working: 
+Value of D = Deduction for individual,  
+Value of S = Deduction for husband or wife, and  
+Value of C = Number of qualifying children; 
+(iii) Category 3 = Married and husband or wife is working, divorced or widowed, or single 
+with adopted child: 
+Value of D = Deduction for individual,  
+Value of S = 0, and  
+Value of C = Number of qualifying children; 
+∑LP Accumulated allowable deductions in the current year, including from 
+previous employment, if any; 
+LP1 Allowable deductions for the current month; 
+M Amount of the first chargeable income for every range of chargeable 
+income a year; 
+R Percentage of tax rates; 
+B Amount of tax on M after deduction of tax rebate for individual and 
+husband or wife, if qualified; 
+Z Accumulated zakat paid in the current year other than zakat for the 
+current month; 
+X Accumulated Monthly Tax Deduction paid for the previous month in the 
+current year, including payment from previous employment, but shall 
+not include additional Monthly Tax Deduction requested by the employee 
+and payment of tax installment. 
+ 
+Upon getting the value of P, the value of M, R and B are determined based on Table 1 where the value 
+of B depends on the category of employee. 
+ 
+Table 1: Value of P, M, R and B 
+ 
+ 
+ 
+2. COMPUTERIZED CALCULATION FOR ADDITIONAL REMUNERATION 
+ 
+Additional remuneration means any additional payment to the normal remuneration for the 
+current month paid to an employee whether in one lump sum, periodical, in arrears or non-fixed 
+payment. 
+ 
+Such additional remuneration includes: 
+• bonus/incentive 
+• arrears of salary or any other arrears paid to an employee 
+• employee’s share option scheme (if employee opts for MTD deduction) 
+P 
+(RM) 
+M 
+(RM) 
+R 
+(%) 
+B 
+Category 1 & 3 (RM) 
+B 
+Category 2 (RM) 
+5,001 - 20,000 5,000 1 – 400 – 800 
+20,001 - 35,000 20,000 3 – 250 –650 
+35,001 - 50,000 35,000 6 600 600 
+50,001 - 70,000 50,000 11 1,500 1,500 
+70,001 - 100,000 70,000 19 3,700 3,700 
+100,001 - 400,000 100,000 25 9,400 9,400 
+400,001 - 600,000 400,000 26 84,400 84,400 
+600,001 - 2,000,000 600,000 28 136,400 136,400 
+Exceeding 2,000,000 2,000,000 30 528,400 528,400 
+12 
+ 
+ 
+ 
+ 
+ 
+• tax borne by employer 
+• gratuity 
+• compensation for loss of employment 
+• ex-gratia 
+• director’s fee (not paid monthly) 
+• commissions (not paid monthly) 
+• allowances (not paid monthly) 
+• any other payment in addition to normal remuneration for current month  
+Therefore, MTD should calculate based on current year additional remuneration formula and 
+reported together with current month’s MTD in CP39 text file format.  
+ 
+ 
+ 
+ 
+The amount of Monthly Tax Deduction for additional remuneration based on Computerized Calculation 
+is determined in accordance with the following formula: 
+ 
+Step 1 – Determine the Monthly Tax Deduction on net normal remuneration for a year. 
+ 
+[A] Determine the category of the employee. 
+[B] Determine the chargeable income for a year, not including additional 
+remuneration for the current month, in accordance with the formula 
+specified in subparagraph c(i), where P = [∑(Y - K*) + (Y1 – K1*) + [(Y2 
+– K2*) n] + (Yt – Kt*)**] - [D + S +  DU + SU + QC + (∑LP + LP1)]. 
+[C] Determine the Monthly Tax Deduction for net normal remuneration for 
+the current month in accordance with the formula specified in 
+subparagraph c(i) = [(P – M) R + B] – (Z + X) 
+n + 1 
+ 
+Upon the value of P being determined, the value of M, R and B are 
+determined based on Table 1. 
+[D] Determine the net Monthly Tax Deduction for the current month = 
+Monthly Tax Deduction for the current month (Step [C]) –  zakat for 
+the current month, if any. 
+[E] Determine the total Monthly Tax Deduction for a year 
+= X + [Step [C] x (n + 1)] 
+X is the accumulated Monthly Tax Deduction which has been paid; 
+n + 1 is the balance of month in a year, including the current month. 
+ 
+Step 2 – Determine the chargeable income for a year, including the additional remuneration 
+for the current month. 
+ 
+[A] Determine the category of the employee. 
+[B] Determine the chargeable income for a year in accordance with the 
+formula specified in (i), where P = [∑(Y - K*) + (Y1 – K1*) + [(Y2 – K2*) n] 
++ (Yt – Kt*)**] - [D + S +  DU + SU + QC + (∑LP + LP1)]. 
+Step 3 – Determine the total tax for a year. 
+Total tax for a year            =      (P – M) R + B  
+Note : 
+With effect from the Year of Assessment 2016, where gross income from an employment 
+is receivable in respect of any particular period, it shall, when received, be taxed in the year 
+in which it is received [Subsection 25(1) of ITA 1967]. 
+ 
+13 
+ 
+ 
+ 
+ 
+ 
+Value of P is determined based on Step 2[B]; 
+Value of M, R and B are determined based on Table 1. 
+ 
+Step 4 – Determine the Monthly Tax Deduction for additional remuneration for the current 
+month. 
+ 
+Monthly Tax Deduction for 
+additional remuneration for the 
+current month 
+=  Total tax for a year (Step 3) –  total Monthly 
+Tax Deduction for a year (Step 1[E]) + zakat 
+which has been paid. 
+ 
+Step 5 – Determine the Monthly Tax Deduction for the current month which shall be paid. 
+ 
+Monthly Tax Deduction for the 
+current month which shall be paid 
+= Net Monthly Tax Deduction (Step 1[D]) + 
+Monthly Tax Deduction for additional 
+remuneration for the current month (Step 4) 
+ 
+3. COMPUTERIZED CALCULATION FOR AN APPROVED INDIVIDUAL UNDER THE RETURNING EXPERT 
+PROGRAM (REP) 
+ 
+An approved employee under the REP is an expert in a field specified by the Minister and shall be taxed   
+at the rate of 15% on chargeable income  for five (5) consecutive years of assessment. If chargeable 
+income does not exceed RM35,000, the  employee is eligible for self and spouse rebate of RM400, 
+respectively. 
+ 
+The method of determining the amount of MTD should refer to Garis Panduan Potongan Cukai Bulanan 
+Di Bawah Kaedah-Kaedah Cukai Pendapatan (Potongan Daripada Saraan ) 1994  and related Rulings 
+issued by LHDNM. 
+ 
+The amount of MTD is determined in accordance with the following formula: 
+ 
+ 
+Monthly Tax 
+Deduction for the 
+current month 
+= [(PR – T) – (Z + X)] 
+n + 1 
+Net Monthly Tax 
+Deduction 
+= Monthly Tax Deduction for the current month – zakat for the current month 
+Where P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] – [D + S + DU + SU + 
+QC + ∑LP + LP1)] 
+P Total chargeable income for a year; 
+∑ (Y – K) Total accumulated net normal remuneration and net additional remuneration 
+for the current year, paid to an employee prior to the current month, including 
+net normal remuneration and net additional remuneration paid by previous 
+employer, if any; 
+Y Total accumulated gross normal remuneration and gross additional 
+remuneration for the current year, paid to an employee prior to the current 
+month, including gross normal remuneration and gross additional 
+remuneration paid by previous employer, if any; 
+K Total contribution to Employees Provident Fund or other approved scheme 
+paid in respect of Y, if any, subject to the total qualifying amount per year; 
+Y1 Gross normal remuneration for the current month; 
+14 
+ 
+ 
+ 
+ 
+ 
+K1 Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Y1  subject to the total qualifying amount per year; 
+Y2 Estimated remuneration as Y1 for the subsequent months; 
+K2 Estimated balance of total contribution to Employees Provident Fund or other 
+approved scheme paid for the balance of the qualifying months [[Total 
+qualifying amount per year – (K + K1 + Kt)] / n] or K1, whichever is lower; 
+Yt – Kt Net additional remuneration for the current month; 
+Yt Gross additional remuneration for the current month; 
+Kt Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Yt , subject to the total qualifying amount per year; 
+*K + K1 + K2 + Kt  not exceeding total qualifying amount per year; 
+**∑(Yt – Kt) only applies to calculation of Monthly Tax Deduction for additional remuneration; 
+n Balance of month in a year; 
+n + 1 Balance of month in a year, including current month; 
+D Deduction for individual; 
+S Deduction  for husband or wife; 
+DU Deduction for disabled person; 
+SU Deduction for disabled husband or wife; 
+Q Deduction for qualifying children; 
+C Number of qualifying children; 
+Value of D, S and C are determined as follows: 
+  
+(i) Category 1 = Single: 
+Value of D  = Deduction for individual, S = 0 and C = 0; 
+(ii)    Category 2 = Married and husband or wife is not working: 
+Value of D = Deduction for individual, S = Deduction for husband or wife and C = Number of 
+qualifying children; 
+(iii) Category 3 = Married and husband or wife is working, divorced or widowed, or single with adopted 
+child: 
+Value of D = Deduction for individual, S = 0 and C = Number of qualifying children; 
+∑LP Accumulated allowable deductions in the current year, including from previous 
+employment, if any; 
+LP1 Allowable deductions for the current month; 
+R Percentage of tax rates; 
+T Individual or husband or wife rebate, if any; 
+Z Accumulated zakat paid in the current year other than zakat for the current 
+month; 
+X Accumulated Monthly Tax Deduction paid for the previous month in the current 
+year, including payment from previous employment, but shall not include 
+additional Monthly Tax Deduction requested by the employee and payment of 
+tax installment. 
+ 
+ 
+Upon getting the value of P, the value of T is determined based on Table 2 where the value of T 
+depends on the category of employee. 
+ 
+ 
+ 
+ 
+15 
+ 
+ 
+ 
+ 
+ 
+Table 2: Value of P, R and T 
+ 
+P 
+(RM) 
+R 
+(%) 
+T 
+Category 1 & 3 
+(RM) 
+T 
+Category 2 
+(RM) 
+35,000 and below 15 400 800 
+Exceeding 35,000 15 0 0 
+ 
+ 
+4. COMPUTERIZED CALCULATION FOR KNOWLEDGE WORKER IN THE SPECIFIED REGION  
+ 
+A qualified knowledge worker shall be taxed at the rate of 15% on chargeable income from 
+employment with a designated company engaged in qualifying activities as approved by the 
+Minister. 
+ 
+If chargeable income does not exceed RM35,000, the employee is eligible for self and spouse rebate 
+of RM400, respectively. 
+ 
+The method of determining the amount of MTD should refer to Garis Panduan Potongan Cukai 
+Bulanan Di Bawah Kaedah -Kaedah Cukai Pendapatan (Potongan Daripada Saraan) 1994 and 
+related Rulings issued by LHDNM. 
+ 
+The amount of MTD is determined in accordance with the following formula: 
+ 
+Monthly Tax 
+Deduction 
+for current 
+month 
+=  [(PR – T) – (Z + X)] 
+n + 1 
+Net  Monthly 
+Tax 
+Deduction 
+= Monthly Tax Deduction for the current month – zakat for the current 
+month 
+Where P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] - [D + S + DU + SU + 
+QC + (∑LP + LP1)] 
+P Total chargeable income for a year; 
+∑(Y – K) Total accumulated net normal remuneration and net additional remuneration 
+for the current year, paid to an employee prior to the current month, including 
+net normal remuneration and net additional remuneration paid by previous 
+employer, if any; 
+Y Total accumulated gross normal remuneration and gross additional 
+remuneration for the current year, paid to an employee prior to the current 
+month, including gross normal remuneration and gross additional 
+remuneration paid by previous employer, if any; 
+K Total contribution to Employees Provident Fund or other approved scheme 
+paid in respect of Y, if any, subject to the total qualifying amount per year; 
+Y1 Gross normal remuneration for the current month; 
+K1 Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Y1 subject to the total qualifying amount per year; 
+Y2 Estimated remuneration as Y1 for the subsequent months; 
+K2 Estimated balance of total contribution to Employees Provident Fund or other 
+approved scheme for the balance of qualifying months [[Total qualifying amount 
+per year – (K + K1 + Kt)] / n] or K1, whichever is lower; 
+ 
+ 
+ 
+ 
+Yt – Kt Net additional remuneration for the current month; 
+16 
+ 
+ 
+ 
+ 
+ 
+Yt Gross additional remuneration for the current month; 
+Kt Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Yt, subject to the total qualifying amount per year; 
+*K + K1 + K2 + Kt not exceeding the total qualifying amount per year; 
+**∑(Yt – Kt) only applies to calculation of Monthly Tax Deduction for additional remuneration; 
+ 
+n 
+ 
+Balance of month in a year; 
+n + 1 Balance of month in a year, including current month; 
+D Deduction for individual; 
+S Deduction  for husband or wife; 
+DU Deduction for disabled person; 
+SU Deduction for disabled husband or wife; 
+Q Deduction for qualifying children; 
+C Number of qualifying children; 
+ 
+ 
+Value of D, S and C are determined as follows: 
+(i)   Category 1= Single: 
+Value of D = Deduction for individual, S = 0 and C = 0; 
+(ii)  Category 2 = Married and husband or wife is not working: 
+Value of D = Deduction for individual, S = Deduction for husband or wife and C = 
+Number of qualifying children; 
+(iii)  Category 3 = Married and husband or wife is working, divorced or widowed, or single     
+with adopted child: 
+Value of D = Deduction for individual, S = 0 and C = Number of qualifying children; 
+ 
+ ∑LP Accumulated allowable deductions in the current year, including from previous 
+employment, if any; 
+LP1 Allowable deductions for the current month; 
+R Percentage of tax rates; 
+T Individual or husband or wife rebate, if any; 
+Z Accumulated zakat paid in the current year other than zakat for the current 
+month; 
+X Accumulated Monthly Tax Deduction paid for the previous month in the current 
+year, including payment from previous employment, but shall not include 
+additional Monthly Tax Deduction requested by the employee and payment of 
+tax installment. 
+Upon getting the value of P, the value of T is determined based on Table 3 where the value of T 
+depends on the category of employee. 
+ 
+Table 3: Value of P, R and T 
+ 
+P 
+(RM) 
+R 
+(%) 
+T 
+Category 1 & 3 
+(RM) 
+T 
+Category 2 
+(RM) 
+35,000 and below 15 400 800 
+Exceeding 35,000 15 0 0 
+ 
+ 
+ 
+17 
+ 
+ 
+ 
+ 
+ 
+5. COMPUTERIZED CALCULATION FOR AN INDIVIDUAL RESIDENT WHO IS NOT A CITIZEN AND HOLDS 
+C SUITE POSITION IN AN APPROVED COMPANY 
+ 
+A resident employee who is not a citizen and holds C Suite position in the company as approved 
+by the Minister shall be taxed at the rate of 15% on chargeable income. 
+ 
+The method of determining the amount of MTD should refer to Garis Panduan Potongan Cukai  
+Bulanan Di Bawah Kaedah -Kaedah Cukai Pendapatan (Potongan Daripada Saraan) 1994 and 
+related Rulings issued by LHDNM. 
+ 
+The amount of MTD is determined in accordance with the following formula: 
+ 
+Monthly Tax 
+Deduction 
+for current 
+month 
+=  [(PR) – (Z + X)] 
+n + 1 
+Net  Monthly 
+Tax 
+Deduction 
+= Monthly Tax Deduction for the current month – zakat for the current 
+month 
+Where P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] - [D + S + DU + SU + 
+QC + (∑LP + LP1)] 
+P Total chargeable income for a year; 
+∑(Y – K) Total accumulated net normal remuneration and net additional remuneration 
+for the current year, paid to an employee prior to the current month, including 
+net normal remuneration and net additional remuneration paid by previous 
+employer, if any; 
+Y Total accumulated gross normal remuneration and gross additional 
+remuneration for the current year, paid to an employee prior to the current 
+month, including gross normal remuneration and gross additional 
+remuneration paid by previous employer, if any; 
+K Total contribution to Employees Provident Fund or other approved scheme 
+paid in respect of Y, if any, subject to the total qualifying amount per year; 
+Y1 Gross normal remuneration for the current month; 
+K1 Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Y1 subject to the total qualifying amount per year; 
+Y2 Estimated remuneration as Y1 for the subsequent months; 
+K2 Estimated balance of total contribution to Employees Provident Fund or other 
+approved scheme for the balance of qualifying months [[Total qualifying amount 
+per year – (K + K1 + Kt)] / n] or K1, whichever is lower; 
+Yt – Kt Net additional remuneration for the current month; 
+Yt Gross additional remuneration for the current month; 
+Kt Contribution to Employees Provident Fund or other approved scheme paid in 
+respect of Yt, subject to the total qualifying amount per year; 
+ 
+*K + K1 + K2 + Kt not exceeding the total qualifying amount per year; 
+**∑(Yt – Kt) only applies to calculation of Monthly Tax Deduction for additional remuneration; 
+ 
+n 
+ 
+Balance of month in a year; 
+n + 1 Balance of month in a year, including current month; 
+D Deduction for individual; 
+S Deduction  for husband or wife; 
+18 
+ 
+ 
+ 
+ 
+ 
+DU Deduction for disabled person; 
+SU Deduction for disabled husband or wife; 
+Q Deduction for qualifying children; 
+C Number of qualifying children; 
+ 
+ 
+Value of D, S and C are determined as follows: 
+(i)   Category 1= Single: 
+Value of D = Deduction for individual, S = 0 and C = 0; 
+(ii)  Category 2 = Married and husband or wife is not working: 
+Value of D = Deduction for individual, S = Deduction  for husband or wife and C = 
+Number of qualifying children; 
+(iii)  Category 3 = Married and husband or wife is working, divorced or widowed, or single     
+with adopted child: 
+Value of D = Deduction for individual, S = 0 and C = Number of qualifying children; 
+ 
+ ∑LP Accumulated allowable deductions in the current year, including from previous 
+employment, if any; 
+LP1 Allowable deductions for the current month; 
+R Percentage of tax rates; 
+  
+Z Accumulated zakat paid in the current year other than zakat for the current 
+month; 
+X Accumulated Monthly Tax Deduction paid for the previous month in the current 
+year, including payment from previous employment, but shall not include 
+additional Monthly Tax Deduction requested by the employee and payment of 
+tax installment. 
+ 
+Upon getting the value of P & R is determined based on Table 4 depends on the category of 
+employee. 
+ 
+Table 4: Value of P and R 
+ 
+ 
+P 
+(RM) 
+R 
+(%) 
+Exceeding 35,000 15 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+19 
+ 
+ 
+ 
+ 
+ 
+E. TERMS AND CONDITIONS 
+ 
+Monthly Tax Deduction for normal and additional remuneration based on computerized calculation 
+shall be subject to the followings: 
+ 
+1. Calculations is limited to two decimal points only and omit the subsequent figures.  
+ 
+Example : 123.4534 = 123.45 
+ 
+2. The amount of Monthly Tax Deduction to be rounded up to the nearest five cents as follows: 
+i) one, two, three and four cents to be rounded up to five cents; and  
+1, 2, 3, 4 – rounding to the 5 cents 
+ 
+Example: 287.02 ≈ 287.05 
+ 
+ii) six, seven, eight and nine cents to be rounded up to ten cents; and  
+6, 7, 8, 9 – rounding to the 10 cents 
+ 
+Example: 152.06 ≈ 152.10 
+ 
+3. If the amount of Monthly Tax Deduction or Monthly Tax Deduction before deduction for zakat 
+is less than ten ringgit, the employer is not required to make the Monthly Tax Deduction; and 
+ 
+4. If the amount of Monthly Tax Deduction after deduction for zakat is less than ten ringgit, the 
+employer is required to make the Monthly Tax Deduction. 
+ 
+  MTD Calculation 
+(RM) 
+MTD Amount Deduction  
+(RM) 
+a. MTD for current month < 10 0 
+  ≥ 10 Deduct as per MTD calculation 
+b. Net MTD  
+(after zakat/fi deduction for 
+the current month) 
+< 10 Deduct as per MTD calculation 
+  ≥ 10 Deduct as per MTD calculation 
+c. MTD for additional 
+remuneration 
+< 10 0 
+  ≥ 10 Deduct as per MTD calculation 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+20 
+ 
+ 
+ 
+ 
+ 
+5. Zakat and departure levy shall be treated as follows:  
+ 
+i) Employees receive only remuneration (without additional remuneration). 
+ 
+ MTD for current 
+month (RM) 
+         Zakat and departure 
+levy for current 
+month (RM) 
+Net 
+MTD 
+(RM) 
+Zakat and 
+departure levy 
+carried forward to 
+the following 
+month (value of Z)  
+(RM) 
+ (a) (b) (a – b = c) (d) 
+a. 8.00 ≈ 0.00 5.00 - 5.00 ≈ 0.00 5.00 
+b. 15.00 20.00 - 5.00 ≈ 0.00 20.00 
+c. 15.00 8.00 7.00 8.00 
+d. 120.00 100.00 20.00 100.00 
+ 
+ii) Employees receive additional remuneration during the month. Please refer to MTD for 
+     additional remuneration formula. 
+ 
+ MTD for 
+current 
+month (RM) 
+Zakat for 
+current 
+month 
+(RM) 
+Net MTD 
+(RM) 
+ 
+ 
+Step 1(c) 
+Zakat carried 
+forward to the 
+following month 
+(value of Z) 
+(RM) 
+MTD for 
+additional 
+remuneration 
+(RM) 
+Step 4 
+MTD for 
+current 
+month 
+(RM) 
+Step 5 
+ (a) (b) (a – b = c) (d) (e) (c + e = f) 
+a. 8.00 ≈ 0.00 5.00 -5.00 ≈ 0.00 5.00 9.00 ≈ 0.00 0.00 
+b. 8.00 ≈ 0.00 5.00 -5.00 ≈ 0.00 5.00 25.00 20.00 
+c. 15.00 20.00 - 5.00 ≈ 0.00 20.00 32.55 27.55 
+d. 15.00 8.00 7.00 8.00 127.30 134.30 
+e. 120.00 100.00 20.00 100.00 392.25 412.25 
+ 
+6. MTD for computerized calculation method must be paid for the actual amount (including the decimal 
+point amount). 
+ 
+7. In the situation where employees do not receive any normal remuneration in the current month but 
+only additional remuneration, then value of Y1 is equal to 0. 
+ 
+8. If additional remuneration paid before the monthly remuneration, value of Y1 shall refer to the monthly 
+remuneration which will be paid for that month. 
+ 
+9. MTD is to be deducted from the employee’s taxable remuneration only. All the tax exemption on 
+allowances, benefit-in-kind and perquisites shall be excluded from the remuneration for MTD 
+purposes. Any amount exceed the restricted amount shall be taxable. Please refer to Form E 
+Explanatory Notes for references. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+21 
+ 
+ 
+ 
+ 
+ 
+All the tax exemption on allowances, perquisites, gifts and benefits shall be reported in the Form 
+EA, Part F – TOTAL TAX EXEMPT ALLOWANCES / PERQUISITES / GIFTS / BENEFITS. 
+ 
+List of tax exempt allowances / perquisites / gifts / benefits which are required to declare: 
+ 
+ SUBJECT EXEMPTION LIMIT 
+(PER YEAR) 
+i. Petrol card, petrol allowance, travelling allowance or toll payment or 
+any of its combination for official duties. If the amount received 
+exceeds RM6,000 a year, the employee can make a further deduction 
+in respect of the amount spent for official duties. Records pertaining to 
+the claim for official duties and the exempted amount must be kept for 
+a period of 7 years for audit purpose. 
+ 
+RM6,000.00 
+ii. Child care allowance in respect of children up to 12 years of age. Tax 
+exemption limit income on child care allowance received by the 
+employee or paid directly by the employer to the child care cent re 
+increased to RM3,000 per year. 
+RM3,000.00 
+iii. Gift of fixed line telephone, mobile phone, pager or Personal Digital 
+Assistant (PDA) registered in the name of the employee or 
+employer including cost of registration and installation. 
+Limited to only 1 
+unit for each 
+category of assets 
+iv. Monthly bills for subscription of broadband, fixed line telephone, 
+mobile phone, pager and PDA registered in the name of the employee 
+or employer including cost of registration and installation. 
+Limited to only 1 unit 
+for each category of 
+assets 
+v. Perquisite (whether in money or otherwise) provided to the 
+employee pursuant to his employment in respect of :- 
+(i) past achievement award; 
+(ii) service excellence award, innovation award or productivity award; 
+and 
+(iii) long service award (provided that the employee has exercised 
+an employment for more than 10 years with the same employer). 
+RM2,000.00 
+vi. Parking rate and parking allowance. This includes parking rate paid by 
+the employer directly to the parking operator. 
+ 
+ 
+Restricted to the 
+actual amount 
+expended 
+vii. Meal allowance received on a regular basis and given at the same 
+rate to all employees. Meal allowance provided for purposes such as 
+overtime or outstation / overseas trips and other similar purposes in 
+exercising an employment are only exempted if given based on the 
+rate fixed in the internal circular or written instruction of the employer. 
+22 
+ 
+ 
+ 
+ 
+ 
+viii. Subsidized interest for housing, education or car loan is fully exempted 
+from tax if the total amount of loan taken in aggregate does not exceed 
+RM300,000.  
+ 
+If the total amount of loan exceeds RM300,000, the amount of 
+subsidized interest to be exempted from tax is limited in accordance 
+with the following formula:  
+ 
+                                          
+Where; 
+ 
+A = is the difference between the amount of interest to be borne by the 
+employee and the amount of interest payable by the employee in 
+the basis period for a year of assessment; 
+ 
+B = is the aggregate of the balance of the principal amount of housing, 
+education or car loan taken by the employee in the basis period for 
+a year of assessment or RM300,000, whichever is lower; 
+ 
+C = is the total aggregate of the principal amount of housing, education 
+or car loan taken by the employee. 
+ 
+ 
+Example : Normal remuneration : RM5,000 per month 
+Car allowance : RM  800 per month 
+Meal allowance : RM  300 per month (Exempted)  
+Childcare allowance : RM  250 per month (Exempted – limit to 
+                 RM3,000 per year) 
+   
+Total : RM6,350 per month 
+ 
+To determine MTD amount, taxable income as follow: 
+Normal remuneration : RM5,000 per month 
+Car allowance  : RM  800 per month 
+Total taxable remuneration  : RM5,800 per month 
+10. Employee who newly joined the company during the year shall submit Form TP3 (Exhibit 2) to 
+his new employer to notify information relating to his employment with previous employer in the 
+current year. 
+ 
+The amounts related to the previous employment in the previous employer in the current year are 
+used only for the purpose of MTD calculation. These amounts shall not appear in the pay slip and 
+EA Form. 
+ 
+The information amount from the TP3 Form shall be treated in the formula as variable (Y–K*), X, Z 
+and ∑LP. 
+ 
+ 
+
+23 
+ 
+ 
+ 
+ 
+ 
+11. Employee who has benefits-in-kind (BIK) and value of living accommodation (VOLA) as part of his 
+monthly remuneration shall deduct MTD 5 as per normal remuneration. 
+ 
+12. Amount of BIK/VOLA shall be treated as part of Y1 in the MTD calculation during the current year 
+only. It shall not carry forward to the following year. 
+ 
+Amount of BIK/VOLA are used only for the purpose of MTD calculation. These amounts shall not 
+appear in the pay slip and EA Form as gross salary/remuneration. 
+ 
+There are 2 methods in providing fields to key into the system: 
+ 
+i) Employer input monthly amount and system treated as Y1 in the MTD formula. 
+ii) Employer input the total amount of each BIK/VOLA and system calculate the monthly amount 
+that system treated as Y1 in the MTD formula. The method of calculation to obtain a monthly 
+amount is as follow: 
+ 
+Monthly amount =                        Value of BIK/VOLA for a year   
+12/Remaining working month in a year including current month 
+Example : 
+ 
+Value of car in a year : RM25,000 
+Month/year of deduction agreed by the employer  : April 2023 
+Remaining working month in a year including 
+current month : 9 months 
+ 
+Monthly amount : RM25,000 
+9 
+: RM2,777.77 ≈ RM2,777.00 
+ 
+* The value of BIK/VOLA for a year is the actual benefit received by the employee.  
+Please refer to Public Ruling for detail explanation of BIK and VOLA respectively. 
+ 
+13. EPF for the purpose of MTD calculation are as follows: 
+ 
+i) If allowances categorized as the remuneration subject to EPF but not subject to tax, all 
+amount of EPF shall be treated as K1. 
+ 
+Salary : RM2,400.00 
+Child care allowance : RM250.00  
+   (receives every month – remuneration category) 
+  
+EPF deducted from the salary : RM297.00 
+K1 (as per EPF deduction) : RM297.00 
+ 
+ 
+
+24 
+ 
+ 
+ 
+ 
+ 
+ii) If allowances categorized as the additional remuneration subject to EPF but not subject to 
+tax, difference of total EPF with the EPF remuneration shall be treated as Kt. 
+ 
+Salary : RM2,400.00 
+Meal allowance : RM450.00  
+                                                             (one off payment – additional remuneration category) 
+EPF deducted from the salary : RM315.00  
+ 
+K1 (EPF for remuneration) : RM264.00 
+Kt (difference from total and normal)   : RM315 - RM264 
+: RM51.00 
+ 
+ 
+iii) If there is an additional remuneration 
+ 
+Salary : RM2,400.00 
+Bonus : RM3,600.00 
+EPF deducted from the salary : RM660.00  
+ 
+K1 (EPF for remuneration) : RM264.00 
+Kt (difference from total and normal)   : RM660 - RM264 
+  : RM396.00 
+ 
+ 
+iv) If employee claim Voluntary EPF Contribution through Form TP1 (Exhibit 1), the Voluntary 
+EPF Contribution shall be treated as LP1  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Salary      :  RM4,500.00 
+EPF deducted from the slary   :  RM330.00 
+Voluntary EPF (from Form TP1)   :  RM200.00 
+ 
+K1 (EPF for remuneration)   :  RM330.00 
+LP1 (Voluntary EPF from Form TP1)  :  RM200.00 
+ 
+Example: 
+P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] – [D + S + DU + SU + QC + 
+(∑LP + LP1)] 
+ 
+P  = [∑(0.00-0.00)+(4,500.00-330.00)+[(4,500.00-330.00) x 11] + (0-0)]-
+(9000.00+0.00+0.00+0.00+(2000 x 0)+0.00+200.00) 
+ 
+ 
+25 
+ 
+ 
+ 
+ 
+ 
+v) If employee ha ve a Mandatory EPF Contribution  but also clai m Voluntary EPF , the total 
+amount of K1 shall not exceed RM 4,000. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+vi) If employee does not have a Mandatory EPF Contribution, the Voluntary EPF can be claimed 
+up to RM 7,000 
+             
+ 
+ 
+14. All allowable deductions are limited up to the maximum amount under the Income Tax Act 1967. The 
+amount of allowable deduction shall not appear in the pay slip and EA Form. 
+ 
+i) Compulsory deductions 
+ 
+There are six (6) type of compulsory deductions that affect in the formula as follows: 
+ 
+ [D + S + DU + SU + QC + (∑LP + LP1)] 
+Director Fee      :  RM40,000.00 
+EPF (deducted from the salary)    :  RM0.00 
+Voluntary EPF (from Forrm TP1)     :  RM7,000.00 
+ 
+K1 (EPF for remuneration)    :  RM0.00 
+LP1 ((EPF for remuneration) under para 49(1)(b)  :  RM4,000.00 
+LP1 (Voluntary EPF from Form TP1) under para 49(1)(a) :  RM3,000.00 
+ 
+Example: 
+P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] – [D + S + DU + SU + QC + 
+(∑LP + LP1)] 
+P  = [∑(0.00-0.00)+(40,000.00-0.00)+[(40,000.00-0.00) x 11] + (0-0)]-
+(9000.00+0.00+0.00+0.00+(2000 x 0)+0.00+7,000.00) 
+ 
+Salary      :  RM40,000.00 
+EPF deducted from the salary   :  RM4,400.00 
+Voluntary EPF (from Form TP1)   :  RM1,000.00 
+Life Insurance (from Form TP1)   :  RM3,000.00 
+ 
+K1 (EPF for remuneration)   :  RM4,000.00 
+LP1 (Voluntary EPF)    :  RM0.00 
+LP1 (Life Insurance)    :  RM3,000.00 
+ 
+Example: 
+P = [∑(Y – K*) + (Y1 – K1*) + [(Y2 – K2*) n] + (Yt – Kt*)**] – [D + S + DU + SU + QC + 
+(∑LP + LP1)] 
+P  = [∑(0.00-0.00)+(40,000.00-4,000.00)+[(40,000.00-0.00) x 11] + (0-0)]-
+(9000.00+0.00+0.00+0.00+(2000 x 0)+0.00+3,000.00) 
+ 
+ 
+26 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+a. Individual 
+ 
+Relief of RM9,000 for an individual in respect of himself and his dependent 
+relatives is granted automatically. 
+9,000.00 
+b. Husband / Wife 
+ 
+i. A husband relief of RM4,000 is given in respect of a husband who 
+has no source of income / no total income or the husband has elected 
+for joint assessment.  
+ 
+With effect from Year of Assessment 2017, husband relief is NOT 
+allowed if the husband (not a husband who is a disabled person) has 
+gross income exceeding RM4,000 derived from sources outside 
+Malaysia.  
+ 
+ii. A wife relief of RM4,000 is given in respect of a wife who has no 
+source of income / no total income or the wife has elected for joint 
+assessment.  
+ 
+With effect from Year of Assessment 2017, wife relief is NOT allowed 
+if the wife (not a wife who is a disabled person) has gross in come 
+exceeding RM4,000 derived from sources outside Malaysia. 
+4,000.00 
+c. Child 
+ 
+“Child” means an unmarried dependent  legitimate child or stepchild or 
+adopted child, under the age of 18 years or if above 18 years old, the child 
+must be: 
+ 
+i. receiving full-time instruction at any university, college or other 
+higher education institution (similar to a university or college); or 
+ 
+ii. serving under articles or indentures with a view to qualifying in a 
+trade or profession. 
+ 
+A relief of RM2,000 per child is allowed if the child is unmarried and below 
+the age 18 years in the current year.  
+ 
+A relief of RM2,000 per child is allowed if the child is unmarried, 18 years of 
+age and above, and is receiving full-time education; OR 
+ 
+Where a child falls wi thin these conditions, the  employee is treated as 
+having the respective number of children: 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+2,000.00 
+27 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+  
+Relief to be 
+given 
+In circumstances where   as if the  
+employee 
+has this 
+number of 
+children 
+Child over the age of 18 years and receiving full-time 4 
+instruction at diploma level onwards in an institution 
+of higher education in Malaysia. 
+Child over the age of 18 years and receiving full-time 4 
+instruction at degree level onwards in an institution 
+of higher education outside Malaysia. 
+Disabled child as certified by the Department of 4  
+Social Welfare. 
+Disabled child receiving further instruction at diploma 8 
+level onwards in an institution of higher education in 
+Malaysia or at degree level onwards in an institution 
+of higher education outside Malaysia. 
+  
+*Relief for:  
+*1 child below the age of 18 or a child who is studying = RM2,000 
+*Child - 18 years and above and studying (diploma or higher) = 
+RM8,000 (considered with 4 children) 
+*Disabled child = RM8,000 (considered with 4 children) 
+*Disabled child - 18 years and above and studying (diploma or higher) 
+= RM16,000 (considered with 8 children) 
+ 
+d. Employees Provident Fund (EPF) or Other Approved 
+Scheme  
+ 
+Total relief for contributions to approved provident funds and life insurance 
+premium is separated as follows: 
+ 
+i. relief of up to RM4,000 is given on contributions to approved 
+provident funds such as the Employees Provident Fund (EPF). 
+ 
+ii. Payments for takaful or life insurance premiums are eligible for a 
+tax relief of up to RM3,000 will be expanded to include voluntary 
+Employees Provident Fund (EPF) contributions and applicable to 
+all taxpayers among civil servants with a pension scheme, other 
+than civil servants pension scheme and self-employment. 
+ 
+ 
+ 
+4,000.00 
+28 
+ 
+ 
+ 
+ 
+ 
+ 
+e. 
+ 
+Disabled Individual 
+ 
+A further deduction of RM7,000 is allowed if the individual is a disabled 
+person.  
+ 
+7,000.00 
+ 
+f. 
+ 
+Disabled Husband / Wife 
+ 
+An further deduction of RM6,000 is given in respect of a disabled husband 
+/ wife. 
+ 
+6,000.00 
+ 
+ii) Optional deductions 
+ 
+Employee can claim deductions and rebates in the relevant month subject to approval 
+by employer by submitting Form TP1 (Exhibit 1) to the employer. 
+ 
+In the formula, all optional deductions shall be treated as ∑LP for the cumulative 
+deductions and LP1 for the current month deductions. System must show cumulative 
+and current month deduction amount for the purpose of audit. 
+ 
+[D + S + DU + SU + QC + (∑LP + LP1)] 
+ 
+List of deductions must be provided in the system as follows: 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+  a. Medical Treatment, Special Needs or Carer Expenses for Parents / Grand 
+parents 
+ 
+Medical treatment, special needs and carer expenses incurred on parents 
+is limited to RM8,000 in a basis year.   
+ 
+  Medical expenses which qualify for deductions includes: 
+i. medical care and treatment provided by a nursing home; and 
+ii. dental treatment limited to tooth  extraction, filling, scaling and 
+cleaning. 
+iii. the scope for dental treatment  is expanded to include all types of 
+examination and treatment expenses dentistry including false teeth, 
+root canal and treatment for replace teeth and repair teeth. 
+ 
+In addition, the scope of individual income tax relief for medical treatment, 
+special needs and carer expenses for parents is expanded to cover 
+grandparents. Full medical examination is limited up to RM1,000 and is 
+expanded to cover all vaccines expenses registered and approved for 
+use by the National Pharrmaceutical Regulatory Agency (NPRA), 
+Ministry of Health. 
+The parents / grandparents  shall be resident in Malaysia. The medical 
+treatment and care services are provided in Malaysia.  
+ 
+ 
+ 
+ 
+8,000.00 
+ 
+29 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+ In the case of carer, shall be proved by a written certification, receipt or copy 
+of carer’s work permit. “Carer” shall not include that individual, husband, 
+wife or the child of that individual. 
+ 
+The claim must be supported by a certified medical practitioner registered 
+with the Malaysian Medical Council that the medical conditions of the 
+parents / grandparents require medical treatment or special needs or carer. 
+ 
+ 
+ 
+ 
+ 
+b. Basic Supporting Equipment 
+ 
+ 
+The purchase of any supporting equipment for use by a disabled individual, 
+husband, wife, child  or parent, may be claimed up to a maximum of 
+RM6,000.00 in a basis year. Basic supporting equipment includes 
+hemodialysis machine, wheel chair, artificial leg and hearing aid but exclude 
+optical lenses and spectacles. 
+6,000.00 
+c. 
+ 
+ 
+ 
+Higher Education Fees (Self) 
+ 
+Payment of annual fee limited to RM7,000.00 is allowed as a relief for any 
+course of study in an institution or professional body in Malaysia 
+recognized by the Government of Malaysia or approved by the Minister of 
+Finance for the purpose of enhancing any skill or qualification: 
+ 
+i. up to tertiary level (other than Masters and Doctorate level) for 
+the purpose of acquiring law, accounting, Islamic financing, 
+technical, vocational, industrial, scientific or technological skills or 
+qualifications; or 
+ii. any course of study at Masters or Doctorate level – for acquiring 
+any skill or qualification. 
+iii. any course of study undertaken for the purpose of up -skilling or 
+self-enhancement. The course has to be conducted by a body 
+recognized by the Director General of Skills Development, under 
+the National Skills Development Act 2006. Th e tax relief is limited 
+to RM2,000 for each year of assessment. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+7,000.00 
+d. 
+ 
+Expenses on Admission Fees to Tourist Centres and Cultural 
+Programmes 
+ 
+Tax relief of up to RM1,000 on expenses for entrance fees to the following: 
+I. i. Tourist attractions such as museums, theme parks, national parks, 
+marine parks, wildlife parks, zoos, and geoparks; and 
+ii. Cultural and arts programs. 
+The relief is given to support the Government’s efforts in organizing the Visit 
+Malaysia Year 2026 program and as an incentive for Malaysians to travel 
+domestically in conjunction with Visit Malaysia Year 2026. 
+ 
+    1,000.00 
+ 
+  
+30 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+e. Medical Expenses on Serious Diseases 
+ 
+Medical expenses on serious diseases include the treatment of acquired 
+immune deficiency syndrome (AIDS), Parkinson’s disease, cancer, renal 
+failure, leukemia and other similar diseases. 
+ 
+‘Other similar diseases’ such as heart attack, pulmonary hypertension, 
+chronic liver disease, fulminant viral hepatitis, head trauma with neurological 
+deficit, brain tumor or vascular malformation, major burns, major organ 
+transplant or major amputation of limbs. 
+ 
+Amount expended on own self, husband/wife or child is deductible up to a 
+maximum of RM10,000.00. 
+ 
+Additionally, the income tax relief be expanded to cover the cost of fertility 
+treatment for the taxpayer or the spouse. 
+ 
+ 
+Medical Expenses on Fertility treatment for self or spouse 
+ 
+Expenses for fertility treatment include Intrauterine Insemination (IUI) 
+treatment, In vitro fertilization (IVF) or any other fertility treatments including 
+consultation fees and medicines on yourself or your spouse. 
+ 
+ 
+Complete Medical Examination 
+ 
+Amount expended on own self, husband/wife or child for complete medical 
+examination is deductible up to a maximum of RM1,000 includes: 
+ 
+i. COVID-19 and influenza detection test fee: 
+a. tests performed at a clinic or hospital  
+b. purchase of self-test kits  
+ii. Mental health examinations or consultations 
+iii. Purchase of self-examination equipment such as glucometer, pulse 
+oximeter, blood pressure monitor and thermometer 
+iv. Fees for disease detection test carried out in clinics or hospital such 
+as blood tests, ultrasounds, mammograms and pap smears 
+10,000.00 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+31 
+ 
+ 
+ 
+ 
+ 
+ Vaccination  
+ 
+Income tax relief on medical treatment expenses include s vaccination 
+expenses up to a maximum of RM1,000 for self, spouse and child.  The 
+types of vaccines eligible for individual income tax relief to be expanded to 
+cover all vaccines registered and approved for use by the National 
+Pharrmaceutical Regulatory Agency (NPRA), Ministry of Health. 
+ 
+Medical Expenses on Diagnosis, Early Intervention & Rehabilitation 
+ 
+Medical expenses on assessment for the purpose of diagnosis, early 
+intervention programs or rehabilitation treatment for children with learning 
+disabilities 
+ 
+Intervention expenditure for Autism, Attention Deficit Hyperactivity Disorder 
+(ADHD), Global Developmental Delay (GDD), Intellectual Disability, Down 
+Syndrome and Specific Learning Disabilit ies, increased to RM10,000 as 
+below: 
+ 
+i. Diagnostic assessment certified by a medical practitioner 
+registered with the Malaysian Medical Council  
+ii. Early intervention and rehabilitation programmes conducted 
+by health profession practitioners registered under the Allied 
+Health Profession Act 2016 
+ 
+ 
+  Examination and Dental Treatment Expenses 
+ 
+The tax relief for medical expenses to include inspection and dental 
+treatment expenses that is limited to an amount of RM1,000 . The claim 
+must be proved by a receipt issued by dental practitioner registered with the 
+Malaysian Dental Council. 
+ 
+  
+32 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+f. Net Deposit in Skim Simpanan Pendidikan Nasional (SSPN) 
+ 
+Amount deposited in SSPN by an individual for his/her children’s education 
+is deductible up to a maximum of RM8,000.00 per year was given from 
+year of assessment 2012 to year of assessment 2024 and extended to 2027.  
+ 
+The allowable deduction is limited to the net amount deposited in that basis 
+year only with additional conditions as follows: 
+ 
+i. tax relief can only be claimed by either mother or father, who make SSPN 
+savings, with a maximum claim limit of RM8,000; and 
+ii. Disbursements from the SSPN fund that aim to fund education costs to 
+further studies are not taken into account in the calculation of net savings 
+for the year and will not affect the amount of eligible relief. 
+ 
+Example:  
+ 
+For the year 2024  
+Balance Brought Forward                                    RM 4,500.00; 
+Total Deposit      RM 2,000.00; and 
+Total Withdrawal                                                  RM 1,500.00.  
+ 
+Allowable deduction is RM500 (RM2,000 – RM 1,500). 
+The Balance Brought Forward of RM4,500 is not taken into account. 
+ 
+8,000.00 
+ 
+ 
+g. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Payment of Alimony to Former Wife 
+ 
+Deduction for payment of alimony to a former wife is limited to RM4,000 or 
+the actual amount paid if the amount of alimony paid is less than the 
+allowable deduction. The total deduction for a wife living together and 
+alimony payments to the former wife is restricted to RM4,000. 
+ 
+Voluntary alimony payments under a mutual agreement but without any 
+formal agreement do not qualify for deduction. 
+ 
+Note: 
+Payment of alimony to former wife is not allowed in the case where the 
+employee claimed deduction for wife. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+4,000.00 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+33 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+h. Life Insurance and EPF 
+ 
+Total relief for life insurance premium is separated as follows: 
+ 
+i. relief of up to RM4,000 is given on contributions to approved 
+provident funds such as the Voluntary or Compulsory Employees 
+Provident Fund (EPF) contributions. 
+ii. Premium payments for takaful or life insurance premiums  for self, 
+husband / wife and children  are eligible for a tax re lief of up to 
+RM3,000  
+iii. the eligibility criteria for insured children for the purpose of claiming        
+individual income tax relief on life insurance premiums / takaful    
+contribution be determined as follows: 
+• aged below 18 and unmarried; 
+• aged 18 and above, unmarried and pursuing tertiary education; or 
+• no age limit for unmarried disabled children. 
+ 
+The total relief for the above should not exceed RM7,000. 
+ 
+ 
+3,000.00  
+i. Private Retirement Scheme (PRS) and Deferred Annuity 
+ 
+This deduction is effective from the Year of Assessment 2012 until 2025 and 
+extended to 2030. 
+ 
+The d eduction allowed shall not exce ed RM3 ,000 in respect of 
+contributions made to a Private Retirement Scheme (PRS) approved by 
+the Securities Commission and paid premiums for deferred annuity.  
+ 
+The total deduction for PRS contributions and deferred annuity premiums is restricted 
+to RM3,000 for an individual and RM3,000 for the spouse who has source of income. 
+If the husband or wife elects for joint assessment, the deduction allowed for the 
+aggregate amount of PRS contributions and deferred annuity premiums is restricted to 
+RM3,000.  
+3,000.00 
+j. Education and Medical Insurance 
+ 
+A deduction not exceeding RM4,000.00 is available on insurance premiums 
+in respect of education or medical benefits for an individual, husband, wife or 
+child. 
+ 
+The total deduction in respect of premiums paid for insurance on education and 
+medical benefits is restricted to RM4,000 for an individual and RM4,000 for the wife 
+who has source of income. If  the husband or wife elects for joint assessment, the 
+deduction allowed for the total of premiums paid for insurance on education and 
+medical benefits is restricted to RM4,000. 
+4,000.00 
+ 
+ 
+34 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+k. Contribution to the Social Security Organisation (SOCSO) 
+ 
+A relief not exceeding RM350 is allowed in respect of contribution to the 
+Social Security Organisation (SOCSO) made or suffered by the individual in 
+basis year. 
+350.00 
+l. Lifestyle 
+ 
+Tax relief of up to RM2,500 be given to a resident taxpayer for payment of 
+the following expenditure:  
+ 
+• Expenditure for the purchase or subscription of books, journals, 
+magazines, newspapers and other similar publications. 
+• Expenditure for the purchase of personal computer, smartphone or 
+tablet. 
+• Payment of monthly bill for internet subscription registered under own 
+name for the use by own self, spouse or child. 
+• Expenditure for self-enrichment course fees under lifestyle. 
+ 
+ 
+ 
+ 
+2,500.00 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+m. Purchase of Breastfeeding Equipment for own use for a child aged 2 
+years and below  
+ 
+The deduction is allowed can be made in complete set or separate parts. 
+The deduction is applicable to working women with child aged up to 2 years 
+and can be claimed once every 2 years. 
+1,000.00 
+n. Child Care fees to a registered child care centre / kindergarten for a 
+child aged 6 years and below. 
+ 
+This relief is restricted to RM3 ,000 per year. Individual who enroll their 
+children below 6 years of age, in child care centres registered with the 
+Director General of Social Welfare under the Child Care Centre Act 1984 
+or kindergartens registered under the Education Act 1996. 
+ 
+This relief can be claimed by either parent of the children. This relief was given 
+from year of assessment 2020 to year of assessment 2024 and extended to 
+2027.The eligible childcare premises be expanded to include daily care 
+centres or after -school transit centres registered with Department of Social 
+Welfare (JKM) for children aged up to 12 years old. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+3,000.00 
+35 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+Reliefs 
+Amount 
+limited to 
+(RM) 
+o.  Additional Lifestyle. 
+ 
+An additional relief limited to RM1 ,000 be given to a resident individual 
+taxpayer for taxpayer’s own use or for the use of the spouse or child and is 
+expanded for the use of the parents for the following: 
+• Cost of purchasing sports equipment for any sports activity as 
+defined under the Sports Development Act 1997. 
+• Rental or entrance fees to any sports facilities; and  
+• Registration fees for any sports competitions where the organizer 
+is approved and licensed by the Commissioner of Sports under the 
+Sports Development Act 1997. 
+• Gym membership fees or sports training. 
+ 
+The taxpayer is allowed to claim this relief in additional to the existing 
+lifestyle relief provided that the total amount claimed under this relief has 
+not been claimed under the existing lifestyle tax relief. The relief is 
+restricted to RM1,000. 
+ 
+1,000.00 
+ 
+p.  Electric Vehicle (EV) Charging Facilities / Purchase of Food Waste  
+Composting Machines expenditure. 
+ 
+Tax relief of up to RM2,500 be given to a resident taxpayer for payment of 
+the following expenditure:  
+• The cost of installing an electric vehicle charger 
+• Purchases include purchase on hire purchase of vehicle chargers; 
+• Vehicle charger rental; or 
+• Electric vehicle charging facility subscription fee 
+• Purchase of food waste composting machines for household use 
+• household food waste grinders 
+• Closed-Circuit Television (CCTV) for home use. 
+ 
+The tax relief claim for the purchase of food waste grinders and / or CCTV is 
+allowed once within a period of 2 years of assessment. 
+ 
+ 
+ 
+2,500.00 
+q.  Interest on Housing Loan 
+ 
+ Tax reliefs  will be given on interest expenses incurred by first -time home    
+buyers:  
+• up to RM7,000 for a home valued up to RM500,000; or  
+• up to RM5,000 for a home valued between RM500,001 and 
+RM750,000.  
+ with additional conditions as follows : 
+• the residential house is not used to generate any income; 
+• the sale and purchase agreement must be completed from 1 January 
+2025 to 31 December 2027; 
+• the amount of individual income tax relief on interest payments 
+allowed is for 3 consecutive assessment years, starting from the  first 
+year housing loan interest is paid; and 
+• two or more individuals are eligible to claim tax relief on housing loan 
+interest payments for the same residential house according to the 
+basis of interest payment division. 
+ 
+7,000.00 
+36 
+ 
+ 
+15. Rebate on Zakat 
+ 
+There are two type of zakat as follows: 
+ 
+a. Zakat that deducted from the remuneration (payslip). Amount of zakat should appear in the payslip 
+and EA Form. 
+ 
+b. Zakat claimed through TP1 form 
+ 
+• Amount of zakat should not appear in the payslip and EA Form due to employee himself paid 
+directly to Pusat Zakat. 
+• It is treated as zakat for current month in the month claimed by the employee. 
+ 
+ 
+16. Form TP1 and Form TP3 can be submitted online by the employee to the employer. All software 
+provider/employer are recommended to develop online submission of TP1 and TP3 Form in easing the 
+compulsory implementation of these submissions by the employee. 
+ 
+Logic of submission is as follow: 
+ 
+i) Unique ID and password to login by each employee. 
+ 
+ii)   Employee’s declaration section 
+ 
+a. Date of employee’s declaration        : date of submission via online 
+b. Employee signature  : employee’s name 
+ 
+iii)   Approval by employer 
+ 
+a. Date of approval by the employer   : date of the employer process the application  
+from the employees in the payroll system as to generate the 
+MTD amount. 
+b. Name           : person in charged for payroll processing 
+c. Designation           : designation of the person in charged 
+d. Employer address          : employer address 
+ 
+ 
+System must provide list of employees that claimed these TP Form. The list can be print and save. 
+Employee also can print and save these TP Form. 
+ 
+17. System must be able to generate detail of amount MTD/CP38 deducted from the employee by using PCBII Form 
+(Exhibit 3). 
+ 
+18. System must provide the text file data format (Exhibit 4) for the purpose of MTD submission to the IRBM. 
+ 
+Employer is recommended to submit CP39 text file format data via internet banking or e-PCB Plus. Employer 
+can register to use the e-PCB Plus at https://mytax.hasil.gov.my/ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+37 
+ 
+ 
+ EXHIBIT 1 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+38 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+39 
+ 
+ 
+     EXHIBIT 2 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+40 
+ 
+ 
+ 
+ 
+ 
+           
+ 
+ 
+ 
+ 
+ 
+
+41 
+ 
+ 
+ 
+ 
+
+  
+ 
+ 
+  42  
+ 
+ 
+ 
+          EXHIBIT 3   
+PENYATA BAYARAN CUKAI OLEH MAJIKAN  PCB 2(II)-Pin. 2012   
+Kepada: Tarikh: 
+  
+Ketua Pegawai Eksekutif/Ketua Pengarah Hasil Dalam Negeri 
+      
+      
+Lembaga Hasil Dalam Negeri Malaysia       
+Cawangan       
+          
+Tuan,       
+Potongan Cukai Yang Dibuat Dalam Tahun     
+  
+        
+Nama Pekerja       
+        
+No. Kad Pengenalan/No. Passpot       
+        
+No. Pengenalan Cukai Pekerja (IG)       
+        
+No. Pekerja       
+        
+No. Majikan (E)       
+        
+Dengan hormatnya saya merujuk kepada perkara di atas.       
+ 
+2. Potongan-potongan yang telah dibuat bagi pekerja di atas dalam tahun semasa adalah seperti berikut: 
+ 
+Bulan Amaun (RM) No. Resit/No. Slip Bank/No. Tarikh Resit/Tarikh Transaksi  Transaksi       
+        
+ PCB CP38 PCB  CP38 PCB CP38 
+        
+Januari     
+   
+Februari     
+   
+Mac     
+   
+April     
+   
+Mei     
+   
+Jun     
+   
+Julai     
+   
+Ogos     
+  
+September     
+   
+Oktober     
+   
+November     
+   
+Disember     
+   
+Jumlah        
+ 
+3. Potongan-potongan yang telah dibuat bagi pendapatan pekerja untuk tahun terdahulu dalam tahun semasa 
+adalah seperti berikut: 
+ 
+Jenis   Amaun PCB No. Resit/ Tarikh Resit/ 
+Bulan Tahun No. Slip Bank/ Tarikh Pendapatan (RM)   
+No. Transaksi Transaksi     
+      
+      
+      
+      
+ 
+Sekian. Terima kasih. 
+ 
+Nama pegawai   
+Jawatan   
+No. Telefon   
+Nama Dan Alamat Majikan  
+  
+ 
+ 
+  43  
+ 
+ 
+ 
+EXHIBIT 4  
+SPECIFICATION FORMAT FOR MTD TEXT FILE DATA        
+File name of text file data  : xxxxxxxxxxmm_yyyy.txt           
+  xxxxxxxxxx   : Employer number   
+  mm       : month of deduction   
+  yyyy       : year of deduction   
+Header:                  
+                     
+No  Field Name   Start   End Length   Type   Notes 
+1  Record Type  1   1  1  Alphabet  H - 'Header’ 
+2  Employer No. (HQ)  2   11  10    Num  Right justify with zeroes 
+                    
+3  Employer No.  12   21  10    Num  Right justify with zeroes 
+                    
+4  Year of Deduction  22   25  4    Num  YYYY 
+                    
+5  Month of Deduction  26   27  2    Num  MM (01-12) 
+                    
+6  Total MTD Amount  28   37  10    Num  Right justify with zeroes and with 2 decimal point 
+                    
+7  Total MTD Records  38   42  5    Num  Right justify with zeroes 
+                    
+8  Total CP38 Amount  43   52  10    Num  Right justify with zeroes and with 2 decimal point 
+                    
+9  Total CP38 Records  53   57  5    Num  Right justify with zeroes 
+                      
+Transaction Record Length     = 57        
+Transaction record (Details):                  
+No  Field Name  Start  End  Length  Type  Notes 
+10  Record Type  1    1  1    Alphabet D - 'Detail’ 
+11  Tax Identification Number  2    12  11   Num  
+Left justify with zeroes (Please complete with 11 digits 
+IG 531367080 to be filled as 00531367080 
+                
+              
+12  Employee’s Name  13   72  60   Alphabet Left justify with spaces 
+              
+13  Old IC No.  73   84  12   Alphanum A valid Old IC No. or just leave it blank if not applicable 
+               
+14  New IC No.  85   96  12   Num  
+A valid New IC No. (without ‘-‘) or just leave it blank if not 
+applicable 
+              
+15  Passport No.  97   108  12   Alphanum Left justify or just leave it blank if not applicable 
+              
+16  Country Code  109  110  2    Alphabet Refer to Country Code list 
+               
+17  MTD Amount  111  118  8    Num  Right justify with zeroes and with 2 decimal point 
+               
+18  CP38 Amount  119  126  8    Num  Right justify with zeroes and with 2 decimal point 
+            
+19 
+Employee No. or Salary 
+No.  127  136  10   Alphanum Left justify   
+Transaction Record Length = 136 
+  
+ 
+ 
+  44  
+ 
+ 
+ 
+EXHIBIT 5 
+The Example of Data as required (IRB Diskette Specification)          
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+1.   Record Type:  H for Header  10. Record Type:  D for Details 
+    
+2. Employer’s No. (Headquarter)  11.     Tax Identification Number (TIN) 
+  
+A.  Please complete the TIN with 11 digit without IG    Please complete with 10 digits without the letter E  
+   
+Example 1 : IG     531367-080 have to be filled as 00531367080  Example 1 : E   908915-10 have to be filled as 0090891510   
+   
+Example 2 : IG 10544355-081 have to be filled as 10544355081  Example 2 : E 6918546-05 have to be filled as 0690891510   
+  
+B. The Tax Identification Number (TIN) is mandatory  Example 3 : E   90002135-00 have to be filled  as 9000213500  
+   
+       
+3. Employer’s No.      
+     
+ Same as No. 2 above  12. Employee’s Name     
+4. Year of Deduction   Please complete the employee’s full name as IC / Passport 
+    
+ Please complete the year of deduction with 4 digits 13. and 14. Old / New Identity Card No.  Example : Year 2005 have to be filled as 2005   
+Please complete the IC no. for local employee (if applicable)      
+5. Month of Deduction   Example 1 :  Old IC No. A 4457334 have to be filled as A4457334 
+  
+Example 2 :  New IC No. 530706-01-5641 have to be filled as 530706015641  Example : Month of August have to be filled as 08  
+    
+6. Total MTD Amount  15. Passport No. 
+  
+Please complete the Passport No. for foreigner employee (if applicable)  Please complete the deduction amount without RM and decimal point  
+  
+Example :  J 1294567 have to be filled as J1294567  Example : RM8350.00 have to be filled as 0000835000  
+    
+7. Total MTD Records  16. Country Code 
+  
+Please complete the Country Code for foreigner employee only. The code is  The total must be tally with employees whom subject to MTD  
+  
+for which country that has issued the passport.  Example : 6 employees have to be filled as 00006  
+    
+8. Total CP38 Amount  17. and 18.  MTD Amount and CP38 Amount 
+  
+Please complete the deduction amount without the word RM and decimal point   Please complete the deduction amount without the word RM and decimal point  
+  
+Example 1 :  RM900.00 have to be filled as 00090000  Example : RM1500.50 have to be filled as 0000150050  
+ 
+Example 2 :  RM500.50 have to be filled as 00050050     
+9. Total CP38 Records  
+19. Employee’s No  
+ The total must be tally with employees whom subject to MTD  
+Example :  2 employees have to be filled as 00002 
+Complete Employee’s No. or Salary No. 
+Example :  AB012283 have to be filled as AB012283  
+  
+ 
+ 
+  45  
+ 
+ 
+ 
+ EXAMPLE OF CALCULATION   
+       
+       
+ MTD Calculation for January 2025 
+ 
+   
+ 
+ 
+Employee (Married) and wife working   
+  3 children entitle for deduction   
+ 
+ 
+Monthly normal remuneration for January = RM5,500.00  
+  EPF = RM605.00  
+  Additional deduction = Nil  
+  MTD paid = Nil  
+  Additional remuneration – Bonus   
+  Received in month of April = RM8,250.00 EPF = RM908.00 
+----------------------------------------------------------------------------------------------------------------------------------- 
+[A] Determine category of employee 
+Category 3 / KA3 
+ 
+[B] Determine chargeable income for a year [P] 
+ 
+Firstly determine value K2 
+K2 = Estimated balance of total contribution to EPF or other Approved Scheme for the balance of the 
+qualifying month  
+= [ [RM4,000.00 (limited) – (K + K1 + Kt) ] / n] or K1, whichever is lower 
+= [ [RM4,000.00 – (RM0.00 + RM605.00 + RM0.00)] / 11] 
+= RM 308.63 
+ 
+*Total EPF = K + K1 + Kt + (K2 x n) ≤ RM 4,000.00 (limit)  
+= RM0.00 + RM605.00 + RM0.00 + (RM308.63 x 11) ≤ RM 4,000.00 (limit) 
+= RM605.00 + RM3,394.93 ≤ RM 4,000.00 (limit) 
+= RM3,999.93 ≤ RM 4,000.00 (limit) 
+where; n = 11 
+P = [∑ (Y– K*)+(Y1 – K1*)+[(Y2 – K2 *) x n] + (Yt – Kt *)**] – [D+S+2000C+(∑LP + LP1)] 
+Where (Yt – Kt ) = 0  
+= [∑ ( RM0.00– RM0.00) + (RM5,500.00– RM605.00*) + [(RM5,500.00– RM308.63*) x 11] + (RM0.00 
++ RM0.00)**] – [RM9,000.00 + RM0.00 +  RM2,000.00(3) + (RM0.00 + RM0.00)] 
+= [[RM4,895.00] + [ (RM5,191.37 x 11)] – [RM9,000.00 + RM6,000.00] 
+= RM 4,895.00 + RM57,105.07 – RM15,000.00 
+= RM47,000.07 
+ 
+[C] Determine monthly MTD for net normal remuneration. Once value of P in Step [B] is determined, 
+value of M, R and B are determined based on Table 1 above. 
+ 
+MTD for current month = [ (P – M) x R + B ] – (Z+ X) 
+n + 1  
+= [RM47,000.07–RM35,000.00] x 6% + RM600.00 - (RM0.00 + RM0.00) 
+11 + 1 
+= RM110.00 
+ 
+  
+ 
+ 
+  46  
+ 
+ 
+ 
+MTD Calculation for February 2025  
+   
+Employee (Married) and wife working  
+3 children entitle for deduction  
+Monthly normal remuneration for February = RM 5,500.00 
+EPF = RM605.00 
+Additional deduction = Nil 
+MTD paid = January – RM110 
+ 
+------------------------------------------------------------------------------------------------------------------------------------------ 
+[A] Determine category of employee 
+Category 3 / KA3 
+ 
+[B] Determine chargeable income for a year [P] 
+ 
+Firstly determine value K2 
+K2 = Estimated balance of total contribution to EPF or other Approved Scheme and life insurance premium 
+for the qualifying monthly balance  
+= [ [RM4,000.00 (limited)– (K + K1 + Kt ] / n] or K1, whichever is lower 
+= [ [RM4,000.00 – (RM605.00 + RM605.00 + RM0.00)] / 10] 
+= RM 279.00 
+ 
+*Total EPF = K + K1 + Kt + (K2 x n) ≤ RM 6,000.00 (limit)  
+= RM605.00 + RM605.00 + RM0.00 + (RM279.00 x 10) ≤ RM 4,000.00 (limit) 
+= RM605.00 + RM605.00 + RM2,790.00 ≤ RM 4,000.00 (limit) 
+= RM4,000.00 ≤ RM 4,000.00 (limit) 
+ 
+where;  n = 10 
+ 
+P = [(Y– K*)+(Y1 – K1*)+[(Y2 – K2 *) x n] + (Yt – Kt *)**] – [D+S+2000C+(∑ LP + LP1)] 
+Where (Yt – Kt ) = 0 
+= [(RM5,500.00– RM605.00*) + (RM5,500.00– RM605.00*) + [(RM5,500.00– RM279.00*) x 10] + (RM0.00 + 
+RM0.00)**] – [RM9,000.00 + RM0.00 + RM2,000.00(3) + (RM0.00 + RM0.00)] 
+= [RM4,895.00 ]+ RM4,895.00 + [(RM5,221.00 x 10)] – [RM9,000.00 + RM6,000.00]  
+= RM 4,895.00 + RM4,895.00 + RM52,210.00 – RM15,000.00 
+= RM47,000.00 
+ 
+ 
+[C] Determine monthly MTD for net normal remuneration. Once value of P in Step [B] is determined, value 
+of M, R and B are determined based on Schedule 1 above. 
+ 
+MTD for current month = [ (P – M) x R + B ] – (Z+ X) 
+n + 1 
+ 
+= (RM47,000.00–RM35,000.00) x 6%+RM600.00-(RM0.00+ RM110.00)  
+10 + 1 
+ 
+= RM110 
+ 
+  
+ 
+ 
+  47  
+ 
+ 
+ 
+MTD Calculation for Mac 202 5     
+Employee (Married) and wife working    
+3 children entitle for deduction    
+Monthly normal remuneration for Mac = RM 5,500.00 
+EPF = RM605.00 
+Additional remuneration = Nil 
+Additional deduction  i) Purchase of books = RM100.00 
+ii) Medical expenses for parent = RM200.00  
+  RM300.00 
+   
+MTD paid = January until February – RM220.00 
+---------------------------------------------------------------------------------------------------------------------------------------- 
+[A] Determine category of employee 
+ 
+Category 3 / KA3 
+ 
+[B] Determine chargeable income for a year [P] 
+ 
+Firstly determine value K2  
+K2 = Estimated balance of total contribution to EPF or other Approved Scheme and life insurance 
+premium for the qualifying monthly balance  
+= [ [RM4,000.00 (limited) – (K + K1 + Kt  ) ] / n] or K1, whichever is lower 
+= [ [RM4,000.00 – (RM605.00 x 2) + RM605.00 + RM0)] / 9] 
+= RM 242.77 
+ 
+*Total EPF = K + K1 + Kt + (K2 x n) ≤ RM 6,000.00 (limit) 
+= (RM605.00 x 2) + RM605 + RM0 + (RM242.77 x 9) ≤ RM 4,000.00 (limit) 
+= RM1,210.00 + RM605.00 + RM2,184.93 ≤ RM 4,000.00 (limit) 
+= RM3,999.93 ≤ RM 4,000.00 (limit)  
+where;  n = 9 
+ 
+P = [∑ (Y– K*)+(Y1 – K1*)+[(Y2 – K2 *) x n] + (Yt – Kt *)**] – [D+S+2000C+(∑ LP + LP1)] 
+Where (Yt – Kt ) = 0 
+= [(RM11,000.00– RM1,210.00) + (RM5,500.00– RM605.00*)  + [(RM5,500.00– RM242.77*) x 9] + (RM0.00 
++ RM0.00)**] – [RM9,000.00 + RM0.00 +  RM2,000.00(3) + (RM0.00 + RM300.00)]  
+= [RM9,790.00 + RM4,895.00 + [(RM5,257.23 x 9)]] – [RM9,000.00 +  RM6,000.00 + RM300.00] 
+= RM62,000.07 – RM15,300.00 
+= RM46,700.07 
+ 
+[C] Determine monthly MTD for net normal remuneration. Once value of P in Step [B] is determined, 
+value of M, R and B are determined based on Schedule 1 above. 
+ 
+MTD for current month =[ (P – M) x R + B ] – (Z+ X) 
+n + 1 
+ 
+=[RM46,700.07–RM35,000.00] x 6% + RM600.00-( RM0.00 + RM220.00)  
+9 + 1 
+ 
+= RM108.20 
+ 
+ 
+  
+ 
+ 
+  48  
+ 
+ 
+ 
+MTD Calculation for April 2025 ( receive additional remuneration – using Additional 
+Remuneration Formula) 
+ 
+Employee (Married) and wife working 
+3 children entitle for deduction 
+ 
+Monthly normal remuneration for April = RM5,500.00  
+EPF = RM605.00  
+   
+Additional deduction  i) Purchase of sport equipment = RM100.00  
+                                  ii) Expenses for SSPN = RM200.00   
+ RM300.00  
+   
+MTD paid = January until March – RM328.20 
+Additional Remuneration – Bonus = RM8,250.00 EPF = RM908.00 
+----------------------------------------------------------------------------------------------------------------------------------------- 
+ 
+Step 1 – Determine the Monthly Tax Deduction on net normal remuneration for a year. 
+ 
+[A] Determine the category of employee. 
+Category 3 / KA3 
+[B] Determine the chargeable income for a year, not including additional remuneration for the current 
+month, in accordance with the formula specified in subparagraph c(i), where P = [∑(Y - K*) + (Y1 – K1*) 
++ [(Y2 – K2*) n] + (Yt – Kt*)**] - [D + S + DU + SU + QC + (∑LP + LP1)]. 
+ 
+Firstly determine value K2 
+K2 = Estimated balance of total contribution to EPF or other Approved Scheme and life insurance 
+premium for the balance of the qualifying month  
+= [ [RM4,000.00 (limited)  – (K + K1 + Kt ) ] / n] or K1, whichever is lower 
+= [ [RM4,000.00 – (RM605.00 x 3) + RM605.00 + RM0.00)] / 8] 
+= RM 197.50 
+ 
+*Total EPF = K + K1 + Kt + (K2 x n) ≤ RM 6,000.00 (limit) 
+= (RM605.00 x 3) + RM605.00 + RM0.00 + (RM197.50 x 8) ≤ RM 4,000.00 (limit)  
+= RM1,815.00 + RM605.00 + RM1,580.00 ≤ RM 4,000.00 (limit) 
+= RM4,000.00 ≤ RM 4,000.00 (limit) 
+ 
+where;  n = 8 
+ 
+P = [∑ (Y– K*)+(Y1 – K1*)+[(Y2 – K2 *) x n] + (Yt – Kt *)**] – [D+S+2000C+(∑ LP + LP1)] 
+Where; (Yt – Kt ) = 0 
+= (RM16,500.00– RM1,815.00*) + (RM5,500.00– RM605.00*) + [(RM5,500.00– RM197.50*) x 8] + (RM0.00 
++ RM0.00)] – [RM9,000.00 + RM0.00 + RM2,000.00(3) + (RM300.00 + RM300.00)] 
+= [RM14,685.00+ RM4,895.00+ RM42,420.00] – [RM9,000.00 + RM6,000.00 + RM300.00 + RM300.00] 
+= RM62,000.00 – RM15,600.00  
+= RM46,400.00 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+  49  
+ 
+ 
+ 
+[C] Determine the Monthly Tax Deduction for net normal remuneration for the current month in 
+accordance with the formula specified in subparagraph c(i) = [(P – M) R + B] – (Z + X)  
+n + 1 
+ 
+MTD for current month = [(P – M) x R + B] – (Z+ X) 
+n + 1 
+ 
+= [RM46,400.00–RM35,000.00] x 6% + RM600.00- (RM0.00+ RM328.20) 
+8 + 1 
+ 
+= RM106.20 
+ 
+[D] Determine the net Monthly Tax Deduction for the current month = Monthly Tax Deduction for the 
+current month (Step [C]) ― zakat for the current month, if any. 
+ 
+Net MTD = MTD for current month  – zakat for current month 
+= RM106.20 – RM0.00 
+= RM106.20 
+ 
+[E] Determine the total Monthly Tax Deduction for a year 
+= X + [Step [C] x (n + 1)] 
+ 
+X is the accumulated Monthly Tax Deduction which has been paid; 
+n + 1 is the balance of month in a year, including the current month. 
+ 
+Total MTD for a year = X + [Step [C] x (n + 1)] 
+= RM328.20 + [(RM106.20 x (8 + 1)) 
+= RM328.20 + RM955.80 
+= RM1,284.00 
+ 
+ 
+Step 2 – Determine the chargeable income for a year, including the additional remuneration for the 
+current month. 
+ 
+ 
+[A] Determine the category of employee. 
+Category 3 / KA3 
+ 
+[B] Determine the chargeable income for a year in accordance with the formula specified in 
+subparagraph 4(1), where P = [(Y – K) x 12] + [∑(Yt1 – Kt1)] + (Yt – Kt) – (D + S + QC) 
+ 
+Firstly determine value K2 
+K2 = Estimated balance of total contribution to EPF or other Approved Scheme and life insurance 
+premium for the qualifying monthly balance  
+= [ [RM4,000.00 (limited) – (K + K1 + Kt  ) ] / n] or K1, whichever is lower 
+= [ [RM4,000.00 – (RM605.00 x 3) + RM605.00 + RM908.00)] / 8] 
+= RM 84.00 
+ 
+ 
+ 
+  
+ 
+ 
+  50  
+ 
+ 
+ 
+*Total EPF = K + K1 + Kt + (K2 x n) ≤ RM 6,000.00 (limit) 
+= (RM605.00 x 3) + RM605.00 + RM908.00 + (RM84.00 x 8) ≤ RM 4,000.00 (limit) 
+= RM1,815.00 + RM605.00 + RM908.00 + RM672.00 ≤ RM 4,000.00 (limit)  
+= RM4,000.00 ≤ RM 4,000.00 (limit) 
+ 
+P = [∑ (Y– K*)+(Y1 – K1*)+[(Y2 – K2 *) x n] + (Yt – Kt *)] – [D+S+2000C+(Σ LP + LP1)] 
+=[(RM16,500.00– RM1,815.00*) + (RM5,500.00– RM605.00*) + [(RM5,500.00– RM84.00*) x 8] + 
+(RM8,250.00 – RM908.00)] – [RM9,000.00 + RM0.00 + RM2,000.00(3) + (RM300.00 + RM300.00)] 
+= [RM14,685.00 +RM4,895.00 + RM43,328.00 + RM7,342.00] – [RM9,000.00+ RM0.00 + RM6,000.00 
++RM600.00] 
+= RM 70,250.00 – RM15,600.00 
+= RM54,650.00 
+ 
+Step 3 – Determine the total tax for a year. 
+ 
+ 
+Total tax for a year =  (P – M) R + B 
+ 
+Value of P is determined based on Step 2[B];  
+Value of M, R and B are determined based on Table 1. 
+ 
+Total tax for a year = (P – M) x R + B 
+= (RM54,650.00 – RM50,000.00) x 11% + RM1,500.00 
+= RM2,011.50 
+ 
+Table 1 : Value of P, M, R and B 
+ 
+ 
+   
+Step 4 – Determine the Monthly Tax Deduction for additional remuneration for the current month. 
+ 
+Monthly Tax Deduction for 
+additional remuneration for 
+the current month 
+ 
+= Total tax for a year (Step 3) ― total Monthly Tax Deduction for a year (Step 
+1[E]) + zakat which has been paid. 
+= RM2,011.50 – [RM1,284.00 + RM0.00] 
+= RM727.50
+P 
+(RM) 
+M 
+(RM) 
+R 
+(%) 
+B 
+Category 1 & 3 (RM) 
+B 
+Category 2 (RM) 
+5,001 - 20,000 5,000 1 – 400 – 800 
+20,001 - 35,000 20,000 3 –250 –650 
+35,001 - 50,000 35,000 6 600 600 
+50,001 - 70,000 50,000 11 1,500 1,500 
+70,001 - 100,000 70,000 19 3,700 3,700 
+100,001 - 400,000 100,000 25 9,400 9,400 
+400,001 - 600,000 400,000 26 84,400 84,400 
+600,001 - 2,000,000 600,000 28 136,400 136,400 
+Exceeding 2,000,000 2,000,000 30 528,400 528,400 
+  
+ 
+ 
+  51  
+ 
+ 
+ 
+Step 5 – Determine the Monthly Tax Deduction for the current month which shall be paid. 
+ 
+Monthly Tax Deduction 
+for the current month 
+which shall be paid 
+ 
+ 
+ 
+ 
+ 
+=  Net  Monthly  Tax  Deduction  (Step  1[D])  +  Monthly  Tax 
+Deduction for additional remuneration for the current month 
+(Step  4) 
+= RM106.20 + RM727.50  
+= RM 833.70 ≈ RM 833.70 
+ 
+ 
+ 
+NOTE: 
+ 
+ 
+MTD Calculation for month of May until December is as per example above. Total remuneration, MTD paid and 
+the deductions/rebates will be accumulated and brought forward from month to month until month of 
+December in a current year. 
+ 

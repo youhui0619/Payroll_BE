@@ -1,0 +1,120 @@
+e4866848da3ac25bfbb3aea21ae1eaa3
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WorkforceModule = exports.WorkforceController = void 0;
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
+const auth_module_1 = require("../auth/auth.module");
+const page_dto_1 = require("../common/page.dto");
+const workforce_dto_1 = require("./workforce.dto");
+const workforce_service_1 = require("./workforce.service");
+let WorkforceController = class WorkforceController {
+    constructor(service) {
+        this.service = service;
+    }
+    locations(r, q) {
+        return this.service.locations(r.membership, q);
+    }
+    location(r, d) {
+        return this.service.createLocation(r.membership, d);
+    }
+    schedules(r, q) {
+        return this.service.schedules(r.membership, q);
+    }
+    schedule(r, d) {
+        return this.service.createSchedule(r.membership, d);
+    }
+    holidays(r, q) {
+        return this.service.holidays(r.membership, q);
+    }
+    holiday(r, d) {
+        return this.service.createHoliday(r.membership, d);
+    }
+    assign(r, id, d) {
+        return this.service.assign(r.membership, id, d);
+    }
+};
+exports.WorkforceController = WorkforceController;
+__decorate([
+    (0, common_1.Get)('work-locations'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, page_dto_1.PageDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "locations", null);
+__decorate([
+    (0, common_1.Post)('work-locations'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, workforce_dto_1.LocationDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "location", null);
+__decorate([
+    (0, common_1.Get)('work-schedules'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, page_dto_1.PageDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "schedules", null);
+__decorate([
+    (0, common_1.Post)('work-schedules'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, workforce_dto_1.ScheduleDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "schedule", null);
+__decorate([
+    (0, common_1.Get)('public-holidays'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, page_dto_1.PageDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "holidays", null);
+__decorate([
+    (0, common_1.Post)('public-holidays'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, workforce_dto_1.HolidayDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "holiday", null);
+__decorate([
+    (0, common_1.Patch)('employees/:id/assignment'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, workforce_dto_1.AssignmentDto]),
+    __metadata("design:returntype", void 0)
+], WorkforceController.prototype, "assign", null);
+exports.WorkforceController = WorkforceController = __decorate([
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiTags)('workforce-settings'),
+    (0, auth_module_1.Roles)('OWNER', 'HR'),
+    (0, common_1.Controller)(),
+    __metadata("design:paramtypes", [workforce_service_1.WorkforceService])
+], WorkforceController);
+let WorkforceModule = class WorkforceModule {
+};
+exports.WorkforceModule = WorkforceModule;
+exports.WorkforceModule = WorkforceModule = __decorate([
+    (0, common_1.Module)({ controllers: [WorkforceController], providers: [workforce_service_1.WorkforceService] })
+], WorkforceModule);
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJmaWxlIjoiQzpcXFVzZXJzXFx0YW5rYVxcT25lRHJpdmVcXERvY3VtZW50c1xccGFydFxccGF5cm9sbFxccGF5cm9sbGJlXFxzcmNcXHdvcmtmb3JjZVxcd29ya2ZvcmNlLm1vZHVsZS50cyIsIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7QUFBQSwyQ0FXd0I7QUFDeEIsNkNBQXlEO0FBQ3pELHFEQUEyRDtBQUMzRCxpREFBNkM7QUFDN0MsbURBS3lCO0FBQ3pCLDJEQUF1RDtBQUtoRCxJQUFNLG1CQUFtQixHQUF6QixNQUFNLG1CQUFtQjtJQUM5QixZQUFvQixPQUF5QjtRQUF6QixZQUFPLEdBQVAsT0FBTyxDQUFrQjtJQUFHLENBQUM7SUFDMUIsU0FBUyxDQUN2QixDQUFnQixFQUNkLENBQVU7UUFFbkIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ2pELENBQUM7SUFDdUIsUUFBUSxDQUN2QixDQUFnQixFQUNmLENBQWM7UUFFdEIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLGNBQWMsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ3RELENBQUM7SUFDc0IsU0FBUyxDQUN2QixDQUFnQixFQUNkLENBQVU7UUFFbkIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLFNBQVMsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ2pELENBQUM7SUFDdUIsUUFBUSxDQUN2QixDQUFnQixFQUNmLENBQWM7UUFFdEIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLGNBQWMsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ3RELENBQUM7SUFDdUIsUUFBUSxDQUN2QixDQUFnQixFQUNkLENBQVU7UUFFbkIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLFFBQVEsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ2hELENBQUM7SUFDd0IsT0FBTyxDQUN2QixDQUFnQixFQUNmLENBQWE7UUFFckIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLGFBQWEsQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLENBQUMsQ0FBQyxDQUFDO0lBQ3JELENBQUM7SUFDa0MsTUFBTSxDQUNoQyxDQUFnQixFQUNLLEVBQVUsRUFDOUIsQ0FBZ0I7UUFFeEIsT0FBTyxJQUFJLENBQUMsT0FBTyxDQUFDLE1BQU0sQ0FBQyxDQUFDLENBQUMsVUFBVSxFQUFFLEVBQUUsRUFBRSxDQUFDLENBQUMsQ0FBQztJQUNsRCxDQUFDO0NBQ0YsQ0FBQTtBQTdDWSxrREFBbUI7QUFFUDtJQUF0QixJQUFBLFlBQUcsRUFBQyxnQkFBZ0IsQ0FBQztJQUNuQixXQUFBLElBQUEsWUFBRyxHQUFFLENBQUE7SUFDTCxXQUFBLElBQUEsY0FBSyxHQUFFLENBQUE7OzZDQUFJLGtCQUFPOztvREFHcEI7QUFDdUI7SUFBdkIsSUFBQSxhQUFJLEVBQUMsZ0JBQWdCLENBQUM7SUFDcEIsV0FBQSxJQUFBLFlBQUcsR0FBRSxDQUFBO0lBQ0wsV0FBQSxJQUFBLGFBQUksR0FBRSxDQUFBOzs2Q0FBSSwyQkFBVzs7bURBR3ZCO0FBQ3NCO0lBQXRCLElBQUEsWUFBRyxFQUFDLGdCQUFnQixDQUFDO0lBQ25CLFdBQUEsSUFBQSxZQUFHLEdBQUUsQ0FBQTtJQUNMLFdBQUEsSUFBQSxjQUFLLEdBQUUsQ0FBQTs7NkNBQUksa0JBQU87O29EQUdwQjtBQUN1QjtJQUF2QixJQUFBLGFBQUksRUFBQyxnQkFBZ0IsQ0FBQztJQUNwQixXQUFBLElBQUEsWUFBRyxHQUFFLENBQUE7SUFDTCxXQUFBLElBQUEsYUFBSSxHQUFFLENBQUE7OzZDQUFJLDJCQUFXOzttREFHdkI7QUFDdUI7SUFBdkIsSUFBQSxZQUFHLEVBQUMsaUJBQWlCLENBQUM7SUFDcEIsV0FBQSxJQUFBLFlBQUcsR0FBRSxDQUFBO0lBQ0wsV0FBQSxJQUFBLGNBQUssR0FBRSxDQUFBOzs2Q0FBSSxrQkFBTzs7bURBR3BCO0FBQ3dCO0lBQXhCLElBQUEsYUFBSSxFQUFDLGlCQUFpQixDQUFDO0lBQ3JCLFdBQUEsSUFBQSxZQUFHLEdBQUUsQ0FBQTtJQUNMLFdBQUEsSUFBQSxhQUFJLEdBQUUsQ0FBQTs7NkNBQUksMEJBQVU7O2tEQUd0QjtBQUNrQztJQUFsQyxJQUFBLGNBQUssRUFBQywwQkFBMEIsQ0FBQztJQUMvQixXQUFBLElBQUEsWUFBRyxHQUFFLENBQUE7SUFDTCxXQUFBLElBQUEsY0FBSyxFQUFDLElBQUksRUFBRSxzQkFBYSxDQUFDLENBQUE7SUFDMUIsV0FBQSxJQUFBLGFBQUksR0FBRSxDQUFBOztxREFBSSw2QkFBYTs7aURBR3pCOzhCQTVDVSxtQkFBbUI7SUFKL0IsSUFBQSx1QkFBYSxHQUFFO0lBQ2YsSUFBQSxpQkFBTyxFQUFDLG9CQUFvQixDQUFDO0lBQzdCLElBQUEsbUJBQUssRUFBQyxPQUFPLEVBQUUsSUFBSSxDQUFDO0lBQ3BCLElBQUEsbUJBQVUsR0FBRTtxQ0FFa0Isb0NBQWdCO0dBRGxDLG1CQUFtQixDQTZDL0I7QUFFTSxJQUFNLGVBQWUsR0FBckIsTUFBTSxlQUFlO0NBQUcsQ0FBQTtBQUFsQiwwQ0FBZTswQkFBZixlQUFlO0lBRDNCLElBQUEsZUFBTSxFQUFDLEVBQUUsV0FBVyxFQUFFLENBQUMsbUJBQW1CLENBQUMsRUFBRSxTQUFTLEVBQUUsQ0FBQyxvQ0FBZ0IsQ0FBQyxFQUFFLENBQUM7R0FDakUsZUFBZSxDQUFHIiwibmFtZXMiOltdLCJzb3VyY2VzIjpbIkM6XFxVc2Vyc1xcdGFua2FcXE9uZURyaXZlXFxEb2N1bWVudHNcXHBhcnRcXHBheXJvbGxcXHBheXJvbGxiZVxcc3JjXFx3b3JrZm9yY2VcXHdvcmtmb3JjZS5tb2R1bGUudHMiXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHtcbiAgQm9keSxcbiAgQ29udHJvbGxlcixcbiAgR2V0LFxuICBNb2R1bGUsXG4gIFBhcmFtLFxuICBQYXJzZVVVSURQaXBlLFxuICBQYXRjaCxcbiAgUG9zdCxcbiAgUXVlcnksXG4gIFJlcSxcbn0gZnJvbSAnQG5lc3Rqcy9jb21tb24nO1xuaW1wb3J0IHsgQXBpQmVhcmVyQXV0aCwgQXBpVGFncyB9IGZyb20gJ0BuZXN0anMvc3dhZ2dlcic7XG5pbXBvcnQgeyBSb2xlcywgVGVuYW50UmVxdWVzdCB9IGZyb20gJy4uL2F1dGgvYXV0aC5tb2R1bGUnO1xuaW1wb3J0IHsgUGFnZUR0byB9IGZyb20gJy4uL2NvbW1vbi9wYWdlLmR0byc7XG5pbXBvcnQge1xuICBMb2NhdGlvbkR0byxcbiAgU2NoZWR1bGVEdG8sXG4gIEhvbGlkYXlEdG8sXG4gIEFzc2lnbm1lbnREdG8sXG59IGZyb20gJy4vd29ya2ZvcmNlLmR0byc7XG5pbXBvcnQgeyBXb3JrZm9yY2VTZXJ2aWNlIH0gZnJvbSAnLi93b3JrZm9yY2Uuc2VydmljZSc7XG5AQXBpQmVhcmVyQXV0aCgpXG5AQXBpVGFncygnd29ya2ZvcmNlLXNldHRpbmdzJylcbkBSb2xlcygnT1dORVInLCAnSFInKVxuQENvbnRyb2xsZXIoKVxuZXhwb3J0IGNsYXNzIFdvcmtmb3JjZUNvbnRyb2xsZXIge1xuICBjb25zdHJ1Y3Rvcihwcml2YXRlIHNlcnZpY2U6IFdvcmtmb3JjZVNlcnZpY2UpIHt9XG4gIEBHZXQoJ3dvcmstbG9jYXRpb25zJykgbG9jYXRpb25zKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBRdWVyeSgpIHE6IFBhZ2VEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2UubG9jYXRpb25zKHIubWVtYmVyc2hpcCwgcSk7XG4gIH1cbiAgQFBvc3QoJ3dvcmstbG9jYXRpb25zJykgbG9jYXRpb24oXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQEJvZHkoKSBkOiBMb2NhdGlvbkR0byxcbiAgKSB7XG4gICAgcmV0dXJuIHRoaXMuc2VydmljZS5jcmVhdGVMb2NhdGlvbihyLm1lbWJlcnNoaXAsIGQpO1xuICB9XG4gIEBHZXQoJ3dvcmstc2NoZWR1bGVzJykgc2NoZWR1bGVzKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBRdWVyeSgpIHE6IFBhZ2VEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2Uuc2NoZWR1bGVzKHIubWVtYmVyc2hpcCwgcSk7XG4gIH1cbiAgQFBvc3QoJ3dvcmstc2NoZWR1bGVzJykgc2NoZWR1bGUoXG4gICAgQFJlcSgpIHI6IFRlbmFudFJlcXVlc3QsXG4gICAgQEJvZHkoKSBkOiBTY2hlZHVsZUR0byxcbiAgKSB7XG4gICAgcmV0dXJuIHRoaXMuc2VydmljZS5jcmVhdGVTY2hlZHVsZShyLm1lbWJlcnNoaXAsIGQpO1xuICB9XG4gIEBHZXQoJ3B1YmxpYy1ob2xpZGF5cycpIGhvbGlkYXlzKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBRdWVyeSgpIHE6IFBhZ2VEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2UuaG9saWRheXMoci5tZW1iZXJzaGlwLCBxKTtcbiAgfVxuICBAUG9zdCgncHVibGljLWhvbGlkYXlzJykgaG9saWRheShcbiAgICBAUmVxKCkgcjogVGVuYW50UmVxdWVzdCxcbiAgICBAQm9keSgpIGQ6IEhvbGlkYXlEdG8sXG4gICkge1xuICAgIHJldHVybiB0aGlzLnNlcnZpY2UuY3JlYXRlSG9saWRheShyLm1lbWJlcnNoaXAsIGQpO1xuICB9XG4gIEBQYXRjaCgnZW1wbG95ZWVzLzppZC9hc3NpZ25tZW50JykgYXNzaWduKFxuICAgIEBSZXEoKSByOiBUZW5hbnRSZXF1ZXN0LFxuICAgIEBQYXJhbSgnaWQnLCBQYXJzZVVVSURQaXBlKSBpZDogc3RyaW5nLFxuICAgIEBCb2R5KCkgZDogQXNzaWdubWVudER0byxcbiAgKSB7XG4gICAgcmV0dXJuIHRoaXMuc2VydmljZS5hc3NpZ24oci5tZW1iZXJzaGlwLCBpZCwgZCk7XG4gIH1cbn1cbkBNb2R1bGUoeyBjb250cm9sbGVyczogW1dvcmtmb3JjZUNvbnRyb2xsZXJdLCBwcm92aWRlcnM6IFtXb3JrZm9yY2VTZXJ2aWNlXSB9KVxuZXhwb3J0IGNsYXNzIFdvcmtmb3JjZU1vZHVsZSB7fVxuIl0sInZlcnNpb24iOjN9
