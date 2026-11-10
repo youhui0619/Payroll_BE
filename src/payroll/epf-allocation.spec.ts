@@ -29,7 +29,9 @@ describe('LHDN section 13 EPF allocation', () => {
       ],
       rules,
     );
-    expect(result.normalEpf).toBe('297.00');
+    // Section 13 illustrates allocation using a stated RM297 deduction;
+    // the selected October 2025 Part A band at RM2,650 instead yields RM293.
+    expect(result.normalEpf).toBe('293.00');
     expect(result.additionalEpf).toBe('0.00');
   });
   it('allocates one-off exempt allowance by total-minus-normal difference', () => {
@@ -69,6 +71,36 @@ describe('LHDN section 13 EPF allocation', () => {
     expect(() =>
       allocateEpfForPcb(
         [{ ...salary, statutoryBases: ['EPF'], pcbTreatment: 'EXCLUDED' }],
+        rules,
+      ),
+    ).toThrow();
+  });
+  it('keeps company remittance rounding out of employee allocation', () => {
+    const result = allocateEpfForPcb([{ ...salary, amount: '2400.01' }], {
+      kind: 'RATE',
+      employeeRate: '0.02',
+      employerRate: '0.02',
+      rounding: 'TOTAL_WHOLE_UP',
+    });
+    expect(result.normalEpf).toBe('48.00');
+    expect(result.additionalEpf).toBe('0.00');
+    expect(result.totalEmployeeEpf).toBe('48.00');
+    expect(result.trace.totalCalculation.total).toBe('97.00');
+  });
+  it('rejects a negative remuneration class even when total wages are positive', () => {
+    expect(() =>
+      allocateEpfForPcb(
+        [
+          salary,
+          {
+            ...salary,
+            kind: 'DEDUCTION',
+            amount: '100',
+            statutoryBases: ['EPF'],
+            pcbTreatment: 'EXCLUDED_ADDITIONAL',
+            source: { type: 'ADJUSTMENT', id: 'negative-additional' },
+          },
+        ],
         rules,
       ),
     ).toThrow();

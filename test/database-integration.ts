@@ -1117,6 +1117,13 @@ async function main() {
     await definitions.save(owner, {
       ...basicDefinition,
       effectiveFrom: '2100-01-01',
+      pcbTreatment: 'EXCLUDED_NORMAL',
+    });
+    await definitions.save(owner, {
+      ...basicDefinition,
+      code: 'BONUS',
+      effectiveFrom: '2100-01-01',
+      pcbTreatment: 'EXCLUDED_ADDITIONAL',
     });
     const assemblyEmployee = await db.employee.create({
       data: {
@@ -1151,6 +1158,7 @@ async function main() {
       ...opening,
       effectiveMonth: 2,
       taxableIncome: '12000',
+      employeeEpf: '12001',
       reason: 'Reviewed correction',
     });
     assert.equal(
@@ -1234,6 +1242,10 @@ async function main() {
     assert.equal(assembled.taxOpening?.id, openingRevision.id);
     assert.equal(assembled.taxOpening?.taxableIncome.toFixed(2), '10000.00');
     assert.equal(assembled.contributionPreview.nonPcbReady, true);
+    assert.equal(assembled.epfAllocationIssue, null);
+    assert.equal(assembled.epfAllocation?.normalEpf, '62.00');
+    assert.equal(assembled.epfAllocation?.additionalEpf, '2.00');
+    assert.equal(assembled.epfAllocation?.totalEmployeeEpf, '64.00');
     assert.equal(assembled.contributionPreview.contributions.length, 5);
     assert.equal(
       assembled.contributionPreview.contributions[0].employeeDeduction,

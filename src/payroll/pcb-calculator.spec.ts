@@ -193,7 +193,7 @@ describe('PCB arithmetic and boundary invariants', () => {
       { category: 4 },
       { normal: '-1' },
       { normal: '1.001' },
-      { normalEpf: '6000' },
+      { normalEpf: '-1' },
     ]) {
       expect(() => calculatePcb({ ...base, ...change } as PcbInput)).toThrow();
     }

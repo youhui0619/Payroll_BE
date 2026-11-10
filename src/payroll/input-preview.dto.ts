@@ -44,7 +44,12 @@ class InputPreviewDataDto {
   @ApiProperty({
     type: 'object',
     nullable: true,
-    additionalProperties: true,
+    properties: {
+      normalEpf: { type: 'string', example: '264.00' },
+      additionalEpf: { type: 'string', example: '51.00' },
+      totalEmployeeEpf: { type: 'string', example: '315.00' },
+      trace: { type: 'object', additionalProperties: true },
+    },
     description:
       'Normal/additional employee EPF allocation with contribution and source traces, including EPF on tax-exempt payments.',
   })
