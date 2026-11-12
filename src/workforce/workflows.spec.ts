@@ -108,6 +108,7 @@ describe('clocking', () => {
       data: {
         companyId: 'company',
         employeeId: 'employee',
+        date: expect.any(Date),
         clockIn: expect.any(Date),
         clockInKey: 'key',
       },

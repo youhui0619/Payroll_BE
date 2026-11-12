@@ -6,6 +6,7 @@ import { PageDto, paginated } from '../common/page.dto';
 import {
   CreatePayrollDto,
   PayrollProfileDto,
+  PayrollDay,
   PayrollSettingsDto,
 } from './payroll.dto';
 import { validateRules } from './calculator';
@@ -40,11 +41,67 @@ export class PayrollService {
   }
 
   async saveSettings(m: Membership, d: PayrollSettingsDto) {
+    const payrollCutoffDay = d.payrollCutoffDay ?? d.cutoffDay;
+    const scheduledPayDate = d.scheduledPayDate ?? d.payDay;
+    if (payrollCutoffDay === undefined || scheduledPayDate === undefined)
+      fail(
+        'PAYROLL_DAY_REQUIRED',
+        'Provide payrollCutoffDay and scheduledPayDate.',
+        400,
+      );
+    const legacyDay = (day: PayrollDay) => (day === 'LAST_DAY' ? 31 : day);
+    const decimalFields = {
+      standardWorkingHoursPerDay: d.standardWorkingHoursPerDay,
+      normalWorkingDayMultiplier: d.normalWorkingDayMultiplier,
+      restDayOvertimeMultiplier: d.restDayOvertimeMultiplier,
+      publicHolidayOvertimeMultiplier: d.publicHolidayOvertimeMultiplier,
+    };
+    const normalized = {
+      ...d,
+      cutoffDay: legacyDay(payrollCutoffDay),
+      payDay: legacyDay(scheduledPayDate),
+      payrollCutoffDay: String(payrollCutoffDay),
+      scheduledPayDate: String(scheduledPayDate),
+      ...(decimalFields.standardWorkingHoursPerDay !== undefined
+        ? {
+            standardWorkingHoursPerDay:
+              decimalFields.standardWorkingHoursPerDay === null
+                ? null
+                : new Prisma.Decimal(decimalFields.standardWorkingHoursPerDay),
+          }
+        : {}),
+      ...(decimalFields.normalWorkingDayMultiplier !== undefined
+        ? {
+            normalWorkingDayMultiplier:
+              decimalFields.normalWorkingDayMultiplier === null
+                ? null
+                : new Prisma.Decimal(decimalFields.normalWorkingDayMultiplier),
+          }
+        : {}),
+      ...(decimalFields.restDayOvertimeMultiplier !== undefined
+        ? {
+            restDayOvertimeMultiplier:
+              decimalFields.restDayOvertimeMultiplier === null
+                ? null
+                : new Prisma.Decimal(decimalFields.restDayOvertimeMultiplier),
+          }
+        : {}),
+      ...(decimalFields.publicHolidayOvertimeMultiplier !== undefined
+        ? {
+            publicHolidayOvertimeMultiplier:
+              decimalFields.publicHolidayOvertimeMultiplier === null
+                ? null
+                : new Prisma.Decimal(
+                    decimalFields.publicHolidayOvertimeMultiplier,
+                  ),
+          }
+        : {}),
+    };
     return this.db.$transaction(async (tx) => {
       const data = await tx.payrollSettings.upsert({
         where: { companyId: m.companyId },
-        create: { ...d, companyId: m.companyId },
-        update: d,
+        create: { ...normalized, companyId: m.companyId },
+        update: normalized,
       });
       await audit(tx, m, 'PAYROLL_SETTINGS_UPDATED', data.id);
       return { data };

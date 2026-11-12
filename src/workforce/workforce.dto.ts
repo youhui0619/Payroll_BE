@@ -7,6 +7,7 @@ import {
   IsIn,
   IsInt,
   IsOptional,
+  IsObject,
   IsString,
   IsUUID,
   Length,
@@ -32,10 +33,66 @@ export const STATES = [
   'MY-15',
   'MY-16',
 ];
+export const REGIONS = [
+  'Johor',
+  'Kedah',
+  'Kelantan',
+  'Kuala Lumpur',
+  'Labuan',
+  'Malacca',
+  'Negeri Sembilan',
+  'Pahang',
+  'Penang',
+  'Perak',
+  'Perlis',
+  'Putrajaya',
+  'Sabah',
+  'Sarawak',
+  'Selangor',
+  'Terengganu',
+  'Wilayah Persekutuan Kuala Lumpur',
+];
+export const HOLIDAY_REGIONS = [...STATES, ...REGIONS] as const;
 export class LocationDto {
   @ApiProperty() @IsString() @Length(1, 30) code: string;
   @ApiProperty() @IsString() @Length(1, 150) name: string;
-  @ApiProperty({ enum: STATES }) @IsIn(STATES) state: string;
+  @ApiProperty({ enum: [...STATES, ...REGIONS] })
+  @IsIn([...STATES, ...REGIONS])
+  state: string;
+  @ApiPropertyOptional({ enum: ['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'] })
+  @IsOptional()
+  @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
+  type?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 500)
+  remark?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 200)
+  addressLine1?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 200)
+  addressLine2?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  city?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  postcode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  country?: string;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
@@ -69,6 +126,26 @@ export class ScheduleDto {
   @ApiProperty({ example: 1080 }) @IsInt() @Min(0) @Max(1439) endMinute: number;
   @ApiProperty({ default: 60 }) @IsInt() @Min(0) @Max(720) breakMinutes = 60;
   @ApiProperty({ default: 0 }) @IsInt() @Min(0) @Max(120) graceMinutes = 0;
+  @ApiPropertyOptional({
+    enum: [
+      'Permanent',
+      'Contract',
+      'Part-time',
+      'Intern',
+      'Temporary',
+      'Trainee',
+      'Freelance',
+      'Casual',
+    ],
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentType?: string;
+  @ApiPropertyOptional({ type: 'object' })
+  @IsOptional()
+  @IsObject()
+  scheduleDays?: Record<string, unknown>;
   @ApiProperty()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -81,6 +158,15 @@ export class ScheduleDto {
 }
 export class HolidayDto {
   @ApiProperty() @IsString() @Length(1, 150) name: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 1000)
+  description?: string;
+  @ApiPropertyOptional({ enum: ['National', 'State'] })
+  @IsOptional()
+  @IsIn(['National', 'State'])
+  scope?: string;
   @ApiProperty()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -89,14 +175,30 @@ export class HolidayDto {
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   endDate: string;
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: [],
     description: 'Empty for national; otherwise Malaysian state codes.',
   })
+  @IsOptional()
   @IsArray()
   @ArrayUnique()
   @IsIn(STATES, { each: true })
-  states: string[];
+  states?: string[];
+
+  @ApiPropertyOptional({
+    example: ['Johor', 'Selangor'],
+    description: 'Archive-compatible region names or Malaysian state codes.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsIn(HOLIDAY_REGIONS, { each: true })
+  regions?: string[];
+
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 export class AssignmentDto {
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() managerId?:

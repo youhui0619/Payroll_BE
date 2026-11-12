@@ -11,7 +11,9 @@ import {
   DepartmentDto,
   PositionDto,
   UpdateDepartmentDto,
+  UpdatePositionDto,
 } from './organization.dto';
+import { FINANCIAL_MONTHS } from './organization.dto';
 
 @Injectable()
 export class OrganizationService {
@@ -22,10 +24,29 @@ export class OrganizationService {
     return { data };
   }
   async updateCompany(companyId: string, dto: CompanyDto) {
+    const { financialStartingMonth, financialYearStartMonth, ...rest } = dto;
+    const month =
+      financialStartingMonth ??
+      (financialYearStartMonth !== undefined
+        ? FINANCIAL_MONTHS[financialYearStartMonth - 1]
+        : undefined);
+    if (
+      financialYearStartMonth !== undefined &&
+      (!month || financialYearStartMonth < 1 || financialYearStartMonth > 12)
+    )
+      throw new ConflictException('Invalid financial year start month.');
     return {
       data: await this.db.company.update({
         where: { id: companyId },
-        data: dto,
+        data: {
+          ...rest,
+          ...(month
+            ? {
+                financialYearStartMonth: FINANCIAL_MONTHS.indexOf(month) + 1,
+                financialStartingMonth: month,
+              }
+            : {}),
+        },
       }),
     };
   }
@@ -56,8 +77,28 @@ export class OrganizationService {
     return { data };
   }
   async createDepartment(companyId: string, dto: DepartmentDto) {
+    const { effectiveFrom, effectiveTo, ...rest } = dto;
     return {
-      data: await this.db.department.create({ data: { ...dto, companyId } }),
+      data: await this.db.department.create({
+        data: {
+          ...rest,
+          companyId,
+          ...(effectiveFrom !== undefined
+            ? {
+                effectiveFrom: effectiveFrom
+                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(effectiveTo !== undefined
+            ? {
+                effectiveTo: effectiveTo
+                  ? new Date(effectiveTo + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+        },
+      }),
     };
   }
   async updateDepartment(
@@ -65,10 +106,27 @@ export class OrganizationService {
     id: string,
     dto: UpdateDepartmentDto,
   ) {
+    const { effectiveFrom, effectiveTo, ...rest } = dto;
     return {
       data: await this.db.department.update({
         where: { companyId_id: { companyId, id } },
-        data: dto,
+        data: {
+          ...rest,
+          ...(effectiveFrom !== undefined
+            ? {
+                effectiveFrom: effectiveFrom
+                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(effectiveTo !== undefined
+            ? {
+                effectiveTo: effectiveTo
+                  ? new Date(effectiveTo + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+        },
       }),
     };
   }
@@ -98,8 +156,28 @@ export class OrganizationService {
         });
         if (!department || !department.active)
           throw new NotFoundException('Active department not found.');
+        const { effectiveFrom, effectiveTo, ...rest } = dto;
         return {
-          data: await tx.position.create({ data: { ...dto, companyId } }),
+          data: await tx.position.create({
+            data: {
+              ...rest,
+              companyId,
+              ...(effectiveFrom !== undefined
+                ? {
+                    effectiveFrom: effectiveFrom
+                      ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                      : null,
+                  }
+                : {}),
+              ...(effectiveTo !== undefined
+                ? {
+                    effectiveTo: effectiveTo
+                      ? new Date(effectiveTo + 'T00:00:00.000Z')
+                      : null,
+                  }
+                : {}),
+            },
+          }),
         };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -112,11 +190,28 @@ export class OrganizationService {
     if (!data) throw new NotFoundException();
     return { data };
   }
-  async updatePosition(companyId: string, id: string, dto: { title?: string }) {
+  async updatePosition(companyId: string, id: string, dto: UpdatePositionDto) {
+    const { effectiveFrom, effectiveTo, ...rest } = dto;
     return {
       data: await this.db.position.update({
         where: { companyId_id: { companyId, id } },
-        data: dto,
+        data: {
+          ...rest,
+          ...(effectiveFrom !== undefined
+            ? {
+                effectiveFrom: effectiveFrom
+                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(effectiveTo !== undefined
+            ? {
+                effectiveTo: effectiveTo
+                  ? new Date(effectiveTo + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+        },
       }),
     };
   }

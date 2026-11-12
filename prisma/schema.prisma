@@ -41,6 +41,7 @@ model Company {
   email                       String?
   contactNo                   String?
   financialYearStartMonth     Int                          @default(1)
+  financialStartingMonth      String                       @default("JANUARY")
   sstNo                       String?
   taxNo                       String?
   website                     String?
@@ -61,8 +62,14 @@ model Company {
   auditEvents                 AuditEvent[]
   statutoryRules              StatutoryRuleset[]
   payrollSettings             PayrollSettings?
+  payslipSettings             PayslipSettings?
   payrollRuns                 PayrollRun[]
   payrollComponentDefinitions PayrollComponentDefinition[]
+  overtimeRequests            OvertimeRequest[]
+  commissionSettings          CommissionIncentiveSetting[]
+  commissionRecords           CommissionPayrollRecord[]
+  notificationSettings        NotificationSettings?
+  regionalSettings            RegionalSettings?
 
   @@map("companies")
 }
@@ -84,88 +91,90 @@ model Membership {
 }
 
 model Employee {
-  id                           String                          @id @default(uuid()) @db.Uuid
-  companyId                    String                          @db.Uuid
-  employeeNo                   String
-  name                         String
-  email                        String?
-  joinedDate                   DateTime                        @db.Date
-  active                       Boolean                         @default(true)
-  departmentId                 String?                         @db.Uuid
-  positionId                   String?                         @db.Uuid
-  department                   Department?                     @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
-  position                     Position?                       @relation(fields: [companyId, positionId], references: [companyId, id], onDelete: Restrict)
-  createdAt                    DateTime                        @default(now()) @db.Timestamptz(3)
-  updatedAt                    DateTime                        @updatedAt @db.Timestamptz(3)
-  company                      Company                         @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  salaries                     SalaryHistory[]
-  membership                   Membership?
-  managerId                    String?                         @db.Uuid
-  manager                      Employee?                       @relation("Manager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
-  reports                      Employee[]                      @relation("Manager")
-  locationId                   String?                         @db.Uuid
-  scheduleId                   String?                         @db.Uuid
-  location                     WorkLocation?                   @relation(fields: [companyId, locationId], references: [companyId, id], onDelete: Restrict)
-  schedule                     WorkSchedule?                   @relation(fields: [companyId, scheduleId], references: [companyId, id], onDelete: Restrict)
-  attendance                   AttendanceSession[]
-  leaveRequests                LeaveRequest[]
-  leaveLedger                  LeaveLedger[]
-  claims                       Claim[]
-  files                        StoredFile[]
-  payrollProfile               EmployeePayrollProfile?
-  payrollProfileVersions       EmployeePayrollProfileVersion[]
-  payslips                     PayrollEmployee[]
-  payrollInputs                PayrollInput[]
-  taxOpenings                  EmployeeTaxOpening[]
-  taxFamilyVersions            EmployeeTaxFamily[]
-  taxExpenseVersions           EmployeeTaxExpenses[]
-  headedDepartments            Department[]                    @relation("HeadOfDepartment")
+  id                     String                          @id @default(uuid()) @db.Uuid
+  companyId              String                          @db.Uuid
+  employeeNo             String
+  name                   String
+  email                  String?
+  joinedDate             DateTime                        @db.Date
+  active                 Boolean                         @default(true)
+  departmentId           String?                         @db.Uuid
+  positionId             String?                         @db.Uuid
+  department             Department?                     @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  position               Position?                       @relation(fields: [companyId, positionId], references: [companyId, id], onDelete: Restrict)
+  createdAt              DateTime                        @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime                        @updatedAt @db.Timestamptz(3)
+  company                Company                         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  salaries               SalaryHistory[]
+  membership             Membership?
+  managerId              String?                         @db.Uuid
+  manager                Employee?                       @relation("Manager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
+  reports                Employee[]                      @relation("Manager")
+  locationId             String?                         @db.Uuid
+  scheduleId             String?                         @db.Uuid
+  location               WorkLocation?                   @relation(fields: [companyId, locationId], references: [companyId, id], onDelete: Restrict)
+  schedule               WorkSchedule?                   @relation(fields: [companyId, scheduleId], references: [companyId, id], onDelete: Restrict)
+  attendance             AttendanceSession[]
+  leaveRequests          LeaveRequest[]
+  leaveLedger            LeaveLedger[]
+  claims                 Claim[]
+  files                  StoredFile[]
+  payrollProfile         EmployeePayrollProfile?
+  payrollProfileVersions EmployeePayrollProfileVersion[]
+  payslips               PayrollEmployee[]
+  payrollInputs          PayrollInput[]
+  taxOpenings            EmployeeTaxOpening[]
+  taxFamilyVersions      EmployeeTaxFamily[]
+  taxExpenseVersions     EmployeeTaxExpenses[]
+  headedDepartments      Department[]                    @relation("HeadOfDepartment")
+  overtimeRequests       OvertimeRequest[]
+  commissionRecords      CommissionPayrollRecord[]
 
   // Personal Information
-  nricPassportNo               String?
-  dateOfBirth                  DateTime?                       @db.Date
-  gender                       String?
-  nationality                  String?
-  race                         String?
-  religion                     String?
-  maritalStatus                String?
-  tin                          String?
-  contactNo                    String?
-  address                      String?
-  addressLine1                 String?
-  addressLine2                 String?
-  city                         String?
-  postcode                     String?
-  state                        String?
-  country                      String?
+  nricPassportNo String?
+  dateOfBirth    DateTime? @db.Date
+  gender         String?
+  nationality    String?
+  race           String?
+  religion       String?
+  maritalStatus  String?
+  tin            String?
+  contactNo      String?
+  address        String?
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  postcode       String?
+  state          String?
+  country        String?
 
   // Employment Details
-  employmentStatus             String?
-  employmentType               String?
-  confirmationDate             DateTime?                       @db.Date
-  resignationDate              DateTime?                       @db.Date
+  employmentStatus String?
+  employmentType   String?
+  confirmationDate DateTime? @db.Date
+  resignationDate  DateTime? @db.Date
 
   // Banking & Payroll
-  salaryType                   String?
-  paymentMethod                String?
-  bank                         String?
-  bankAccount                  String?
+  salaryType    String?
+  paymentMethod String?
+  bank          String?
+  bankAccount   String?
 
   // Statutory Identifiers & Rates
-  epfEmployeeNo                String?
-  epfEmployerNo                String?
-  epfRate                      String?
-  kwspNo                       String?
-  socsoNo                      String?
-  contributionCategory         String?
-  eisStatus                    String?
-  hrdRegisterNo                String?
-  statutoryEntitlementCodes    String[]                        @default([])
+  epfEmployeeNo             String?
+  epfEmployerNo             String?
+  epfRate                   String?
+  kwspNo                    String?
+  socsoNo                   String?
+  contributionCategory      String?
+  eisStatus                 String?
+  hrdRegisterNo             String?
+  statutoryEntitlementCodes String[] @default([])
 
   // Overtime Settings
-  includeOvertime              Boolean                         @default(false)
-  overtimeCalculationBasis     String?
-  overtimeHourlyRate           Decimal?                        @db.Decimal(14, 2)
+  includeOvertime          Boolean  @default(false)
+  overtimeCalculationBasis String?
+  overtimeHourlyRate       Decimal? @db.Decimal(14, 2)
 
   // Emergency Contact
   emergencyContactName         String?
@@ -179,12 +188,12 @@ model Employee {
   emergencyContactCountry      String?
 
   // Leave & Commission Assignments
-  leavePolicyCodes             String[]                        @default([])
+  leavePolicyCodes             String[] @default([])
   leaveEntitlementOverrides    Json?
   leaveServiceEntitlementTiers Json?
-  medicalLeaveEntitlement      Decimal?                        @db.Decimal(7, 2)
+  medicalLeaveEntitlement      Decimal? @db.Decimal(7, 2)
   medicalLeavePeriod           String?
-  commissionSettingCodes       String[]                        @default([])
+  commissionSettingCodes       String[] @default([])
 
   @@unique([companyId, id])
   @@unique([companyId, employeeNo])
@@ -192,25 +201,26 @@ model Employee {
 }
 
 model Department {
-  id                 String       @id @default(uuid()) @db.Uuid
-  companyId          String       @db.Uuid
+  id                 String            @id @default(uuid()) @db.Uuid
+  companyId          String            @db.Uuid
   code               String
   name               String
   shortName          String?
   description        String?
   remark             String?
-  parentDepartmentId String?      @db.Uuid
-  headOfDepartmentId String?      @db.Uuid
-  effectiveFrom      DateTime?    @db.Date
-  effectiveTo        DateTime?    @db.Date
+  parentDepartmentId String?           @db.Uuid
+  headOfDepartmentId String?           @db.Uuid
+  effectiveFrom      DateTime?         @db.Date
+  effectiveTo        DateTime?         @db.Date
   status             String?
-  active             Boolean      @default(true)
-  company            Company      @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  parentDepartment   Department?  @relation("DepartmentHierarchy", fields: [companyId, parentDepartmentId], references: [companyId, id], onDelete: Restrict)
-  subDepartments     Department[] @relation("DepartmentHierarchy")
-  headOfDepartment   Employee?    @relation("HeadOfDepartment", fields: [companyId, headOfDepartmentId], references: [companyId, id], onDelete: Restrict)
+  active             Boolean           @default(true)
+  company            Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  parentDepartment   Department?       @relation("DepartmentHierarchy", fields: [companyId, parentDepartmentId], references: [companyId, id], onDelete: Restrict)
+  subDepartments     Department[]      @relation("DepartmentHierarchy")
+  headOfDepartment   Employee?         @relation("HeadOfDepartment", fields: [companyId, headOfDepartmentId], references: [companyId, id], onDelete: Restrict)
   employees          Employee[]
   positions          Position[]
+  overtimeRequests   OvertimeRequest[]
 
   @@unique([companyId, id])
   @@unique([companyId, code])
@@ -308,6 +318,8 @@ model PublicHoliday {
   endDate     DateTime @db.Date
   states      String[]
   active      Boolean  @default(true)
+  regions     String[] @default([])
+  status      String   @default("ACTIVE")
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@index([companyId, startDate, endDate])
@@ -328,17 +340,23 @@ model AuditEvent {
 }
 
 model AttendanceSession {
-  id          String    @id @default(uuid()) @db.Uuid
-  companyId   String    @db.Uuid
-  employeeId  String    @db.Uuid
-  clockIn     DateTime  @db.Timestamptz(3)
-  clockOut    DateTime? @db.Timestamptz(3)
-  clockInKey  String
-  clockOutKey String?
-  employee    Employee  @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  id                 String    @id @default(uuid()) @db.Uuid
+  companyId          String    @db.Uuid
+  employeeId         String    @db.Uuid
+  date               DateTime  @db.Date
+  clockIn            DateTime  @db.Timestamptz(3)
+  clockOut           DateTime? @db.Timestamptz(3)
+  durationMinutes    Int?
+  hoursWorkedMinutes Int?
+  overtimeMinutes    Int       @default(0)
+  remark             String?
+  clockInKey         String
+  clockOutKey        String?
+  employee           Employee  @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
 
   @@unique([companyId, employeeId, clockInKey])
   @@unique([companyId, employeeId, clockOutKey])
+  @@index([companyId, employeeId, date])
   @@index([companyId, employeeId, clockIn])
   @@map("attendance_sessions")
 }
@@ -401,6 +419,7 @@ model LeaveRequest {
   employeeId      String        @db.Uuid
   policyId        String        @db.Uuid
   reference       String?
+  requestDate     DateTime      @db.Date
   startDate       DateTime      @db.Date
   endDate         DateTime      @db.Date
   halfDay         Boolean       @default(false)
@@ -528,23 +547,25 @@ model ClaimEvent {
 }
 
 model StoredFile {
-  id             String        @id @default(uuid()) @db.Uuid
-  companyId      String        @db.Uuid
-  employeeId     String        @db.Uuid
-  uploadedBy     String        @db.Uuid
-  originalName   String
-  mimeType       String
-  size           Int
-  sha256         String
-  category       String
-  claimId        String?       @db.Uuid
-  leaveRequestId String?       @db.Uuid
-  archived       Boolean       @default(false)
-  scanStatus     String        @default("UNSCANNED")
-  createdAt      DateTime      @default(now()) @db.Timestamptz(3)
-  employee       Employee      @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
-  claim          Claim?        @relation(fields: [companyId, claimId], references: [companyId, id], onDelete: Restrict)
-  leaveRequest   LeaveRequest? @relation(fields: [companyId, leaveRequestId], references: [companyId, id], onDelete: Restrict)
+  id                String           @id @default(uuid()) @db.Uuid
+  companyId         String           @db.Uuid
+  employeeId        String           @db.Uuid
+  uploadedBy        String           @db.Uuid
+  originalName      String
+  mimeType          String
+  size              Int
+  sha256            String
+  category          String
+  claimId           String?          @db.Uuid
+  leaveRequestId    String?          @db.Uuid
+  overtimeRequestId String?          @db.Uuid
+  archived          Boolean          @default(false)
+  scanStatus        String           @default("UNSCANNED")
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  employee          Employee         @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  claim             Claim?           @relation(fields: [companyId, claimId], references: [companyId, id], onDelete: Restrict)
+  leaveRequest      LeaveRequest?    @relation(fields: [companyId, leaveRequestId], references: [companyId, id], onDelete: Restrict)
+  overtimeRequest   OvertimeRequest? @relation(fields: [companyId, overtimeRequestId], references: [companyId, id], onDelete: Restrict)
 
   @@unique([companyId, id])
   @@index([companyId, employeeId, category])
@@ -687,10 +708,11 @@ model PayrollSettings {
   companyId                       String   @unique @db.Uuid
   cutoffDay                       Int      @default(25)
   payDay                          Int      @default(28)
+  payrollCutoffDay                String   @default("25")
   currency                        String   @default("MYR") @db.Char(3)
   makerChecker                    Boolean  @default(true)
   payrollFrequency                String   @default("MONTHLY")
-  scheduledPayDate                Int      @default(28)
+  scheduledPayDate                String   @default("28")
   salaryProrationMethod           String   @default("CALENDAR_DAYS")
   calculationPrecision            Int      @default(2)
   includeBasicSalary              Boolean  @default(true)
@@ -756,21 +778,23 @@ enum PayrollStatus {
 }
 
 model PayrollRun {
-  claims           Claim[]
-  id               String            @id @default(uuid()) @db.Uuid
-  companyId        String            @db.Uuid
-  year             Int
-  month            Int
-  status           PayrollStatus     @default(DRAFT)
-  createdBy        String            @db.Uuid
-  approvedBy       String?           @db.Uuid
-  approvedAt       DateTime?         @db.Timestamptz(3)
-  paidAt           DateTime?         @db.Timestamptz(3)
-  paymentReference String?
-  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
-  company          Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  employees        PayrollEmployee[]
-  inputs           PayrollInput[]
+  claims            Claim[]
+  overtimeRequests  OvertimeRequest[]
+  commissionRecords CommissionPayrollRecord[]
+  id                String                    @id @default(uuid()) @db.Uuid
+  companyId         String                    @db.Uuid
+  year              Int
+  month             Int
+  status            PayrollStatus             @default(DRAFT)
+  createdBy         String                    @db.Uuid
+  approvedBy        String?                   @db.Uuid
+  approvedAt        DateTime?                 @db.Timestamptz(3)
+  paidAt            DateTime?                 @db.Timestamptz(3)
+  paymentReference  String?
+  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
+  company           Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employees         PayrollEmployee[]
+  inputs            PayrollInput[]
 
   @@unique([companyId, id])
   @@unique([companyId, year, month])
@@ -814,4 +838,171 @@ model PayrollEmployee {
 
   @@unique([companyId, runId, employeeId])
   @@map("payroll_employees")
+}
+
+model PayslipSettings {
+  id                      String   @id @default(uuid()) @db.Uuid
+  companyId               String   @unique @db.Uuid
+  pageSize                String   @default("A4")
+  pageOrientation         String   @default("PORTRAIT")
+  payslipNumberFormat     String   @default("PAY-{YYYY}-{MM}-{EMPLOYEE_ID}")
+  pdfFilenameFormat       String   @default("{EMPLOYEE_ID}-{YYYY}-{MM}-payslip")
+  passwordProtectedPdf    Boolean  @default(false)
+  companyLogo             Boolean  @default(true)
+  employeeDetails         Boolean  @default(true)
+  departmentAndPosition   Boolean  @default(true)
+  employmentType          Boolean  @default(false)
+  payPeriodAndPaymentDate Boolean  @default(true)
+  salaryAndEarnings       Boolean  @default(true)
+  itemizedDeductions      Boolean  @default(true)
+  employerContributions   Boolean  @default(true)
+  yearToDateTotals        Boolean  @default(true)
+  leaveBalance            Boolean  @default(true)
+  employeeExpensesList    Boolean  @default(true)
+  dailyAttendanceRecord   Boolean  @default(true)
+  leaveList               Boolean  @default(true)
+  bankAccountDetails      Boolean  @default(false)
+  maskBankAccountNumber   Boolean  @default(true)
+  displayFooterMessage    Boolean  @default(false)
+  footerText              String   @default("")
+  publishingMethod        String   @default("MANUAL")
+  employeeVisibility      String   @default("EMPLOYEES_AND_ADMINS")
+  notifyEmployees         Boolean  @default(true)
+  createdAt               DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime @updatedAt @db.Timestamptz(3)
+  company                 Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@map("payslip_settings")
+}
+
+model OvertimeRequest {
+  id                   String        @id @default(uuid()) @db.Uuid
+  companyId            String        @db.Uuid
+  employeeId           String        @db.Uuid
+  departmentId         String?       @db.Uuid
+  requestDate          DateTime      @db.Date
+  overtimeDate         DateTime      @db.Date
+  overtimeType         String        @default("NORMAL_WORKING_DAY")
+  startTime            String
+  endTime              String
+  totalMinutes         Int
+  breakDurationMinutes Int           @default(0)
+  netMinutes           Int
+  hourlyRateMultiplier Decimal       @default(1.5) @db.Decimal(5, 2)
+  earningCode          String        @default("OT")
+  description          String
+  status               RequestStatus @default(DRAFT)
+  submittedAt          DateTime?     @db.Timestamptz(3)
+  decisionComment      String?
+  decidedBy            String?       @db.Uuid
+  decidedAt            DateTime?     @db.Timestamptz(3)
+  payrollRunId         String?       @db.Uuid
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  company              Company       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee             Employee      @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  department           Department?   @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  payrollRun           PayrollRun?   @relation(fields: [companyId, payrollRunId], references: [companyId, id], onDelete: Restrict)
+  files                StoredFile[]
+
+  @@unique([companyId, id])
+  @@index([companyId, employeeId, overtimeDate])
+  @@index([companyId, status])
+  @@map("overtime_requests")
+}
+
+model CommissionIncentiveSetting {
+  id                    String                    @id @default(uuid()) @db.Uuid
+  companyId             String                    @db.Uuid
+  code                  String
+  name                  String
+  commissionType        String
+  calculationMethod     String
+  rate                  Decimal?                  @db.Decimal(7, 4)
+  amount                Decimal?                  @db.Decimal(14, 2)
+  calculationFrequency  String                    @default("MONTHLY")
+  payoutTiming          String                    @default("CURRENT_PAYROLL")
+  description           String?
+  eligibleEmployees     String                    @default("ALL_EMPLOYEES")
+  eligibleDepartmentIds String[]                  @default([])
+  eligiblePositionIds   String[]                  @default([])
+  eligibleEmployeeIds   String[]                  @default([])
+  payrollEarningCode    String
+  requiresApproval      Boolean                   @default(true)
+  active                Boolean                   @default(true)
+  createdAt             DateTime                  @default(now()) @db.Timestamptz(3)
+  company               Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  records               CommissionPayrollRecord[]
+
+  @@unique([companyId, id])
+  @@unique([companyId, code])
+  @@map("commission_incentive_settings")
+}
+
+model CommissionPayrollRecord {
+  id                   String                      @id @default(uuid()) @db.Uuid
+  companyId            String                      @db.Uuid
+  employeeId           String                      @db.Uuid
+  settingId            String?                     @db.Uuid
+  planCode             String
+  planName             String?
+  payrollEarningCode   String
+  calculationMethod    String?
+  calculationFrequency String?
+  payoutTiming         String?
+  calculationBasis     Decimal?                    @db.Decimal(14, 2)
+  rate                 Decimal?                    @db.Decimal(7, 4)
+  amount               Decimal                     @db.Decimal(14, 2)
+  referenceId          String?
+  notes                String?
+  createdDate          DateTime                    @default(now()) @db.Date
+  status               String                      @default("PENDING_APPROVAL")
+  approvedBy           String?                     @db.Uuid
+  approvedAt           DateTime?                   @db.Timestamptz(3)
+  approvalComment      String?
+  payrollRunId         String?                     @db.Uuid
+  createdAt            DateTime                    @default(now()) @db.Timestamptz(3)
+  company              Company                     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee             Employee                    @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  setting              CommissionIncentiveSetting? @relation(fields: [companyId, settingId], references: [companyId, id], onDelete: Restrict)
+  payrollRun           PayrollRun?                 @relation(fields: [companyId, payrollRunId], references: [companyId, id], onDelete: Restrict)
+
+  @@unique([companyId, id])
+  @@index([companyId, employeeId, status])
+  @@index([companyId, payrollRunId])
+  @@map("commission_payroll_records")
+}
+
+model NotificationSettings {
+  id                              String   @id @default(uuid()) @db.Uuid
+  companyId                       String   @unique @db.Uuid
+  emailNotifications              Boolean  @default(true)
+  whatsappNotifications           Boolean  @default(false)
+  leaveApplications               Boolean  @default(true)
+  claims                          Boolean  @default(true)
+  attendanceOvertime              Boolean  @default(true)
+  payrollPayslips                 Boolean  @default(true)
+  statutoryCompliance             Boolean  @default(true)
+  probationConfirmation           Boolean  @default(true)
+  probationConfirmationLeadMonths Int      @default(2)
+  createdAt                       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt                       DateTime @updatedAt @db.Timestamptz(3)
+  company                         Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@map("notification_settings")
+}
+
+model RegionalSettings {
+  id           String   @id @default(uuid()) @db.Uuid
+  companyId    String   @unique @db.Uuid
+  language     String   @default("en")
+  timeZone     String   @default("Asia/Kuala_Lumpur")
+  dateFormat   String   @default("dd/MM/yyyy")
+  timeFormat   String   @default("24h")
+  currency     String   @default("MYR")
+  numberFormat String   @default("1,234.56")
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@map("regional_settings")
 }

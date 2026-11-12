@@ -1,33 +1,186 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
   IsIn,
   IsInt,
+  IsNumber,
+  IsOptional,
   IsString,
   Length,
   Max,
   Min,
   Matches,
+  ValidateIf,
 } from 'class-validator';
 
+export type PayrollDay = number | 'LAST_DAY';
+
 export class PayrollSettingsDto {
-  @ApiProperty({ minimum: 1, maximum: 31 })
+  @ApiPropertyOptional({ minimum: 1, maximum: 31 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(31)
-  cutoffDay: number;
-  @ApiProperty({ minimum: 1, maximum: 31 })
+  cutoffDay?: number;
+
+  @ApiPropertyOptional({ minimum: 1, maximum: 31 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(31)
-  payDay: number;
+  payDay?: number;
+
+  @ApiPropertyOptional({
+    oneOf: [
+      { type: 'integer', minimum: 1, maximum: 31 },
+      { type: 'string', enum: ['LAST_DAY'] },
+    ],
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== 'LAST_DAY')
+  @IsInt()
+  @Min(1)
+  @Max(31)
+  @ValidateIf((_, value) => value === 'LAST_DAY')
+  @IsIn(['LAST_DAY'])
+  payrollCutoffDay?: PayrollDay;
+
   @ApiProperty({ enum: ['MYR'] }) @IsIn(['MYR']) currency: string;
   @ApiProperty({
     description: 'Require an approver other than the payroll creator.',
   })
   @IsBoolean()
   makerChecker: boolean;
+
+  @ApiPropertyOptional({
+    enum: ['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'],
+  })
+  @IsOptional()
+  @IsIn(['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'])
+  payrollFrequency?: string;
+  @ApiPropertyOptional({
+    oneOf: [
+      { type: 'integer', minimum: 1, maximum: 31 },
+      { type: 'string', enum: ['LAST_DAY'] },
+    ],
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== 'LAST_DAY')
+  @IsInt()
+  @Min(1)
+  @Max(31)
+  @ValidateIf((_, value) => value === 'LAST_DAY')
+  @IsIn(['LAST_DAY'])
+  scheduledPayDate?: PayrollDay;
+  @ApiPropertyOptional({
+    enum: ['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'],
+  })
+  @IsOptional()
+  @IsIn(['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'])
+  salaryProrationMethod?: string;
+  @ApiPropertyOptional({ enum: [2, 3] })
+  @IsOptional()
+  @IsIn([2, 3])
+  calculationPrecision?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  includeBasicSalary?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeOvertime?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  includeClaimsAndAllowance?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeBonus?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  includeCommissionAndIncentives?: boolean;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  standardWorkingHoursPerDay?: number | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  normalWorkingDayMultiplier?: number | null;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 30)
+  normalWorkingDayEarningCode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  configureRestDayRates?: boolean;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  restDayOvertimeMultiplier?: number | null;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 30)
+  restDayEarningCode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  configurePublicHolidayRates?: boolean;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  publicHolidayOvertimeMultiplier?: number | null;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 30)
+  publicHolidayEarningCode?: string;
+  @ApiPropertyOptional({
+    enum: [
+      'CALENDAR_DAYS',
+      'FIXED_26_DAYS',
+      'WORKING_DAYS',
+      'FOLLOW_SALARY_PRORATION',
+    ],
+  })
+  @IsOptional()
+  @IsIn([
+    'CALENDAR_DAYS',
+    'FIXED_26_DAYS',
+    'WORKING_DAYS',
+    'FOLLOW_SALARY_PRORATION',
+  ])
+  deductionProrationMethod?: string;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeEpf?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeSocso?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeEis?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includePcb?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  includeHrdCorpLevy?: boolean;
+  @ApiPropertyOptional({ enum: ['BANK_TRANSFER', 'CASH', 'OTHER'] })
+  @IsOptional()
+  @IsIn(['BANK_TRANSFER', 'CASH', 'OTHER'])
+  paymentMethod?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  automaticallyCalculatePayroll?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  blockApprovalOnValidationErrors?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  lockAfterFinalApproval?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() notifyApprovers?: boolean;
+  @ApiPropertyOptional({ enum: ['ONE_APPROVER', 'TWO_STEP'] })
+  @IsOptional()
+  @IsIn(['ONE_APPROVER', 'TWO_STEP'])
+  approvalWorkflow?: string;
 }
 
 export class PayrollProfileDto {

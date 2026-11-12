@@ -90,7 +90,7 @@ export class ReportsService {
     const rows = await this.db.attendanceSession.findMany({
       where: {
         companyId: m.companyId,
-        clockIn: { gte: start, lt: new Date(end.getTime() + 86400000) },
+        date: { gte: start, lte: end },
       },
       include: { employee: { select: { employeeNo: true, name: true } } },
       orderBy: { clockIn: 'asc' },
@@ -103,18 +103,24 @@ export class ReportsService {
       [
         'Employee number',
         'Name',
+        'Date',
         'Clock in (UTC)',
         'Clock out (UTC)',
-        'Worked minutes',
+        'Duration minutes',
+        'Hours worked minutes',
+        'Overtime minutes',
+        'Remark',
       ],
       rows.map((r) => [
         r.employee.employeeNo,
         r.employee.name,
+        r.date.toISOString().slice(0, 10),
         r.clockIn.toISOString(),
         r.clockOut?.toISOString(),
-        r.clockOut
-          ? Math.floor((r.clockOut.getTime() - r.clockIn.getTime()) / 60000)
-          : '',
+        r.durationMinutes ?? '',
+        r.hoursWorkedMinutes ?? '',
+        r.overtimeMinutes,
+        r.remark ?? '',
       ]),
     );
   }

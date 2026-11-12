@@ -72,12 +72,16 @@ export class WorkforceService {
     if (dto.effectiveTo && dto.effectiveTo < dto.effectiveFrom)
       fail('INVALID_DATES', 'End date precedes start date.');
     return this.db.$transaction(async (tx) => {
+      const { effectiveFrom, effectiveTo, scheduleDays, ...rest } = dto;
       const data = await tx.workSchedule.create({
         data: {
-          ...dto,
+          ...rest,
           companyId: m.companyId,
-          effectiveFrom: dateOnly(dto.effectiveFrom),
-          effectiveTo: dto.effectiveTo ? dateOnly(dto.effectiveTo) : null,
+          ...(scheduleDays !== undefined
+            ? { scheduleDays: scheduleDays as Prisma.InputJsonValue }
+            : {}),
+          effectiveFrom: dateOnly(effectiveFrom),
+          effectiveTo: effectiveTo ? dateOnly(effectiveTo) : null,
         },
       });
       await audit(tx, m, 'SCHEDULE_CREATED', data.id);
@@ -87,6 +91,8 @@ export class WorkforceService {
   async createHoliday(m: Membership, dto: HolidayDto) {
     if (dto.endDate < dto.startDate)
       fail('INVALID_DATES', 'End date precedes start date.');
+    const regions = dto.regions ?? dto.states ?? [];
+    const status = dto.status ?? 'ACTIVE';
     return this.db.$transaction(
       async (tx) => {
         const overlaps = await tx.publicHoliday.findMany({
@@ -100,9 +106,11 @@ export class WorkforceService {
         if (
           overlaps.some(
             (h) =>
-              !h.states.length ||
-              !dto.states.length ||
-              h.states.some((s) => dto.states.includes(s)),
+              !(h.regions?.length ? h.regions : h.states).length ||
+              !regions.length ||
+              (h.regions?.length ? h.regions : h.states).some((s) =>
+                regions.includes(s),
+              ),
           )
         )
           fail(
@@ -112,10 +120,16 @@ export class WorkforceService {
           );
         const data = await tx.publicHoliday.create({
           data: {
-            ...dto,
             companyId: m.companyId,
+            name: dto.name,
+            description: dto.description,
+            scope: dto.scope,
             startDate: dateOnly(dto.startDate),
             endDate: dateOnly(dto.endDate),
+            states: regions,
+            regions,
+            active: status === 'ACTIVE',
+            status,
           },
         });
         await audit(tx, m, 'HOLIDAY_CREATED', data.id);

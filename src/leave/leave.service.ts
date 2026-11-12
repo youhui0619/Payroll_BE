@@ -151,6 +151,7 @@ export class LeaveService {
             halfDay: d.halfDay,
             days: d.halfDay ? '0.50' : String(days),
             reason: d.reason,
+            ...(d.reference !== undefined ? { reference: d.reference } : {}),
             managerId: employee.managerId,
             approval: policy.approval,
             paid: policy.paid,
@@ -181,10 +182,68 @@ export class LeaveService {
     return this.db.$transaction(async (tx) => {
       const data = await tx.leavePolicy.create({
         data: {
-          ...d,
           companyId: m.companyId,
+          code: d.code,
+          name: d.name,
+          ...(d.description !== undefined
+            ? { description: d.description }
+            : {}),
+          paid: d.paid,
+          ...(d.entitlementUnit !== undefined
+            ? { entitlementUnit: d.entitlementUnit }
+            : {}),
+          ...(d.entitlementCalculationMethod !== undefined
+            ? { entitlementCalculationMethod: d.entitlementCalculationMethod }
+            : {}),
+          ...(d.serviceEntitlementTiers !== undefined
+            ? {
+                serviceEntitlementTiers: d.serviceEntitlementTiers.map(
+                  (tier) => ({
+                    serviceFrom: tier.serviceFrom ?? null,
+                    serviceTo: tier.serviceTo ?? null,
+                    daysPerYear: tier.daysPerYear ?? null,
+                  }),
+                ),
+              }
+            : {}),
+          ...(d.entitlementGrantMethod !== undefined
+            ? { entitlementGrantMethod: d.entitlementGrantMethod }
+            : {}),
+          ...(d.eligibility !== undefined
+            ? { eligibility: d.eligibility }
+            : {}),
+          ...(d.leaveYear !== undefined ? { leaveYear: d.leaveYear } : {}),
+          ...(d.carryForwardPolicy !== undefined
+            ? { carryForwardPolicy: d.carryForwardPolicy }
+            : {}),
+          ...(d.requireSupportingDocuments !== undefined
+            ? { requireSupportingDocuments: d.requireSupportingDocuments }
+            : {}),
+          ...(d.allowEmployeeSpecificSettings !== undefined
+            ? { allowEmployeeSpecificSettings: d.allowEmployeeSpecificSettings }
+            : {}),
+          annualDays: d.annualDays,
+          allowHalfDay: d.allowHalfDay,
+          noticeDays: d.noticeDays,
+          approval: d.approval,
           effectiveFrom: dateOnly(d.effectiveFrom),
           effectiveTo: d.effectiveTo ? dateOnly(d.effectiveTo) : null,
+          ...(d.defaultEntitlement !== undefined
+            ? {
+                defaultEntitlement:
+                  d.defaultEntitlement === null
+                    ? null
+                    : new Prisma.Decimal(d.defaultEntitlement),
+              }
+            : {}),
+          ...(d.maximumCarryForward !== undefined
+            ? {
+                maximumCarryForward:
+                  d.maximumCarryForward === null
+                    ? null
+                    : new Prisma.Decimal(d.maximumCarryForward),
+              }
+            : {}),
         },
       });
       await audit(tx, m, 'LEAVE_POLICY_CREATED', data.id);
@@ -419,7 +478,12 @@ export class LeaveService {
       schedule.workingDays,
       holidays.filter(
         (h) =>
-          !h.states.length || (location && h.states.includes(location.state)),
+          h.status === 'ACTIVE' &&
+          (!(h.regions?.length ? h.regions : h.states).length ||
+            (location &&
+              (h.regions?.length ? h.regions : h.states).includes(
+                location.state,
+              ))),
       ),
     );
     const days = dates.length;
@@ -450,6 +514,7 @@ export class LeaveService {
       policy,
       start,
       end,
+      requestDate: today,
       days,
       daySnapshot: {
         version: 1,
@@ -464,21 +529,20 @@ export class LeaveService {
   async create(m: Membership, d: LeaveDto) {
     return this.db.$transaction(
       async (tx) => {
-        const { employee, policy, start, end, days } = await this.eligibility(
-          tx,
-          m,
-          d,
-        );
+        const { employee, policy, start, end, requestDate, days } =
+          await this.eligibility(tx, m, d);
         const data = await tx.leaveRequest.create({
           data: {
             companyId: m.companyId,
             employeeId: employee.id,
             policyId: policy.id,
+            requestDate,
             startDate: start,
             endDate: end,
             halfDay: d.halfDay,
             days: d.halfDay ? '0.50' : String(days),
             reason: d.reason,
+            ...(d.reference !== undefined ? { reference: d.reference } : {}),
             managerId: employee.managerId,
             approval: policy.approval,
             paid: policy.paid,
