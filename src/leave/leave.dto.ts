@@ -1,16 +1,20 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsBoolean,
   IsDateString,
   IsEnum,
   IsInt,
+  IsIn,
   IsOptional,
+  IsNumber,
   IsString,
   IsUUID,
   Length,
   Matches,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { LeaveApproval } from '@prisma/client';
 import { Type } from 'class-transformer';
@@ -62,10 +66,104 @@ export class LeaveBalanceResponseDto {
   @ApiProperty({ type: [LeaveBalanceItemDto] }) data: LeaveBalanceItemDto[];
   @ApiProperty({ type: LeaveBalanceMetaDto }) meta: LeaveBalanceMetaDto;
 }
+
+export class LeaveServiceEntitlementTierDto {
+  @ApiPropertyOptional({ nullable: true, minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  serviceFrom?: number | null;
+
+  @ApiPropertyOptional({ nullable: true, minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  serviceTo?: number | null;
+
+  @ApiPropertyOptional({ nullable: true, minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  daysPerYear?: number | null;
+}
+
 export class LeavePolicyDto {
   @ApiProperty() @IsString() @Length(1, 30) code: string;
   @ApiProperty() @IsString() @Length(1, 150) name: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 1000)
+  description?: string;
   @ApiProperty({ default: true }) @IsBoolean() paid = true;
+  @ApiPropertyOptional({ enum: ['DAILY', 'HOURLY'] })
+  @IsOptional()
+  @IsIn(['DAILY', 'HOURLY'])
+  entitlementUnit?: string;
+  @ApiPropertyOptional({ enum: ['FIXED', 'SERVICE'] })
+  @IsOptional()
+  @IsIn(['FIXED', 'SERVICE'])
+  entitlementCalculationMethod?: string;
+  @ApiPropertyOptional({ nullable: true, minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  defaultEntitlement?: number | null;
+  @ApiPropertyOptional({ type: [LeaveServiceEntitlementTierDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => LeaveServiceEntitlementTierDto)
+  serviceEntitlementTiers?: LeaveServiceEntitlementTierDto[];
+  @ApiPropertyOptional({
+    enum: ['ANNUAL', 'MONTHLY_ACCRUAL', 'SERVICE_ANNIVERSARY', 'MANUAL'],
+  })
+  @IsOptional()
+  @IsIn(['ANNUAL', 'MONTHLY_ACCRUAL', 'SERVICE_ANNIVERSARY', 'MANUAL'])
+  entitlementGrantMethod?: string;
+  @ApiPropertyOptional({
+    enum: [
+      'ALL_EMPLOYEES',
+      'PERMANENT',
+      'PROBATION',
+      'PART_TIME',
+      'CONTRACT_WORKER',
+      'INTERN',
+    ],
+  })
+  @IsOptional()
+  @IsIn([
+    'ALL_EMPLOYEES',
+    'PERMANENT',
+    'PROBATION',
+    'PART_TIME',
+    'CONTRACT_WORKER',
+    'INTERN',
+  ])
+  eligibility?: string;
+  @ApiPropertyOptional({
+    enum: ['CALENDAR', 'EMPLOYMENT_ANNIVERSARY', 'FINANCIAL'],
+  })
+  @IsOptional()
+  @IsIn(['CALENDAR', 'EMPLOYMENT_ANNIVERSARY', 'FINANCIAL'])
+  leaveYear?: string;
+  @ApiPropertyOptional({ enum: ['NONE', 'LIMITED', 'UNLIMITED', 'HR_REVIEW'] })
+  @IsOptional()
+  @IsIn(['NONE', 'LIMITED', 'UNLIMITED', 'HR_REVIEW'])
+  carryForwardPolicy?: string;
+  @ApiPropertyOptional({ nullable: true, minimum: 0 })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  maximumCarryForward?: number | null;
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  requireSupportingDocuments?: boolean;
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  allowEmployeeSpecificSettings?: boolean;
   @ApiProperty({ example: '14.00' })
   @IsString()
   @Matches(/^(0|[1-9]\d{0,2})(\.\d{1,2})?$/)
@@ -97,6 +195,11 @@ export class LeaveDto {
   endDate: string;
   @ApiProperty({ default: false }) @IsBoolean() halfDay = false;
   @ApiProperty() @IsString() @Length(1, 1000) reason: string;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  reference?: string | null;
 }
 export class GrantDto {
   @ApiProperty() @IsUUID() employeeId: string;

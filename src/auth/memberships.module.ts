@@ -40,6 +40,11 @@ import { audit, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 
 export class CreateMemberDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  fullName?: string;
   @ApiProperty()
   @Transform(({ value }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
@@ -61,6 +66,11 @@ export class CreateMemberDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
 }
 export class UpdateMemberDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  fullName?: string;
   @ApiProperty({ enum: Role, isArray: true })
   @IsArray()
   @ArrayNotEmpty()
@@ -76,7 +86,7 @@ const selection = {
   employeeId: true,
   roles: true,
   active: true,
-  user: { select: { email: true } },
+  user: { select: { email: true, fullName: true } },
 } as const;
 @Injectable()
 export class MembershipsService {
@@ -116,7 +126,7 @@ export class MembershipsService {
             409,
           );
         const user = await tx.user.create({
-          data: { email: d.email, passwordHash },
+          data: { email: d.email, fullName: d.fullName, passwordHash },
         });
         const data = await tx.membership.create({
           data: {
@@ -166,6 +176,11 @@ export class MembershipsService {
           if (!others)
             fail('LAST_OWNER', 'Keep at least one active owner.', 409);
         }
+        if (d.fullName !== undefined)
+          await tx.user.update({
+            where: { id: row.userId },
+            data: { fullName: d.fullName },
+          });
         const data = await tx.membership.update({
           where: { id },
           data: { active: d.active, roles: d.roles },

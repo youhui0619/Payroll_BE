@@ -63,10 +63,12 @@ export class UploadDto {
   category = 'EMPLOYEE_DOCUMENT';
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
 }
 export class FileQueryDto extends PageDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
   @ApiPropertyOptional({
     enum: ['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'],
   })
@@ -111,6 +113,7 @@ export class FilesService {
       archived: false,
       employeeId: q.employeeId,
       claimId: q.claimId,
+      leaveRequestId: q.leaveRequestId,
       category: q.category,
       ...(q.search
         ? { originalName: { contains: q.search, mode: 'insensitive' } }
@@ -149,6 +152,22 @@ export class FilesService {
               409,
             );
         }
+        if (row.leaveRequestId) {
+          const leave = await tx.leaveRequest.findUnique({
+            where: {
+              companyId_id: {
+                companyId: m.companyId,
+                id: row.leaveRequestId,
+              },
+            },
+          });
+          if (!leave || leave.status !== 'DRAFT')
+            fail(
+              'ATTACHMENT_LOCKED',
+              'Submitted leave documents must be retained.',
+              409,
+            );
+        }
         if (row.archived) return { data: row };
         const data = await tx.storedFile.update({
           where: { companyId_id: { companyId: m.companyId, id } },
@@ -182,6 +201,16 @@ export class FilesService {
       fail('INVALID_ATTACHMENT', 'Claim links require CLAIM_RECEIPT.', 400);
     if (d.category === 'CLAIM_RECEIPT' && !d.claimId)
       fail('INVALID_ATTACHMENT', 'Receipt requires a claim ID.', 400);
+    if (d.leaveRequestId && d.category !== 'LEAVE_DOCUMENT')
+      fail('INVALID_ATTACHMENT', 'Leave links require LEAVE_DOCUMENT.', 400);
+    if (d.category === 'LEAVE_DOCUMENT' && !d.leaveRequestId)
+      fail(
+        'INVALID_ATTACHMENT',
+        'Leave documents require a leave request ID.',
+        400,
+      );
+    if (d.claimId && d.leaveRequestId)
+      fail('INVALID_ATTACHMENT', 'A file can link to only one request.', 400);
     const scanStatus = await this.scanner.scan(file.buffer);
     const id = randomUUID();
     await this.storage.put(id, file.buffer, mime);
@@ -200,6 +229,18 @@ export class FilesService {
             if (!claim)
               throw new NotFoundException('Editable claim not found.');
           }
+          if (d.leaveRequestId) {
+            const leave = await tx.leaveRequest.findFirst({
+              where: {
+                id: d.leaveRequestId,
+                companyId: m.companyId,
+                employeeId,
+                status: 'DRAFT',
+              },
+            });
+            if (!leave)
+              throw new NotFoundException('Editable leave request not found.');
+          }
           const data = await tx.storedFile.create({
             data: {
               id,
@@ -214,6 +255,7 @@ export class FilesService {
               sha256: createHash('sha256').update(file.buffer).digest('hex'),
               category: d.category,
               claimId: d.claimId,
+              leaveRequestId: d.leaveRequestId,
               scanStatus,
             },
           });
@@ -302,6 +344,7 @@ export class FilesController {
         },
         employeeId: { type: 'string', format: 'uuid' },
         claimId: { type: 'string', format: 'uuid' },
+        leaveRequestId: { type: 'string', format: 'uuid' },
       },
     },
   })

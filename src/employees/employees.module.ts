@@ -19,16 +19,20 @@ import {
   ApiProperty,
   ApiPropertyOptional,
   ApiTags,
+  PartialType,
 } from '@nestjs/swagger';
 import {
+  IsArray,
+  IsBoolean,
   IsDateString,
   IsEmail,
+  IsNumber,
   IsOptional,
   IsString,
   IsUUID,
   Length,
   Matches,
-  ValidateIf,
+  MaxLength,
 } from 'class-validator';
 import { Prisma } from '@prisma/client';
 import { Database } from '../database.module';
@@ -47,18 +51,275 @@ export class CreateEmployeeDto {
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   joinedDate: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() departmentId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() positionId?: string;
-}
-export class UpdateEmployeeDto {
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string | null;
+  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() positionId?:
+    string | null;
+  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() managerId?:
+    string | null;
+  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() locationId?:
+    string | null;
+  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() scheduleId?:
+    string | null;
+
+  // Personal Information
   @ApiPropertyOptional()
-  @ValidateIf((_o, v) => v !== undefined)
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  nricPassportNo?: string;
+  @ApiPropertyOptional({ example: '1990-01-01', nullable: true })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  dateOfBirth?: string | null;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  gender?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  nationality?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 50) race?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  religion?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 30)
+  maritalStatus?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 50) tin?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  contactNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
   @Length(1, 200)
-  name?: string;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsEmail() email?:
-    string | null;
+  addressLine1?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 200)
+  addressLine2?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  city?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  postcode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  state?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  country?: string;
+
+  // Employment Details
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentStatus?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentType?: string;
+  @ApiPropertyOptional({ example: '2026-04-01', nullable: true })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  confirmationDate?: string | null;
+  @ApiPropertyOptional({ example: '2026-12-31', nullable: true })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  resignationDate?: string | null;
+
+  // Banking & Payroll
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  salaryType?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  paymentMethod?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  bank?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  bankAccount?: string;
+
+  // Statutory Identifiers & Rates
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  epfEmployeeNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  epfEmployerNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  epfRate?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  kwspNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  socsoNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  contributionCategory?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  eisStatus?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  hrdRegisterNo?: string;
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  statutoryEntitlementCodes?: string[];
+
+  // Overtime Settings
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeOvertime?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  overtimeCalculationBasis?: string;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() overtimeHourlyRate?: number;
+
+  // Emergency Contact
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  emergencyContactName?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  emergencyContactRelationship?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  emergencyContactNo?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 200)
+  emergencyContactAddressLine1?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 200)
+  emergencyContactAddressLine2?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  emergencyContactCity?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  emergencyContactPostcode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  emergencyContactState?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  emergencyContactCountry?: string;
+
+  // Leave & Commission Assignments
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  leavePolicyCodes?: string[];
+  @ApiPropertyOptional({ type: Object })
+  @IsOptional()
+  leaveEntitlementOverrides?: Record<string, any>;
+  @ApiPropertyOptional({ type: Object })
+  @IsOptional()
+  leaveServiceEntitlementTiers?: Record<string, any>;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsNumber()
+  medicalLeaveEntitlement?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  medicalLeavePeriod?: string;
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  commissionSettingCodes?: string[];
 }
+
+export class UpdateEmployeeDto extends PartialType(CreateEmployeeDto) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}
+
 export class SalaryDto {
   @ApiProperty({
     example: '3500.00',
@@ -80,6 +341,57 @@ export class SalaryDto {
 @Injectable()
 export class EmployeesService {
   constructor(private db: Database) {}
+  private async validateReferences(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+    dto: Pick<
+      CreateEmployeeDto,
+      'departmentId' | 'positionId' | 'managerId' | 'locationId' | 'scheduleId'
+    >,
+    currentDepartmentId?: string | null,
+    employeeId?: string,
+  ) {
+    const departmentId =
+      dto.departmentId !== undefined ? dto.departmentId : currentDepartmentId;
+    if (dto.departmentId) {
+      const department = await tx.department.findFirst({
+        where: { id: dto.departmentId, companyId, active: true },
+      });
+      if (!department) throw new NotFoundException('Department not found.');
+    }
+    if (dto.positionId) {
+      const position = await tx.position.findFirst({
+        where: { id: dto.positionId, companyId, active: true },
+      });
+      if (!position) throw new NotFoundException('Position not found.');
+      if (!departmentId || position.departmentId !== departmentId)
+        throw new UnprocessableEntityException(
+          'Position must belong to the selected department.',
+        );
+    }
+    if (dto.managerId) {
+      if (dto.managerId === employeeId)
+        throw new UnprocessableEntityException(
+          'An employee cannot report to themself.',
+        );
+      const manager = await tx.employee.findFirst({
+        where: { id: dto.managerId, companyId, active: true },
+      });
+      if (!manager) throw new NotFoundException('Manager not found.');
+    }
+    if (dto.locationId) {
+      const location = await tx.workLocation.findFirst({
+        where: { id: dto.locationId, companyId, active: true },
+      });
+      if (!location) throw new NotFoundException('Location not found.');
+    }
+    if (dto.scheduleId) {
+      const schedule = await tx.workSchedule.findFirst({
+        where: { id: dto.scheduleId, companyId, active: true },
+      });
+      if (!schedule) throw new NotFoundException('Schedule not found.');
+    }
+  }
   async list(companyId: string, q: PageDto) {
     const where = {
       companyId,
@@ -108,29 +420,57 @@ export class EmployeesService {
   async create(companyId: string, dto: CreateEmployeeDto) {
     return this.db.$transaction(
       async (tx) => {
-        if (
-          dto.departmentId &&
-          !(await tx.department.findFirst({
-            where: { id: dto.departmentId, companyId, active: true },
-          }))
-        )
-          throw new NotFoundException('Department not found.');
-        if (dto.positionId) {
-          const position = await tx.position.findFirst({
-            where: { id: dto.positionId, companyId, active: true },
-          });
-          if (!position) throw new NotFoundException('Position not found.');
-          if (position.departmentId !== dto.departmentId)
-            throw new UnprocessableEntityException(
-              'Position must belong to the selected department.',
-            );
-        }
+        await this.validateReferences(tx, companyId, dto);
+
+        const {
+          joinedDate,
+          dateOfBirth,
+          confirmationDate,
+          resignationDate,
+          overtimeHourlyRate,
+          medicalLeaveEntitlement,
+          ...rest
+        } = dto;
+
         return {
           data: await tx.employee.create({
             data: {
-              ...dto,
+              ...rest,
               companyId,
-              joinedDate: new Date(dto.joinedDate + 'T00:00:00.000Z'),
+              joinedDate: new Date(joinedDate + 'T00:00:00.000Z'),
+              ...(dateOfBirth !== undefined
+                ? {
+                    dateOfBirth: dateOfBirth
+                      ? new Date(dateOfBirth + 'T00:00:00.000Z')
+                      : null,
+                  }
+                : {}),
+              ...(confirmationDate !== undefined
+                ? {
+                    confirmationDate: confirmationDate
+                      ? new Date(confirmationDate + 'T00:00:00.000Z')
+                      : null,
+                  }
+                : {}),
+              ...(resignationDate !== undefined
+                ? {
+                    resignationDate: resignationDate
+                      ? new Date(resignationDate + 'T00:00:00.000Z')
+                      : null,
+                  }
+                : {}),
+              ...(overtimeHourlyRate !== undefined &&
+              overtimeHourlyRate !== null
+                ? { overtimeHourlyRate: new Prisma.Decimal(overtimeHourlyRate) }
+                : {}),
+              ...(medicalLeaveEntitlement !== undefined &&
+              medicalLeaveEntitlement !== null
+                ? {
+                    medicalLeaveEntitlement: new Prisma.Decimal(
+                      medicalLeaveEntitlement,
+                    ),
+                  }
+                : {}),
             },
           }),
         };
@@ -139,12 +479,90 @@ export class EmployeesService {
     );
   }
   async update(companyId: string, id: string, dto: UpdateEmployeeDto) {
-    return {
-      data: await this.db.employee.update({
-        where: { companyId_id: { companyId, id } },
-        data: dto,
-      }),
-    };
+    const referencesChanged =
+      dto.departmentId !== undefined ||
+      dto.positionId !== undefined ||
+      dto.managerId !== undefined ||
+      dto.locationId !== undefined ||
+      dto.scheduleId !== undefined;
+    const current = referencesChanged
+      ? await this.db.employee.findUnique({
+          where: { companyId_id: { companyId, id } },
+          select: { departmentId: true },
+        })
+      : null;
+    if (referencesChanged && !current) throw new NotFoundException();
+    const {
+      joinedDate,
+      dateOfBirth,
+      confirmationDate,
+      resignationDate,
+      overtimeHourlyRate,
+      medicalLeaveEntitlement,
+      ...rest
+    } = dto;
+
+    return this.db.$transaction(async (tx) => {
+      await this.validateReferences(
+        tx,
+        companyId,
+        dto,
+        current?.departmentId,
+        id,
+      );
+      return {
+        data: await tx.employee.update({
+          where: { companyId_id: { companyId, id } },
+          data: {
+            ...rest,
+            ...(joinedDate !== undefined
+              ? {
+                  joinedDate: joinedDate
+                    ? new Date(joinedDate + 'T00:00:00.000Z')
+                    : undefined,
+                }
+              : {}),
+            ...(dateOfBirth !== undefined
+              ? {
+                  dateOfBirth: dateOfBirth
+                    ? new Date(dateOfBirth + 'T00:00:00.000Z')
+                    : null,
+                }
+              : {}),
+            ...(confirmationDate !== undefined
+              ? {
+                  confirmationDate: confirmationDate
+                    ? new Date(confirmationDate + 'T00:00:00.000Z')
+                    : null,
+                }
+              : {}),
+            ...(resignationDate !== undefined
+              ? {
+                  resignationDate: resignationDate
+                    ? new Date(resignationDate + 'T00:00:00.000Z')
+                    : null,
+                }
+              : {}),
+            ...(overtimeHourlyRate !== undefined
+              ? {
+                  overtimeHourlyRate:
+                    overtimeHourlyRate !== null
+                      ? new Prisma.Decimal(overtimeHourlyRate)
+                      : null,
+                }
+              : {}),
+            ...(medicalLeaveEntitlement !== undefined
+              ? {
+                  medicalLeaveEntitlement:
+                    medicalLeaveEntitlement !== null
+                      ? new Prisma.Decimal(medicalLeaveEntitlement)
+                      : null,
+                }
+              : {}),
+          },
+        }),
+      };
+    });
   }
   async salaries(companyId: string, id: string, q: PageDto) {
     await this.get(companyId, id);
