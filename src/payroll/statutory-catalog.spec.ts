@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { Membership, Prisma } from '@prisma/client';
 import { calculateContribution, validateRules } from './calculator';
 import { statutoryCatalog } from './data/catalog';
-import { RulesService } from './rules.module';
+import { RulesService } from './rules.service';
 import { Database } from '../database.module';
 
 describe('source-backed statutory catalog', () => {

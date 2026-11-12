@@ -1,5 +1,5 @@
 import { OrganizationService } from './organization.service';
-import { EmployeesService } from '../employees/employees.module';
+import { EmployeesService } from '../employees/employees.service';
 import {
   NotFoundException,
   UnprocessableEntityException,

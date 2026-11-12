@@ -7,7 +7,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { IsIn, IsInt, IsString, Matches, Max, Min } from 'class-validator';
-import { Roles } from '../auth/auth.module';
+import { Roles } from '../auth/auth.decorators';
 import { calculatePcb, PcbInput, PCB_SOURCE_SHA256 } from './pcb-calculator';
 import { calculateTp1Reliefs } from './tp1-reliefs';
 import { Tp1PreviewDto, Tp1PreviewResponseDto } from './tp1.dto';

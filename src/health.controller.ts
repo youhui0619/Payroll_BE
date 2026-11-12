@@ -1,6 +1,6 @@
 import { Controller, Get, ServiceUnavailableException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Public } from './auth/auth.module';
+import { Public } from './auth/auth.decorators';
 import { Database } from './database.module';
 @ApiTags('health')
 @Public()

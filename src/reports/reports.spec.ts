@@ -1,4 +1,4 @@
-import { csvCell } from './reports.module';
+import { csvCell } from './reports.utils';
 describe('CSV export safety', () => {
   it('escapes quotes and embedded commas', () =>
     expect(csvCell('a,"b"')).toBe('"a,""b"""'));

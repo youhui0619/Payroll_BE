@@ -1,4 +1,5 @@
-import { EmployeesService, SalaryDto } from './employees.module';
+import { EmployeesService } from './employees.service';
+import { SalaryDto } from './employees.dto';
 import { OrganizationService } from '../organization/organization.service';
 import {
   ConflictException,

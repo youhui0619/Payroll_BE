@@ -1,5 +1,5 @@
 import { Membership } from '@prisma/client';
-import { MembershipsService } from './memberships.module';
+import { MembershipsService } from './memberships.service';
 const owner = {
   userId: 'owner',
   companyId: 'company',

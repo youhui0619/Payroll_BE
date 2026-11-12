@@ -1,6 +1,6 @@
-import { AttendanceService } from '../attendance/attendance.module';
+import { AttendanceService } from '../attendance/attendance.service';
 import { LeaveService, workingDays } from '../leave/leave.service';
-import { ClaimsService } from '../claims/claims.module';
+import { ClaimsService } from '../claims/claims.service';
 import { Membership, Prisma } from '@prisma/client';
 import { ForbiddenException } from '@nestjs/common';
 const member = {

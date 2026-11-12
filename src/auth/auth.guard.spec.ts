@@ -1,4 +1,4 @@
-import { AuthGuard } from './auth.module';
+import { AuthGuard } from './auth.guard';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 
 describe('tenant authentication guard', () => {

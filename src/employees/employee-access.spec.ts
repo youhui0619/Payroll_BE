@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import request = require('supertest');
 import { Database, DatabaseModule } from '../database.module';
-import { AuthGuard } from '../auth/auth.module';
+import { AuthGuard } from '../auth/auth.guard';
 import { EmployeesModule } from './employees.module';
 
 describe('employee HTTP access', () => {

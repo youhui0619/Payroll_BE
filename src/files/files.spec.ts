@@ -1,4 +1,5 @@
-import { FilesService, sniff } from './files.module';
+import { FilesService } from './files.service';
+import { sniff } from './files.utils';
 import { Membership } from '@prisma/client';
 import { NotFoundException } from '@nestjs/common';
 describe('private file boundary', () => {
