@@ -11,10 +11,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles, TenantRequest } from '../auth/auth.decorators';
-import { PageDto } from '../common/page.dto';
 import {
   CompanyDto,
+  DepartmentQueryDto,
   DepartmentDto,
+  PositionQueryDto,
   PositionDto,
   UpdateDepartmentDto,
   UpdatePositionDto,
@@ -43,7 +44,7 @@ export class CompanyController {
 @Controller('departments')
 export class DepartmentController {
   constructor(private service: OrganizationService) {}
-  @Get() list(@Req() req: TenantRequest, @Query() q: PageDto) {
+  @Get() list(@Req() req: TenantRequest, @Query() q: DepartmentQueryDto) {
     return this.service.departments(req.membership.companyId, q);
   }
   @Get(':id') get(
@@ -76,7 +77,7 @@ export class DepartmentController {
 @Controller('positions')
 export class PositionController {
   constructor(private service: OrganizationService) {}
-  @Get() list(@Req() req: TenantRequest, @Query() q: PageDto) {
+  @Get() list(@Req() req: TenantRequest, @Query() q: PositionQueryDto) {
     return this.service.positions(req.membership.companyId, q);
   }
   @Post() create(@Req() req: TenantRequest, @Body() dto: PositionDto) {

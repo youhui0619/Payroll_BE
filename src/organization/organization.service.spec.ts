@@ -27,9 +27,11 @@ describe('organization and employee tenant boundaries', () => {
     await expect(
       employees.get('company-a', 'foreign-id'),
     ).rejects.toBeInstanceOf(NotFoundException);
-    expect(db.employee.findUnique).toHaveBeenCalledWith({
-      where: { companyId_id: { companyId: 'company-a', id: 'foreign-id' } },
-    });
+    expect(db.employee.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { companyId_id: { companyId: 'company-a', id: 'foreign-id' } },
+      }),
+    );
   });
   it('scopes updates using the composite tenant key', async () => {
     await org.updateDepartment('company-a', 'department', { name: 'HR' });

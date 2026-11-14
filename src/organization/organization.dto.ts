@@ -14,6 +14,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { PageDto } from '../common/page.dto';
 
 export const FINANCIAL_MONTHS = [
   'JANUARY',
@@ -135,6 +136,34 @@ export class PositionDto {
 }
 
 export class UpdatePositionDto extends PartialType(PositionDto) {}
+
+export class DepartmentQueryDto extends PageDto {
+  @ApiPropertyOptional({
+    enum: ['ACTIVE', 'INACTIVE', 'DRAFT', 'Active', 'Inactive', 'Draft'],
+  })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE', 'DRAFT', 'Active', 'Inactive', 'Draft'])
+  status?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  parentDepartmentId?: string;
+}
+
+export class PositionQueryDto extends PageDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
+
+  @ApiPropertyOptional({
+    enum: ['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'],
+  })
+  @IsOptional()
+  @IsIn(['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'])
+  jobLevel?: string;
+}
 
 export class CompanyDto {
   @ApiPropertyOptional()

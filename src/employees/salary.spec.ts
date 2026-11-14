@@ -163,7 +163,7 @@ describe('salary history and organization deactivation', () => {
     );
     expect(db.department.update).toHaveBeenCalledWith({
       where: { companyId_id: { companyId: 'tenant', id: 'department' } },
-      data: { active: false },
+      data: { active: false, status: 'INACTIVE' },
     });
   });
 });
