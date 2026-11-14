@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -12,6 +13,43 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
+import { PageDto } from '../common/page.dto';
+
+export class EmployeeQueryDto extends PageDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  positionId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentStatus?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentType?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by active or archived employees.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+}
 
 export class CreateEmployeeDto {
   @ApiProperty() @IsString() @Length(1, 30) employeeNo: string;

@@ -18,6 +18,7 @@ import {
 } from './employee-accounts.service';
 import {
   CreateEmployeeDto,
+  EmployeeQueryDto,
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
@@ -44,7 +45,7 @@ export class EmployeesController {
   ) {
     return this.accounts.create(req.membership.companyId, id, dto);
   }
-  @Get() list(@Req() req: TenantRequest, @Query() q: PageDto) {
+  @Get() list(@Req() req: TenantRequest, @Query() q: EmployeeQueryDto) {
     return this.service.list(req.membership.companyId, q);
   }
   @Get(':id') get(

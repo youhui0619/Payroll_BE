@@ -9,6 +9,7 @@ import { Database } from '../database.module';
 import { PageDto, paginated } from '../common/page.dto';
 import {
   CreateEmployeeDto,
+  EmployeeQueryDto,
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
@@ -67,30 +68,92 @@ export class EmployeesService {
       if (!schedule) throw new NotFoundException('Schedule not found.');
     }
   }
-  async list(companyId: string, q: PageDto) {
+  async list(companyId: string, q: EmployeeQueryDto) {
+    const search = q.search?.trim();
     const where = {
       companyId,
-      ...(q.search
-        ? { name: { contains: q.search, mode: 'insensitive' as const } }
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(q.departmentId ? { departmentId: q.departmentId } : {}),
+      ...(q.positionId ? { positionId: q.positionId } : {}),
+      ...(q.employmentStatus ? { employmentStatus: q.employmentStatus } : {}),
+      ...(q.employmentType ? { employmentType: q.employmentType } : {}),
+      ...(search
+        ? {
+            OR: [
+              {
+                employeeNo: { contains: search, mode: 'insensitive' as const },
+              },
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { email: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
         : {}),
     };
-    const [data, total] = await this.db.$transaction([
+    const [rows, total] = await this.db.$transaction([
       this.db.employee.findMany({
         where,
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
+        include: {
+          department: { select: { id: true, code: true, name: true } },
+          position: { select: { id: true, code: true, title: true } },
+          manager: { select: { id: true, employeeNo: true, name: true } },
+          location: { select: { id: true, code: true, name: true } },
+          schedule: { select: { id: true, code: true, name: true } },
+          salaries: {
+            orderBy: { effectiveFrom: 'desc' },
+            take: 1,
+          },
+        },
       }),
       this.db.employee.count({ where }),
     ]);
+    const data = rows.map(({ salaries, ...employee }) => ({
+      ...employee,
+      currentSalary: salaries[0]
+        ? {
+            ...salaries[0],
+            amount: salaries[0].amount.toFixed(2),
+          }
+        : null,
+    }));
     return paginated(data, total, q);
   }
   async get(companyId: string, id: string) {
     const data = await this.db.employee.findUnique({
       where: { companyId_id: { companyId, id } },
+      include: {
+        department: { select: { id: true, code: true, name: true } },
+        position: { select: { id: true, code: true, title: true } },
+        manager: { select: { id: true, employeeNo: true, name: true } },
+        location: { select: { id: true, code: true, name: true } },
+        schedule: true,
+        membership: {
+          select: {
+            id: true,
+            active: true,
+            roles: true,
+            user: { select: { id: true, email: true, fullName: true } },
+          },
+        },
+        salaries: { orderBy: { effectiveFrom: 'desc' } },
+      },
     });
     if (!data) throw new NotFoundException();
-    return { data };
+    const salaryHistory = data.salaries.map((salary) => ({
+      ...salary,
+      amount: salary.amount.toFixed(2),
+    }));
+    const currentSalary = salaryHistory[0] ?? null;
+    return {
+      data: {
+        ...data,
+        salaries: salaryHistory,
+        salaryHistory,
+        currentSalary,
+      },
+    };
   }
   async create(companyId: string, dto: CreateEmployeeDto) {
     return this.db.$transaction(
