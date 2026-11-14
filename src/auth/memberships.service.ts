@@ -3,15 +3,44 @@ import { Membership } from '@prisma/client';
 import { Database } from '../database.module';
 import { hashPassword } from './password';
 import { audit, fail } from '../common/domain';
-import { PageDto, paginated } from '../common/page.dto';
-import { CreateMemberDto, UpdateMemberDto } from './memberships.dto';
+import { paginated } from '../common/page.dto';
+import {
+  CreateMemberDto,
+  MembershipQueryDto,
+  UpdateMemberDto,
+} from './memberships.dto';
 import { membershipSelection } from './memberships.selection';
 
 @Injectable()
 export class MembershipsService {
   constructor(private db: Database) {}
-  async list(m: Membership, q: PageDto) {
-    const where = { companyId: m.companyId };
+  async list(m: Membership, q: MembershipQueryDto) {
+    const search = q.search?.trim();
+    const where = {
+      companyId: m.companyId,
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(q.role ? { roles: { has: q.role } } : {}),
+      ...(search
+        ? {
+            OR: [
+              { id: search },
+              {
+                user: {
+                  email: { contains: search, mode: 'insensitive' as const },
+                },
+              },
+              {
+                user: {
+                  fullName: {
+                    contains: search,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.membership.findMany({
         where,
@@ -23,6 +52,14 @@ export class MembershipsService {
       this.db.membership.count({ where }),
     ]);
     return paginated(data, total, q);
+  }
+  async get(m: Membership, id: string) {
+    const data = await this.db.membership.findFirst({
+      where: { id, companyId: m.companyId },
+      select: membershipSelection,
+    });
+    if (!data) throw new NotFoundException();
+    return { data };
   }
   async create(m: Membership, d: CreateMemberDto) {
     const passwordHash = await hashPassword(d.password);

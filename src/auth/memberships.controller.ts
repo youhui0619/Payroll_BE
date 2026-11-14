@@ -10,9 +10,12 @@ import {
   Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { PageDto } from '../common/page.dto';
 import { Roles, TenantRequest } from './auth.decorators';
-import { CreateMemberDto, UpdateMemberDto } from './memberships.dto';
+import {
+  CreateMemberDto,
+  MembershipQueryDto,
+  UpdateMemberDto,
+} from './memberships.dto';
 import { MembershipsService } from './memberships.service';
 
 @ApiBearerAuth()
@@ -21,11 +24,17 @@ import { MembershipsService } from './memberships.service';
 @Controller('memberships')
 export class MembershipsController {
   constructor(private service: MembershipsService) {}
-  @Get() list(@Req() r: TenantRequest, @Query() q: PageDto) {
+  @Get() list(@Req() r: TenantRequest, @Query() q: MembershipQueryDto) {
     return this.service.list(r.membership, q);
   }
   @Post() create(@Req() r: TenantRequest, @Body() d: CreateMemberDto) {
     return this.service.create(r.membership, d);
+  }
+  @Get(':id') get(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.get(r.membership, id);
   }
   @Patch(':id') update(
     @Req() r: TenantRequest,

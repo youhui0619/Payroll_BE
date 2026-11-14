@@ -66,17 +66,22 @@ export class AuthController {
       data: { failedLoginCount: 0, lockedUntil: null },
     });
     const m = memberships[0];
+    const accessToken = await this.jwt.signAsync({
+      sub: user.id,
+      membershipId: m.id,
+      companyId: m.companyId,
+      version: user.tokenVersion,
+    });
     return {
       data: {
-        accessToken: await this.jwt.signAsync({
-          sub: user.id,
-          membershipId: m.id,
-          companyId: m.companyId,
-          version: user.tokenVersion,
-        }),
+        accessToken,
+        access_token: accessToken,
         tokenType: 'Bearer',
         expiresIn: Number(process.env.JWT_TTL_SECONDS ?? 3600),
       },
+      // Keep the legacy FE contract while the client moves to the
+      // project-standard { data: { accessToken } } response shape.
+      access_token: accessToken,
     };
   }
   @ApiBearerAuth()

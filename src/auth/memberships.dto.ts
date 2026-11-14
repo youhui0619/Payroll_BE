@@ -14,6 +14,24 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { Role } from '@prisma/client';
+import { PageDto } from '../common/page.dto';
+
+export class MembershipQueryDto extends PageDto {
+  @ApiPropertyOptional({ enum: Role })
+  @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
+
+  @ApiPropertyOptional({ description: 'Filter by active or inactive access.' })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+}
 
 export class CreateMemberDto {
   @ApiPropertyOptional()
