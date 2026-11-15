@@ -1,19 +1,62 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
-import { audit, dateOnly, fail } from '../common/domain';
+import { audit, dateOnly, dateString, fail } from '../common/domain';
 import {
+  HolidayQueryDto,
   LocationDto,
+  LocationQueryDto,
   ScheduleDto,
+  ScheduleQueryDto,
   HolidayDto,
   AssignmentDto,
+  UpdateHolidayDto,
+  UpdateLocationDto,
+  UpdateScheduleDto,
 } from './workforce.dto';
-import { PageDto, paginated } from '../common/page.dto';
+import { paginated } from '../common/page.dto';
+
+function validateTimezone(timezone: string) {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: timezone });
+  } catch {
+    fail('INVALID_TIMEZONE', 'Unknown IANA timezone.', 400);
+  }
+}
+
+function validateSchedule(
+  startMinute: number,
+  endMinute: number,
+  breakMinutes: number,
+) {
+  const duration = (endMinute - startMinute + 1440) % 1440;
+  if (!duration || breakMinutes >= duration)
+    fail('INVALID_SCHEDULE', 'Break must be shorter than a non-zero shift.');
+}
+
 @Injectable()
 export class WorkforceService {
   constructor(private db: Database) {}
-  async locations(m: Membership, q: PageDto) {
-    const where = { companyId: m.companyId };
+  async locations(m: Membership, q: LocationQueryDto) {
+    const search = q.search?.trim();
+    const where = {
+      companyId: m.companyId,
+      ...(q.type ? { type: q.type } : {}),
+      ...(q.state ? { state: q.state } : {}),
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(search
+        ? {
+            OR: [
+              { code: { contains: search, mode: 'insensitive' as const } },
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { remark: { contains: search, mode: 'insensitive' as const } },
+              { city: { contains: search, mode: 'insensitive' as const } },
+              { state: { contains: search, mode: 'insensitive' as const } },
+              { country: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.workLocation.findMany({
         where,
@@ -25,8 +68,28 @@ export class WorkforceService {
     ]);
     return paginated(data, total, q);
   }
-  async schedules(m: Membership, q: PageDto) {
-    const where = { companyId: m.companyId };
+  async location(m: Membership, id: string) {
+    const data = await this.db.workLocation.findFirst({
+      where: { id, companyId: m.companyId },
+    });
+    if (!data) throw new NotFoundException();
+    return { data };
+  }
+  async schedules(m: Membership, q: ScheduleQueryDto) {
+    const search = q.search?.trim();
+    const where = {
+      companyId: m.companyId,
+      ...(q.employmentType ? { employmentType: q.employmentType } : {}),
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(search
+        ? {
+            OR: [
+              { code: { contains: search, mode: 'insensitive' as const } },
+              { name: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.workSchedule.findMany({
         where,
@@ -38,8 +101,47 @@ export class WorkforceService {
     ]);
     return paginated(data, total, q);
   }
-  async holidays(m: Membership, q: PageDto) {
-    const where = { companyId: m.companyId };
+  async schedule(m: Membership, id: string) {
+    const data = await this.db.workSchedule.findFirst({
+      where: { id, companyId: m.companyId },
+    });
+    if (!data) throw new NotFoundException();
+    return { data };
+  }
+  async holidays(m: Membership, q: HolidayQueryDto) {
+    const search = q.search?.trim();
+    const yearStart = q.year ? dateOnly(`${q.year}-01-01`) : undefined;
+    const yearEnd = q.year ? dateOnly(`${q.year}-12-31`) : undefined;
+    const where = {
+      companyId: m.companyId,
+      ...(q.scope ? { scope: q.scope } : {}),
+      ...(q.status ? { status: q.status } : {}),
+      ...(q.region
+        ? {
+            OR: [{ regions: { has: q.region } }, { states: { has: q.region } }],
+          }
+        : {}),
+      ...(yearStart && yearEnd
+        ? { startDate: { lte: yearEnd }, endDate: { gte: yearStart } }
+        : {}),
+      ...(search
+        ? {
+            AND: [
+              {
+                OR: [
+                  { name: { contains: search, mode: 'insensitive' as const } },
+                  {
+                    description: {
+                      contains: search,
+                      mode: 'insensitive' as const,
+                    },
+                  },
+                ],
+              },
+            ],
+          }
+        : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.publicHoliday.findMany({
         where,
@@ -51,12 +153,15 @@ export class WorkforceService {
     ]);
     return paginated(data, total, q);
   }
+  async holiday(m: Membership, id: string) {
+    const data = await this.db.publicHoliday.findFirst({
+      where: { id, companyId: m.companyId },
+    });
+    if (!data) throw new NotFoundException();
+    return { data };
+  }
   async createLocation(m: Membership, dto: LocationDto) {
-    try {
-      new Intl.DateTimeFormat('en', { timeZone: dto.timezone });
-    } catch {
-      fail('INVALID_TIMEZONE', 'Unknown IANA timezone.', 400);
-    }
+    validateTimezone(dto.timezone);
     return this.db.$transaction(async (tx) => {
       const data = await tx.workLocation.create({
         data: { ...dto, companyId: m.companyId },
@@ -65,10 +170,46 @@ export class WorkforceService {
       return { data };
     });
   }
+  async updateLocation(m: Membership, id: string, dto: UpdateLocationDto) {
+    if (dto.timezone !== undefined) validateTimezone(dto.timezone);
+    const existing = await this.db.workLocation.findFirst({
+      where: { id, companyId: m.companyId },
+    });
+    if (!existing) throw new NotFoundException();
+    return this.db.$transaction(async (tx) => {
+      const data = await tx.workLocation.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: dto,
+      });
+      await audit(tx, m, 'LOCATION_UPDATED', id);
+      return { data };
+    });
+  }
+  async deactivateLocation(m: Membership, id: string) {
+    return this.db.$transaction(async (tx) => {
+      const existing = await tx.workLocation.findUnique({
+        where: { companyId_id: { companyId: m.companyId, id } },
+      });
+      if (!existing) throw new NotFoundException();
+      const employees = await tx.employee.count({
+        where: { companyId: m.companyId, locationId: id, active: true },
+      });
+      if (employees)
+        fail(
+          'LOCATION_IN_USE',
+          'Reassign active employees before deactivating this location.',
+          409,
+        );
+      const data = await tx.workLocation.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: { active: false },
+      });
+      await audit(tx, m, 'LOCATION_DEACTIVATED', id);
+      return { data };
+    });
+  }
   async createSchedule(m: Membership, dto: ScheduleDto) {
-    const duration = (dto.endMinute - dto.startMinute + 1440) % 1440;
-    if (!duration || dto.breakMinutes >= duration)
-      fail('INVALID_SCHEDULE', 'Break must be shorter than a non-zero shift.');
+    validateSchedule(dto.startMinute, dto.endMinute, dto.breakMinutes);
     if (dto.effectiveTo && dto.effectiveTo < dto.effectiveFrom)
       fail('INVALID_DATES', 'End date precedes start date.');
     return this.db.$transaction(async (tx) => {
@@ -85,6 +226,67 @@ export class WorkforceService {
         },
       });
       await audit(tx, m, 'SCHEDULE_CREATED', data.id);
+      return { data };
+    });
+  }
+  async updateSchedule(m: Membership, id: string, dto: UpdateScheduleDto) {
+    const existing = await this.db.workSchedule.findUnique({
+      where: { companyId_id: { companyId: m.companyId, id } },
+    });
+    if (!existing) throw new NotFoundException();
+    const startMinute = dto.startMinute ?? existing.startMinute;
+    const endMinute = dto.endMinute ?? existing.endMinute;
+    const breakMinutes = dto.breakMinutes ?? existing.breakMinutes;
+    validateSchedule(startMinute, endMinute, breakMinutes);
+    const effectiveFrom =
+      dto.effectiveFrom ?? dateString(existing.effectiveFrom);
+    const effectiveTo =
+      dto.effectiveTo !== undefined
+        ? dto.effectiveTo
+        : existing.effectiveTo
+          ? dateString(existing.effectiveTo)
+          : undefined;
+    if (effectiveTo && effectiveTo < effectiveFrom)
+      fail('INVALID_DATES', 'End date precedes start date.');
+    const { effectiveFrom: from, effectiveTo: to, scheduleDays, ...rest } = dto;
+    return this.db.$transaction(async (tx) => {
+      const data = await tx.workSchedule.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: {
+          ...rest,
+          ...(scheduleDays !== undefined
+            ? { scheduleDays: scheduleDays as Prisma.InputJsonValue }
+            : {}),
+          ...(from !== undefined ? { effectiveFrom: dateOnly(from) } : {}),
+          ...(to !== undefined
+            ? { effectiveTo: to ? dateOnly(to) : null }
+            : {}),
+        },
+      });
+      await audit(tx, m, 'SCHEDULE_UPDATED', id);
+      return { data };
+    });
+  }
+  async deactivateSchedule(m: Membership, id: string) {
+    return this.db.$transaction(async (tx) => {
+      const existing = await tx.workSchedule.findUnique({
+        where: { companyId_id: { companyId: m.companyId, id } },
+      });
+      if (!existing) throw new NotFoundException();
+      const employees = await tx.employee.count({
+        where: { companyId: m.companyId, scheduleId: id, active: true },
+      });
+      if (employees)
+        fail(
+          'SCHEDULE_IN_USE',
+          'Reassign active employees before deactivating this schedule.',
+          409,
+        );
+      const data = await tx.workSchedule.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: { active: false },
+      });
+      await audit(tx, m, 'SCHEDULE_DEACTIVATED', id);
       return { data };
     });
   }
@@ -137,6 +339,92 @@ export class WorkforceService {
       },
       { isolationLevel: 'Serializable' },
     );
+  }
+  async updateHoliday(m: Membership, id: string, dto: UpdateHolidayDto) {
+    const existing = await this.db.publicHoliday.findFirst({
+      where: { companyId: m.companyId, id },
+    });
+    if (!existing) throw new NotFoundException();
+    const startDate = dto.startDate ?? dateString(existing.startDate);
+    const endDate = dto.endDate ?? dateString(existing.endDate);
+    if (endDate < startDate)
+      fail('INVALID_DATES', 'End date precedes start date.');
+    const regions =
+      dto.regions ??
+      dto.states ??
+      (existing.regions?.length ? existing.regions : existing.states);
+    const status = dto.status ?? (existing.status as 'ACTIVE' | 'INACTIVE');
+    return this.db.$transaction(
+      async (tx) => {
+        const overlaps = await tx.publicHoliday.findMany({
+          where: {
+            companyId: m.companyId,
+            id: { not: id },
+            active: true,
+            startDate: { lte: dateOnly(endDate) },
+            endDate: { gte: dateOnly(startDate) },
+          },
+        });
+        if (
+          status === 'ACTIVE' &&
+          overlaps.some(
+            (h) =>
+              !(h.regions?.length ? h.regions : h.states).length ||
+              !regions.length ||
+              (h.regions?.length ? h.regions : h.states).some((s) =>
+                regions.includes(s),
+              ),
+          )
+        )
+          fail(
+            'HOLIDAY_OVERLAP',
+            'A holiday already covers this date and region.',
+            409,
+          );
+        const {
+          startDate: from,
+          endDate: to,
+          states: ignoredStates,
+          regions: ignoredRegions,
+          status: ignoredStatus,
+          ...rest
+        } = dto;
+        void ignoredStates;
+        void ignoredRegions;
+        void ignoredStatus;
+        const data = await tx.publicHoliday.update({
+          where: { id },
+          data: {
+            ...rest,
+            ...(from !== undefined ? { startDate: dateOnly(from) } : {}),
+            ...(to !== undefined ? { endDate: dateOnly(to) } : {}),
+            ...(dto.regions !== undefined || dto.states !== undefined
+              ? { states: regions, regions }
+              : {}),
+            ...(dto.status !== undefined
+              ? { status, active: status === 'ACTIVE' }
+              : {}),
+          },
+        });
+        await audit(tx, m, 'HOLIDAY_UPDATED', id);
+        return { data };
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
+  async deactivateHoliday(m: Membership, id: string) {
+    return this.db.$transaction(async (tx) => {
+      const existing = await tx.publicHoliday.findFirst({
+        where: { companyId: m.companyId, id },
+      });
+      if (!existing) throw new NotFoundException();
+      const data = await tx.publicHoliday.update({
+        where: { id },
+        data: { active: false, status: 'INACTIVE' },
+      });
+      await audit(tx, m, 'HOLIDAY_DEACTIVATED', id);
+      return { data };
+    });
   }
   async assign(m: Membership, id: string, dto: AssignmentDto) {
     return this.db.$transaction(

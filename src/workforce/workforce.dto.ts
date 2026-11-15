@@ -1,7 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   ArrayUnique,
+  IsBoolean,
   IsArray,
   IsDateString,
   IsIn,
@@ -15,6 +17,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { PageDto } from '../common/page.dto';
 export const STATES = [
   'MY-01',
   'MY-02',
@@ -103,6 +106,31 @@ export class LocationDto {
   @Length(1, 80)
   timezone = 'Asia/Kuala_Lumpur';
 }
+export class UpdateLocationDto extends PartialType(LocationDto) {}
+
+export class LocationQueryDto extends PageDto {
+  @ApiPropertyOptional({ enum: ['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'] })
+  @IsOptional()
+  @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
+  type?: string;
+
+  @ApiPropertyOptional({ enum: [...STATES, ...REGIONS] })
+  @IsOptional()
+  @IsIn([...STATES, ...REGIONS])
+  state?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by active or archived locations.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+}
 export class ScheduleDto {
   @ApiProperty() @IsString() @Length(1, 30) code: string;
   @ApiProperty() @IsString() @Length(1, 150) name: string;
@@ -156,6 +184,27 @@ export class ScheduleDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string;
 }
+export class UpdateScheduleDto extends PartialType(ScheduleDto) {}
+
+export class ScheduleQueryDto extends PageDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  employmentType?: string;
+
+  @ApiPropertyOptional({
+    description: 'Filter by active or archived schedules.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+}
 export class HolidayDto {
   @ApiProperty() @IsString() @Length(1, 150) name: string;
   @ApiPropertyOptional()
@@ -199,6 +248,32 @@ export class HolidayDto {
   @IsOptional()
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
+}
+export class UpdateHolidayDto extends PartialType(HolidayDto) {}
+
+export class HolidayQueryDto extends PageDto {
+  @ApiPropertyOptional({ minimum: 2000, maximum: 2200 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2200)
+  year?: number;
+
+  @ApiPropertyOptional({ enum: ['National', 'State'] })
+  @IsOptional()
+  @IsIn(['National', 'State'])
+  scope?: string;
+
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
+
+  @ApiPropertyOptional({ enum: HOLIDAY_REGIONS })
+  @IsOptional()
+  @IsIn(HOLIDAY_REGIONS)
+  region?: string;
 }
 export class AssignmentDto {
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() managerId?:

@@ -11,12 +11,17 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles, TenantRequest } from '../auth/auth.decorators';
-import { PageDto } from '../common/page.dto';
 import {
+  HolidayQueryDto,
   LocationDto,
+  LocationQueryDto,
   ScheduleDto,
+  ScheduleQueryDto,
   HolidayDto,
   AssignmentDto,
+  UpdateHolidayDto,
+  UpdateLocationDto,
+  UpdateScheduleDto,
 } from './workforce.dto';
 import { WorkforceService } from './workforce.service';
 
@@ -28,9 +33,15 @@ export class WorkforceController {
   constructor(private service: WorkforceService) {}
   @Get('work-locations') locations(
     @Req() r: TenantRequest,
-    @Query() q: PageDto,
+    @Query() q: LocationQueryDto,
   ) {
     return this.service.locations(r.membership, q);
+  }
+  @Get('work-locations/:id') locationDetail(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.location(r.membership, id);
   }
   @Post('work-locations') location(
     @Req() r: TenantRequest,
@@ -38,11 +49,30 @@ export class WorkforceController {
   ) {
     return this.service.createLocation(r.membership, d);
   }
+  @Patch('work-locations/:id') updateLocation(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: UpdateLocationDto,
+  ) {
+    return this.service.updateLocation(r.membership, id, d);
+  }
+  @Post('work-locations/:id/deactivate') deactivateLocation(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.deactivateLocation(r.membership, id);
+  }
   @Get('work-schedules') schedules(
     @Req() r: TenantRequest,
-    @Query() q: PageDto,
+    @Query() q: ScheduleQueryDto,
   ) {
     return this.service.schedules(r.membership, q);
+  }
+  @Get('work-schedules/:id') scheduleDetail(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.schedule(r.membership, id);
   }
   @Post('work-schedules') schedule(
     @Req() r: TenantRequest,
@@ -50,17 +80,49 @@ export class WorkforceController {
   ) {
     return this.service.createSchedule(r.membership, d);
   }
+  @Patch('work-schedules/:id') updateSchedule(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: UpdateScheduleDto,
+  ) {
+    return this.service.updateSchedule(r.membership, id, d);
+  }
+  @Post('work-schedules/:id/deactivate') deactivateSchedule(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.deactivateSchedule(r.membership, id);
+  }
   @Get('public-holidays') holidays(
     @Req() r: TenantRequest,
-    @Query() q: PageDto,
+    @Query() q: HolidayQueryDto,
   ) {
     return this.service.holidays(r.membership, q);
+  }
+  @Get('public-holidays/:id') holidayDetail(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.holiday(r.membership, id);
   }
   @Post('public-holidays') holiday(
     @Req() r: TenantRequest,
     @Body() d: HolidayDto,
   ) {
     return this.service.createHoliday(r.membership, d);
+  }
+  @Patch('public-holidays/:id') updateHoliday(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: UpdateHolidayDto,
+  ) {
+    return this.service.updateHoliday(r.membership, id, d);
+  }
+  @Post('public-holidays/:id/deactivate') deactivateHoliday(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.deactivateHoliday(r.membership, id);
   }
   @Patch('employees/:id/assignment') assign(
     @Req() r: TenantRequest,
