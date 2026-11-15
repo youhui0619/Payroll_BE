@@ -16,6 +16,7 @@ import { PayrollModule } from './payroll/payroll.module';
 import { MembershipsModule } from './auth/memberships.module';
 import { SettingsModule } from './settings/settings.module';
 import { OvertimeModule } from './overtime/overtime.module';
+import { CommissionModule } from './commission/commission.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { OvertimeModule } from './overtime/overtime.module';
     MembershipsModule,
     SettingsModule,
     OvertimeModule,
+    CommissionModule,
   ],
   controllers: [HealthController],
   providers: [AppService],
