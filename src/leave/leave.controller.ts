@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -20,7 +21,9 @@ import { PageDto } from '../common/page.dto';
 import { DecisionDto } from '../common/domain';
 import {
   LeaveDto,
+  LeavePolicyQueryDto,
   LeavePolicyDto,
+  UpdateLeavePolicyDto,
   GrantDto,
   LeaveBalanceQueryDto,
   LeaveBalanceResponseDto,
@@ -32,13 +35,40 @@ import { LeaveService } from './leave.service';
 @Controller('leave')
 export class LeaveController {
   constructor(private service: LeaveService) {}
-  @Get('policies') policies(@Req() r: TenantRequest, @Query() q: PageDto) {
+  @Get('policies') policies(
+    @Req() r: TenantRequest,
+    @Query() q: LeavePolicyQueryDto,
+  ) {
     return this.service.policies(r.membership, q);
+  }
+  @Get('policies/:id')
+  policyDetail(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.policy(r.membership, id);
   }
   @Post('policies')
   @Roles('OWNER', 'HR')
   policy(@Req() r: TenantRequest, @Body() d: LeavePolicyDto) {
     return this.service.createPolicy(r.membership, d);
+  }
+  @Patch('policies/:id')
+  @Roles('OWNER', 'HR')
+  updatePolicy(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: UpdateLeavePolicyDto,
+  ) {
+    return this.service.updatePolicy(r.membership, id, d);
+  }
+  @Post('policies/:id/deactivate')
+  @Roles('OWNER', 'HR')
+  deactivatePolicy(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.deactivatePolicy(r.membership, id);
   }
   @Post('grants')
   @Roles('OWNER', 'HR')

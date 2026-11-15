@@ -21,8 +21,10 @@ import { PageDto, paginated } from '../common/page.dto';
 import {
   GrantDto,
   LeaveDto,
+  LeavePolicyQueryDto,
   LeavePolicyDto,
   LeaveBalanceQueryDto,
+  UpdateLeavePolicyDto,
 } from './leave.dto';
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
 export function workingDates(
@@ -163,8 +165,28 @@ export class LeaveService {
       { isolationLevel: 'Serializable' },
     );
   }
-  async policies(m: Membership, q: PageDto) {
-    const where = { companyId: m.companyId };
+  async policies(m: Membership, q: LeavePolicyQueryDto) {
+    const search = q.search?.trim();
+    const where = {
+      companyId: m.companyId,
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(q.paid !== undefined ? { paid: q.paid } : {}),
+      ...(q.approval ? { approval: q.approval } : {}),
+      ...(search
+        ? {
+            OR: [
+              { code: { contains: search, mode: 'insensitive' as const } },
+              { name: { contains: search, mode: 'insensitive' as const } },
+              {
+                description: {
+                  contains: search,
+                  mode: 'insensitive' as const,
+                },
+              },
+            ],
+          }
+        : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.leavePolicy.findMany({
         where,
@@ -175,6 +197,99 @@ export class LeaveService {
       this.db.leavePolicy.count({ where }),
     ]);
     return paginated(data, total, q);
+  }
+  async policy(m: Membership, id: string) {
+    const data = await this.db.leavePolicy.findUnique({
+      where: { companyId_id: { companyId: m.companyId, id } },
+    });
+    if (!data) throw new NotFoundException();
+    return { data };
+  }
+
+  private policyValues(d: UpdateLeavePolicyDto) {
+    const {
+      effectiveFrom,
+      effectiveTo,
+      serviceEntitlementTiers,
+      defaultEntitlement,
+      maximumCarryForward,
+      active,
+      ...rest
+    } = d;
+    return {
+      ...rest,
+      ...(active !== undefined ? { active } : {}),
+      ...(serviceEntitlementTiers !== undefined
+        ? {
+            serviceEntitlementTiers: serviceEntitlementTiers.map((tier) => ({
+              serviceFrom: tier.serviceFrom ?? null,
+              serviceTo: tier.serviceTo ?? null,
+              daysPerYear: tier.daysPerYear ?? null,
+            })),
+          }
+        : {}),
+      ...(defaultEntitlement !== undefined
+        ? {
+            defaultEntitlement:
+              defaultEntitlement === null
+                ? null
+                : new Prisma.Decimal(defaultEntitlement),
+          }
+        : {}),
+      ...(maximumCarryForward !== undefined
+        ? {
+            maximumCarryForward:
+              maximumCarryForward === null
+                ? null
+                : new Prisma.Decimal(maximumCarryForward),
+          }
+        : {}),
+      ...(effectiveFrom !== undefined
+        ? { effectiveFrom: dateOnly(effectiveFrom) }
+        : {}),
+      ...(effectiveTo !== undefined
+        ? { effectiveTo: effectiveTo ? dateOnly(effectiveTo) : null }
+        : {}),
+    };
+  }
+
+  async updatePolicy(m: Membership, id: string, d: UpdateLeavePolicyDto) {
+    const existing = await this.db.leavePolicy.findUnique({
+      where: { companyId_id: { companyId: m.companyId, id } },
+    });
+    if (!existing) throw new NotFoundException();
+    const effectiveFrom = d.effectiveFrom ?? dateString(existing.effectiveFrom);
+    const effectiveTo =
+      d.effectiveTo !== undefined
+        ? d.effectiveTo
+        : existing.effectiveTo
+          ? dateString(existing.effectiveTo)
+          : undefined;
+    if (effectiveTo && effectiveTo < effectiveFrom)
+      fail('INVALID_DATES', 'Policy end precedes start.');
+    return this.db.$transaction(async (tx) => {
+      const data = await tx.leavePolicy.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: this.policyValues(d),
+      });
+      await audit(tx, m, 'LEAVE_POLICY_UPDATED', id);
+      return { data };
+    });
+  }
+
+  async deactivatePolicy(m: Membership, id: string) {
+    return this.db.$transaction(async (tx) => {
+      const existing = await tx.leavePolicy.findUnique({
+        where: { companyId_id: { companyId: m.companyId, id } },
+      });
+      if (!existing) throw new NotFoundException();
+      const data = await tx.leavePolicy.update({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        data: { active: false },
+      });
+      await audit(tx, m, 'LEAVE_POLICY_DEACTIVATED', id);
+      return { data };
+    });
   }
   async createPolicy(m: Membership, d: LeavePolicyDto) {
     if (d.effectiveTo && d.effectiveTo < d.effectiveFrom)

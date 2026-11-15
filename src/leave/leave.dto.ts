@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
@@ -18,6 +18,8 @@ import {
 } from 'class-validator';
 import { LeaveApproval } from '@prisma/client';
 import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
+import { PageDto } from '../common/page.dto';
 
 export class LeaveBalanceQueryDto {
   @ApiPropertyOptional({
@@ -182,6 +184,41 @@ export class LeavePolicyDto {
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string;
+}
+export class UpdateLeavePolicyDto extends PartialType(LeavePolicyDto) {
+  @ApiPropertyOptional({ description: 'Archive the policy from new requests.' })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}
+
+export class LeavePolicyQueryDto extends PageDto {
+  @ApiPropertyOptional({
+    description: 'Filter by active or archived policies.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  paid?: boolean;
+
+  @ApiPropertyOptional({ enum: LeaveApproval })
+  @IsOptional()
+  @IsEnum(LeaveApproval)
+  approval?: LeaveApproval;
 }
 export class LeaveDto {
   @ApiProperty() @IsUUID() policyId: string;
