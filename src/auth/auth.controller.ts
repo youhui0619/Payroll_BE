@@ -84,14 +84,10 @@ export class AuthController {
     return {
       data: {
         accessToken,
-        access_token: accessToken,
         tokenType: 'Bearer',
         expiresIn: Number(process.env.JWT_TTL_SECONDS ?? 3600),
         user: userSummary,
       },
-      // Keep the legacy FE contract while the client moves to the
-      // project-standard { data: { accessToken } } response shape.
-      access_token: accessToken,
     };
   }
   @ApiBearerAuth()
