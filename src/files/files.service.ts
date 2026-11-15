@@ -53,6 +53,7 @@ export class FilesService {
       employeeId: q.employeeId,
       claimId: q.claimId,
       leaveRequestId: q.leaveRequestId,
+      overtimeRequestId: q.overtimeRequestId,
       category: q.category,
       ...(q.search
         ? { originalName: { contains: q.search, mode: 'insensitive' } }
@@ -107,6 +108,22 @@ export class FilesService {
               409,
             );
         }
+        if (row.overtimeRequestId) {
+          const overtime = await tx.overtimeRequest.findUnique({
+            where: {
+              companyId_id: {
+                companyId: m.companyId,
+                id: row.overtimeRequestId,
+              },
+            },
+          });
+          if (!overtime || overtime.status !== 'DRAFT')
+            fail(
+              'ATTACHMENT_LOCKED',
+              'Submitted overtime documents must be retained.',
+              409,
+            );
+        }
         if (row.archived) return { data: row };
         const data = await tx.storedFile.update({
           where: { companyId_id: { companyId: m.companyId, id } },
@@ -148,7 +165,22 @@ export class FilesService {
         'Leave documents require a leave request ID.',
         400,
       );
-    if (d.claimId && d.leaveRequestId)
+    if (d.overtimeRequestId && d.category !== 'OVERTIME_DOCUMENT')
+      fail(
+        'INVALID_ATTACHMENT',
+        'Overtime links require OVERTIME_DOCUMENT.',
+        400,
+      );
+    if (d.category === 'OVERTIME_DOCUMENT' && !d.overtimeRequestId)
+      fail(
+        'INVALID_ATTACHMENT',
+        'Overtime documents require an overtime request ID.',
+        400,
+      );
+    if (
+      [d.claimId, d.leaveRequestId, d.overtimeRequestId].filter(Boolean)
+        .length > 1
+    )
       fail('INVALID_ATTACHMENT', 'A file can link to only one request.', 400);
     const scanStatus = await this.scanner.scan(file.buffer);
     const id = randomUUID();
@@ -180,6 +212,20 @@ export class FilesService {
             if (!leave)
               throw new NotFoundException('Editable leave request not found.');
           }
+          if (d.overtimeRequestId) {
+            const overtime = await tx.overtimeRequest.findFirst({
+              where: {
+                id: d.overtimeRequestId,
+                companyId: m.companyId,
+                employeeId,
+                status: 'DRAFT',
+              },
+            });
+            if (!overtime)
+              throw new NotFoundException(
+                'Editable overtime request not found.',
+              );
+          }
           const data = await tx.storedFile.create({
             data: {
               id,
@@ -195,6 +241,7 @@ export class FilesService {
               category: d.category,
               claimId: d.claimId,
               leaveRequestId: d.leaveRequestId,
+              overtimeRequestId: d.overtimeRequestId,
               scanStatus,
             },
           });
@@ -223,6 +270,25 @@ export class FilesService {
         !!claim &&
         (privileged(m, ['FINANCE']) ||
           (!!m.employeeId && claim.managerId === m.employeeId));
+    }
+    if (
+      !access &&
+      row.category === 'OVERTIME_DOCUMENT' &&
+      row.overtimeRequestId
+    ) {
+      const overtime = await this.db.overtimeRequest.findUnique({
+        where: {
+          companyId_id: {
+            companyId: m.companyId,
+            id: row.overtimeRequestId,
+          },
+        },
+        include: { employee: { select: { managerId: true } } },
+      });
+      access =
+        !!overtime &&
+        !!m.employeeId &&
+        overtime.employee.managerId === m.employeeId;
     }
     if (!access) throw new NotFoundException();
     return row;

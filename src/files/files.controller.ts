@@ -60,11 +60,17 @@ export class FilesController {
         file: { type: 'string', format: 'binary' },
         category: {
           type: 'string',
-          enum: ['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'],
+          enum: [
+            'EMPLOYEE_DOCUMENT',
+            'CLAIM_RECEIPT',
+            'LEAVE_DOCUMENT',
+            'OVERTIME_DOCUMENT',
+          ],
         },
         employeeId: { type: 'string', format: 'uuid' },
         claimId: { type: 'string', format: 'uuid' },
         leaveRequestId: { type: 'string', format: 'uuid' },
+        overtimeRequestId: { type: 'string', format: 'uuid' },
       },
     },
   })

@@ -15,6 +15,7 @@ import { ReportsModule } from './reports/reports.module';
 import { PayrollModule } from './payroll/payroll.module';
 import { MembershipsModule } from './auth/memberships.module';
 import { SettingsModule } from './settings/settings.module';
+import { OvertimeModule } from './overtime/overtime.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SettingsModule } from './settings/settings.module';
     PayrollModule,
     MembershipsModule,
     SettingsModule,
+    OvertimeModule,
   ],
   controllers: [HealthController],
   providers: [AppService],

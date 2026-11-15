@@ -10,22 +10,44 @@ export type Upload = {
 };
 export class UploadDto {
   @ApiPropertyOptional({
-    enum: ['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'],
+    enum: [
+      'EMPLOYEE_DOCUMENT',
+      'CLAIM_RECEIPT',
+      'LEAVE_DOCUMENT',
+      'OVERTIME_DOCUMENT',
+    ],
   })
-  @IsIn(['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'])
+  @IsIn([
+    'EMPLOYEE_DOCUMENT',
+    'CLAIM_RECEIPT',
+    'LEAVE_DOCUMENT',
+    'OVERTIME_DOCUMENT',
+  ])
   category = 'EMPLOYEE_DOCUMENT';
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() overtimeRequestId?: string;
 }
 export class FileQueryDto extends PageDto {
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
   @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
+  @ApiPropertyOptional() @IsOptional() @IsUUID() overtimeRequestId?: string;
   @ApiPropertyOptional({
-    enum: ['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'],
+    enum: [
+      'EMPLOYEE_DOCUMENT',
+      'CLAIM_RECEIPT',
+      'LEAVE_DOCUMENT',
+      'OVERTIME_DOCUMENT',
+    ],
   })
   @IsOptional()
-  @IsIn(['EMPLOYEE_DOCUMENT', 'CLAIM_RECEIPT', 'LEAVE_DOCUMENT'])
+  @IsIn([
+    'EMPLOYEE_DOCUMENT',
+    'CLAIM_RECEIPT',
+    'LEAVE_DOCUMENT',
+    'OVERTIME_DOCUMENT',
+  ])
   category?: string;
 }
