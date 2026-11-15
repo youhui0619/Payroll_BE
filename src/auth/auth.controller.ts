@@ -72,12 +72,22 @@ export class AuthController {
       companyId: m.companyId,
       version: user.tokenVersion,
     });
+    const userSummary = {
+      id: user.id,
+      name: user.fullName,
+      email: user.email,
+      roles: m.roles,
+      companyId: m.companyId,
+      membershipId: m.id,
+      employeeId: m.employeeId,
+    };
     return {
       data: {
         accessToken,
         access_token: accessToken,
         tokenType: 'Bearer',
         expiresIn: Number(process.env.JWT_TTL_SECONDS ?? 3600),
+        user: userSummary,
       },
       // Keep the legacy FE contract while the client moves to the
       // project-standard { data: { accessToken } } response shape.
