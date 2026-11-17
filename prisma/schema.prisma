@@ -37,6 +37,7 @@ model Company {
   active                      Boolean                      @default(true)
   memberships                 Membership[]
   employees                   Employee[]
+  files                       StoredFile[]
   registrationNo              String?
   email                       String?
   contactNo                   String?
@@ -549,7 +550,7 @@ model ClaimEvent {
 model StoredFile {
   id                String           @id @default(uuid()) @db.Uuid
   companyId         String           @db.Uuid
-  employeeId        String           @db.Uuid
+  employeeId        String?          @db.Uuid
   uploadedBy        String           @db.Uuid
   originalName      String
   mimeType          String
@@ -562,7 +563,8 @@ model StoredFile {
   archived          Boolean          @default(false)
   scanStatus        String           @default("UNSCANNED")
   createdAt         DateTime         @default(now()) @db.Timestamptz(3)
-  employee          Employee         @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee          Employee?        @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
   claim             Claim?           @relation(fields: [companyId, claimId], references: [companyId, id], onDelete: Restrict)
   leaveRequest      LeaveRequest?    @relation(fields: [companyId, leaveRequestId], references: [companyId, id], onDelete: Restrict)
   overtimeRequest   OvertimeRequest? @relation(fields: [companyId, overtimeRequestId], references: [companyId, id], onDelete: Restrict)

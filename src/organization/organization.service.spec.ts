@@ -14,6 +14,7 @@ describe('organization and employee tenant boundaries', () => {
     },
     position: { create: jest.fn(), findFirst: jest.fn() },
     employee: { findUnique: jest.fn(), create: jest.fn() },
+    company: { findUnique: jest.fn(), update: jest.fn() },
     $transaction: jest.fn(),
   };
   const org = new OrganizationService(db as never);
@@ -32,6 +33,19 @@ describe('organization and employee tenant boundaries', () => {
         where: { companyId_id: { companyId: 'company-a', id: 'foreign-id' } },
       }),
     );
+  });
+  it('returns the company logo through the stable logoUrl response field', async () => {
+    db.company.findUnique.mockResolvedValue({
+      id: 'company-a',
+      name: 'Company A',
+      logo: 'https://api.example.test/api/v1/files/public/logo-id',
+    });
+    await expect(org.company('company-a')).resolves.toEqual({
+      data: expect.objectContaining({
+        logo: 'https://api.example.test/api/v1/files/public/logo-id',
+        logoUrl: 'https://api.example.test/api/v1/files/public/logo-id',
+      }),
+    });
   });
   it('scopes updates using the composite tenant key', async () => {
     await org.updateDepartment('company-a', 'department', { name: 'HR' });

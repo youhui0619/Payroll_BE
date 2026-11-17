@@ -23,7 +23,7 @@ export class OrganizationService {
   async company(companyId: string) {
     const data = await this.db.company.findUnique({ where: { id: companyId } });
     if (!data) throw new NotFoundException();
-    return { data };
+    return { data: this.companyView(data) };
   }
   async updateCompany(companyId: string, dto: CompanyDto) {
     const { financialStartingMonth, financialYearStartMonth, ...rest } = dto;
@@ -37,20 +37,22 @@ export class OrganizationService {
       (!month || financialYearStartMonth < 1 || financialYearStartMonth > 12)
     )
       throw new ConflictException('Invalid financial year start month.');
-    return {
-      data: await this.db.company.update({
-        where: { id: companyId },
-        data: {
-          ...rest,
-          ...(month
-            ? {
-                financialYearStartMonth: FINANCIAL_MONTHS.indexOf(month) + 1,
-                financialStartingMonth: month,
-              }
-            : {}),
-        },
-      }),
-    };
+    const data = await this.db.company.update({
+      where: { id: companyId },
+      data: {
+        ...rest,
+        ...(month
+          ? {
+              financialYearStartMonth: FINANCIAL_MONTHS.indexOf(month) + 1,
+              financialStartingMonth: month,
+            }
+          : {}),
+      },
+    });
+    return { data: this.companyView(data) };
+  }
+  private companyView<T extends { logo: string | null }>(data: T) {
+    return { ...data, logoUrl: data.logo };
   }
   async departments(companyId: string, q: DepartmentQueryDto) {
     const status = q.status?.toUpperCase();

@@ -15,6 +15,7 @@ export class UploadDto {
       'CLAIM_RECEIPT',
       'LEAVE_DOCUMENT',
       'OVERTIME_DOCUMENT',
+      'COMPANY_LOGO',
     ],
   })
   @IsIn([
@@ -22,6 +23,7 @@ export class UploadDto {
     'CLAIM_RECEIPT',
     'LEAVE_DOCUMENT',
     'OVERTIME_DOCUMENT',
+    'COMPANY_LOGO',
   ])
   category = 'EMPLOYEE_DOCUMENT';
   @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
@@ -40,6 +42,7 @@ export class FileQueryDto extends PageDto {
       'CLAIM_RECEIPT',
       'LEAVE_DOCUMENT',
       'OVERTIME_DOCUMENT',
+      'COMPANY_LOGO',
     ],
   })
   @IsOptional()
@@ -48,6 +51,7 @@ export class FileQueryDto extends PageDto {
     'CLAIM_RECEIPT',
     'LEAVE_DOCUMENT',
     'OVERTIME_DOCUMENT',
+    'COMPANY_LOGO',
   ])
   category?: string;
 }

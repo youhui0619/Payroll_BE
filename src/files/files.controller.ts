@@ -20,7 +20,7 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { Response } from 'express';
-import { TenantRequest } from '../auth/auth.decorators';
+import { Public, TenantRequest } from '../auth/auth.decorators';
 import { Upload, UploadDto, FileQueryDto } from './files.dto';
 import { FilesService } from './files.service';
 
@@ -65,6 +65,7 @@ export class FilesController {
             'CLAIM_RECEIPT',
             'LEAVE_DOCUMENT',
             'OVERTIME_DOCUMENT',
+            'COMPANY_LOGO',
           ],
         },
         employeeId: { type: 'string', format: 'uuid' },
@@ -80,6 +81,18 @@ export class FilesController {
     @UploadedFile() f: Upload,
   ) {
     return this.service.upload(r.membership, d, f);
+  }
+  @Get('public/:id')
+  @Public()
+  @ApiOperation({ summary: 'Serve a company logo without authentication.' })
+  async publicLogo(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ) {
+    const { row, bytes } = await this.service.publicLogo(id);
+    res.setHeader('Content-Type', row.mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(bytes);
   }
   @Get(':id') async download(
     @Req() r: TenantRequest,

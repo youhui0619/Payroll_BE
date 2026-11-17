@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
 import { Membership, Prisma } from '@prisma/client';
 import { paginated } from '../common/page.dto';
@@ -78,7 +82,12 @@ export class FilesService {
           where: { companyId_id: { companyId: m.companyId, id } },
         });
         if (!row) throw new NotFoundException();
-        mayRead(m, row.employeeId);
+        if (row.category === 'COMPANY_LOGO') {
+          if (!privileged(m, ['OWNER', 'HR'])) throw new ForbiddenException();
+        } else {
+          if (!row.employeeId) throw new NotFoundException();
+          mayRead(m, row.employeeId);
+        }
         if (row.claimId) {
           const claim = await tx.claim.findUnique({
             where: {
@@ -145,43 +154,56 @@ export class FilesService {
         'Only matching PDF, PNG and JPEG files are accepted.',
         400,
       );
-    const employeeId = d.employeeId ?? (await selfEmployee(this.db, m)).id;
-    mayRead(m, employeeId);
-    if (
-      !(await this.db.employee.findFirst({
-        where: { id: employeeId, companyId: m.companyId, active: true },
-      }))
-    )
-      throw new NotFoundException();
-    if (d.claimId && d.category !== 'CLAIM_RECEIPT')
-      fail('INVALID_ATTACHMENT', 'Claim links require CLAIM_RECEIPT.', 400);
-    if (d.category === 'CLAIM_RECEIPT' && !d.claimId)
-      fail('INVALID_ATTACHMENT', 'Receipt requires a claim ID.', 400);
-    if (d.leaveRequestId && d.category !== 'LEAVE_DOCUMENT')
-      fail('INVALID_ATTACHMENT', 'Leave links require LEAVE_DOCUMENT.', 400);
-    if (d.category === 'LEAVE_DOCUMENT' && !d.leaveRequestId)
-      fail(
-        'INVALID_ATTACHMENT',
-        'Leave documents require a leave request ID.',
-        400,
-      );
-    if (d.overtimeRequestId && d.category !== 'OVERTIME_DOCUMENT')
-      fail(
-        'INVALID_ATTACHMENT',
-        'Overtime links require OVERTIME_DOCUMENT.',
-        400,
-      );
-    if (d.category === 'OVERTIME_DOCUMENT' && !d.overtimeRequestId)
-      fail(
-        'INVALID_ATTACHMENT',
-        'Overtime documents require an overtime request ID.',
-        400,
-      );
-    if (
-      [d.claimId, d.leaveRequestId, d.overtimeRequestId].filter(Boolean)
-        .length > 1
-    )
-      fail('INVALID_ATTACHMENT', 'A file can link to only one request.', 400);
+    const companyLogo = d.category === 'COMPANY_LOGO';
+    const employeeId = companyLogo
+      ? null
+      : (d.employeeId ?? (await selfEmployee(this.db, m)).id);
+    if (companyLogo) {
+      if (!privileged(m, ['OWNER', 'HR'])) throw new ForbiddenException();
+      if (d.employeeId || d.claimId || d.leaveRequestId || d.overtimeRequestId)
+        fail(
+          'INVALID_ATTACHMENT',
+          'Company logos cannot link to employees or requests.',
+          400,
+        );
+    } else {
+      mayRead(m, employeeId);
+      if (
+        !(await this.db.employee.findFirst({
+          where: { id: employeeId, companyId: m.companyId, active: true },
+        }))
+      )
+        throw new NotFoundException();
+      if (d.claimId && d.category !== 'CLAIM_RECEIPT')
+        fail('INVALID_ATTACHMENT', 'Claim links require CLAIM_RECEIPT.', 400);
+      if (d.category === 'CLAIM_RECEIPT' && !d.claimId)
+        fail('INVALID_ATTACHMENT', 'Receipt requires a claim ID.', 400);
+      if (d.leaveRequestId && d.category !== 'LEAVE_DOCUMENT')
+        fail('INVALID_ATTACHMENT', 'Leave links require LEAVE_DOCUMENT.', 400);
+      if (d.category === 'LEAVE_DOCUMENT' && !d.leaveRequestId)
+        fail(
+          'INVALID_ATTACHMENT',
+          'Leave documents require a leave request ID.',
+          400,
+        );
+      if (d.overtimeRequestId && d.category !== 'OVERTIME_DOCUMENT')
+        fail(
+          'INVALID_ATTACHMENT',
+          'Overtime links require OVERTIME_DOCUMENT.',
+          400,
+        );
+      if (d.category === 'OVERTIME_DOCUMENT' && !d.overtimeRequestId)
+        fail(
+          'INVALID_ATTACHMENT',
+          'Overtime documents require an overtime request ID.',
+          400,
+        );
+      if (
+        [d.claimId, d.leaveRequestId, d.overtimeRequestId].filter(Boolean)
+          .length > 1
+      )
+        fail('INVALID_ATTACHMENT', 'A file can link to only one request.', 400);
+    }
     const scanStatus = await this.scanner.scan(file.buffer);
     const id = randomUUID();
     await this.storage.put(id, file.buffer, mime);
@@ -193,7 +215,7 @@ export class FilesService {
               where: {
                 id: d.claimId,
                 companyId: m.companyId,
-                employeeId,
+                employeeId: employeeId as string,
                 status: 'DRAFT',
               },
             });
@@ -205,7 +227,7 @@ export class FilesService {
               where: {
                 id: d.leaveRequestId,
                 companyId: m.companyId,
-                employeeId,
+                employeeId: employeeId as string,
                 status: 'DRAFT',
               },
             });
@@ -217,7 +239,7 @@ export class FilesService {
               where: {
                 id: d.overtimeRequestId,
                 companyId: m.companyId,
-                employeeId,
+                employeeId: employeeId as string,
                 status: 'DRAFT',
               },
             });
@@ -246,7 +268,12 @@ export class FilesService {
             },
           });
           await audit(tx, m, 'FILE_UPLOADED', id);
-          return { data };
+          return {
+            data: {
+              ...data,
+              ...(companyLogo ? { url: this.publicUrl(id) } : {}),
+            },
+          };
         },
         { isolationLevel: 'Serializable' },
       );
@@ -295,17 +322,35 @@ export class FilesService {
   }
   async download(m: Membership, id: string) {
     const row = await this.authorized(m, id);
-    if (
-      row.scanStatus !== 'CLEAN' &&
-      !(
-        row.scanStatus === 'UNSCANNED' &&
-        process.env.NODE_ENV !== 'production' &&
-        process.env.ALLOW_UNSCANNED_UPLOADS === 'true'
-      )
-    )
-      fail('FILE_QUARANTINED', 'File is awaiting scanning.', 409);
+    this.assertDownloadable(row.scanStatus);
     const bytes = await this.storage.get(row.id);
     await audit(this.db, m, 'FILE_DOWNLOADED', id);
     return { row, bytes };
+  }
+  async publicLogo(id: string) {
+    const row = await this.db.storedFile.findUnique({ where: { id } });
+    if (!row || row.archived || row.category !== 'COMPANY_LOGO')
+      throw new NotFoundException();
+    this.assertDownloadable(row.scanStatus);
+    const bytes = await this.storage.get(row.id);
+    return { row, bytes };
+  }
+  private assertDownloadable(scanStatus: string) {
+    if (
+      scanStatus !== 'CLEAN' &&
+      !(
+        process.env.NODE_ENV !== 'production' &&
+        process.env.ALLOW_UNSCANNED_UPLOADS === 'true' &&
+        scanStatus === 'UNSCANNED'
+      )
+    )
+      fail('FILE_QUARANTINED', 'File is awaiting scanning.', 409);
+  }
+  private publicUrl(id: string) {
+    const base = (
+      process.env.PUBLIC_API_URL ??
+      `http://localhost:${process.env.PORT ?? 3000}`
+    ).replace(/\/+$/, '');
+    return `${base}/api/v1/files/public/${id}`;
   }
 }

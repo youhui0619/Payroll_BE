@@ -91,4 +91,41 @@ describe('private file boundary', () => {
       ),
     ).resolves.toMatchObject({ id: 'file' });
   });
+  it('serves only clean, active company logos publicly', async () => {
+    const db = {
+      storedFile: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'file',
+          category: 'COMPANY_LOGO',
+          archived: false,
+          scanStatus: 'CLEAN',
+        }),
+      },
+    };
+    const storage = { get: jest.fn().mockResolvedValue(Buffer.from('logo')) };
+    const result = await new FilesService(
+      db as never,
+      storage as never,
+      {} as never,
+    ).publicLogo('file');
+    expect(result.bytes).toEqual(Buffer.from('logo'));
+    expect(storage.get).toHaveBeenCalledWith('file');
+  });
+  it('does not serve non-logo files through the public route', async () => {
+    const db = {
+      storedFile: {
+        findUnique: jest.fn().mockResolvedValue({
+          id: 'file',
+          category: 'EMPLOYEE_DOCUMENT',
+          archived: false,
+          scanStatus: 'CLEAN',
+        }),
+      },
+    };
+    await expect(
+      new FilesService(db as never, {} as never, {} as never).publicLogo(
+        'file',
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
 });
