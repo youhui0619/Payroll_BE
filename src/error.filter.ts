@@ -3,19 +3,62 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
+  private readonly logger = new Logger('HTTP_ERROR');
+
+  private log(
+    error: unknown,
+    req: Request,
+    requestId: string,
+    status: number,
+    code: string,
+    message: string,
+    errors?: unknown,
+  ) {
+    const details = {
+      requestId,
+      method: req?.method,
+      path: req?.originalUrl ?? req?.url,
+      status,
+      code,
+      message,
+      ...(errors ? { errors } : {}),
+      errorName: error instanceof Error ? error.name : typeof error,
+    };
+    const serialized = JSON.stringify(details);
+    if (status >= 500) {
+      this.logger.error(
+        serialized,
+        error instanceof Error ? error.stack : undefined,
+      );
+      return;
+    }
+    this.logger.warn(serialized);
+  }
+
   catch(error: unknown, host: ArgumentsHost) {
-    const res = host.switchToHttp().getResponse<Response>();
+    const http = host.switchToHttp();
+    const req = http.getRequest<Request>();
+    const res = http.getResponse<Response>();
+    const requestId = res.locals.requestId ?? randomUUID();
+    res.setHeader('X-Request-Id', requestId);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2034') {
-        const requestId = res.locals.requestId ?? randomUUID();
-        res.setHeader('X-Request-Id', requestId);
+        this.log(
+          error,
+          req,
+          requestId,
+          409,
+          'CONCURRENT_MODIFICATION',
+          'Data changed concurrently. Reload and retry.',
+        );
         res.status(409).json({
           code: 'CONCURRENT_MODIFICATION',
           message: 'Data changed concurrently. Reload and retry.',
@@ -37,8 +80,14 @@ export class ErrorFilter implements ExceptionFilter {
         ],
       }[error.code];
       if (mapped) {
-        const requestId = res.locals.requestId ?? randomUUID();
-        res.setHeader('X-Request-Id', requestId);
+        this.log(
+          error,
+          req,
+          requestId,
+          mapped[0] as number,
+          mapped[1] as string,
+          mapped[2] as string,
+        );
         res
           .status(mapped[0] as number)
           .json({ code: mapped[1], message: mapped[2], requestId });
@@ -60,35 +109,33 @@ export class ErrorFilter implements ExceptionFilter {
       422: 'BUSINESS_RULE_FAILED',
       429: 'RATE_LIMITED',
     };
-    const requestId = res.locals.requestId ?? randomUUID();
-    res.setHeader('X-Request-Id', requestId);
-    res.status(status).json({
-      code:
-        status >= 500
-          ? 'INTERNAL_ERROR'
-          : typeof source === 'object' && source && 'code' in source
-            ? source.code
-            : (codes[status] ?? 'REQUEST_FAILED'),
-      message:
-        status >= 500
-          ? 'An unexpected error occurred.'
-          : Array.isArray(message)
-            ? 'Check the supplied fields.'
-            : (message ?? 'Request failed.'),
-      requestId,
-      ...(status < 500 &&
-      typeof source === 'object' &&
-      source &&
-      'errors' in source
-        ? { errors: source.errors }
+    const code =
+      status >= 500
+        ? 'INTERNAL_ERROR'
+        : typeof source === 'object' && source && 'code' in source
+          ? (source.code as string)
+          : (codes[status] ?? 'REQUEST_FAILED');
+    const responseMessage =
+      status >= 500
+        ? 'An unexpected error occurred.'
+        : Array.isArray(message)
+          ? 'Check the supplied fields.'
+          : (message ?? 'Request failed.');
+    const errors =
+      status < 500 && typeof source === 'object' && source && 'errors' in source
+        ? source.errors
         : status < 500 && Array.isArray(message)
-          ? {
-              errors: message.map((value) => ({
-                code: 'INVALID_VALUE',
-                message: value,
-              })),
-            }
-          : {}),
+          ? message.map((value) => ({
+              code: 'INVALID_VALUE',
+              message: value,
+            }))
+          : undefined;
+    this.log(error, req, requestId, status, code, responseMessage, errors);
+    res.status(status).json({
+      code,
+      message: responseMessage,
+      requestId,
+      ...(errors ? { errors } : {}),
     });
   }
 }
