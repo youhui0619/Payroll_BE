@@ -56,6 +56,7 @@ export class AuthController {
     const memberships = await this.db.membership.findMany({
       where: { userId: user.id, active: true, company: { active: true } },
       orderBy: { id: 'asc' },
+      include: { employee: { select: { name: true } } },
     });
     if (memberships.length !== 1)
       throw new UnauthorizedException(
@@ -74,7 +75,7 @@ export class AuthController {
     });
     const userSummary = {
       id: user.id,
-      name: user.fullName,
+      name: user.fullName || m.employee?.name || null,
       email: user.email,
       roles: m.roles,
       companyId: m.companyId,
