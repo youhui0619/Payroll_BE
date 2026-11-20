@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEmail,
+  IsIn,
   IsNumber,
   IsOptional,
   IsString,
@@ -14,6 +15,8 @@ import {
   MaxLength,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { EMPLOYMENT_TYPE_VALUES } from '../workforce/employment-types';
+import type { EmploymentType } from '../workforce/employment-types';
 
 export class EmployeeQueryDto extends PageDto {
   @ApiPropertyOptional({ format: 'uuid' })
@@ -32,11 +35,13 @@ export class EmployeeQueryDto extends PageDto {
   @Length(1, 50)
   employmentStatus?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
-  @IsString()
-  @Length(1, 50)
-  employmentType?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(EMPLOYMENT_TYPE_VALUES)
+  employmentType?: EmploymentType;
 
   @ApiPropertyOptional({
     description: 'Filter by active or archived employees.',
@@ -152,11 +157,13 @@ export class CreateEmployeeDto {
   @IsString()
   @Length(1, 50)
   employmentStatus?: string;
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
-  @IsString()
-  @Length(1, 50)
-  employmentType?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(EMPLOYMENT_TYPE_VALUES)
+  employmentType?: EmploymentType;
   @ApiPropertyOptional({ example: '2026-04-01', nullable: true })
   @IsOptional()
   @IsDateString({ strict: true })

@@ -24,6 +24,7 @@ import {
   UpdateScheduleDto,
 } from './workforce.dto';
 import { WorkforceService } from './workforce.service';
+import { EMPLOYMENT_TYPES } from './employment-types';
 
 @ApiBearerAuth()
 @ApiTags('workforce-settings')
@@ -31,6 +32,10 @@ import { WorkforceService } from './workforce.service';
 @Controller()
 export class WorkforceController {
   constructor(private service: WorkforceService) {}
+  @Get('employment-types') employmentTypes() {
+    return { data: EMPLOYMENT_TYPES };
+  }
+
   @Get('work-locations') locations(
     @Req() r: TenantRequest,
     @Query() q: LocationQueryDto,

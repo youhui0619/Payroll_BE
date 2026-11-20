@@ -1,8 +1,91 @@
 import 'dotenv/config';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { hashPassword } from '../src/auth/password';
+import {
+  EMPLOYMENT_TYPE_VALUES,
+  type EmploymentType,
+} from '../src/workforce/employment-types';
 
 const day = (value: string) => new Date(`${value}T00:00:00.000Z`);
+
+const workingDay = (
+  dayName: string,
+  isWorkingDay: boolean,
+  startTime: string,
+  endTime: string,
+  breakStartTime = '',
+  breakEndTime = '',
+) => ({
+  day: dayName,
+  isWorkingDay,
+  startTime,
+  endTime,
+  breakStartTime,
+  breakEndTime,
+});
+
+const scheduleDays = (options: {
+  weekdayStart: string;
+  weekdayEnd: string;
+  weekdayBreakStart?: string;
+  weekdayBreakEnd?: string;
+  saturdayWorking: boolean;
+  saturdayStart: string;
+  saturdayEnd: string;
+}) => ({
+  days: [
+    ...['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((name) =>
+      workingDay(
+        name,
+        true,
+        options.weekdayStart,
+        options.weekdayEnd,
+        options.weekdayBreakStart,
+        options.weekdayBreakEnd,
+      ),
+    ),
+    workingDay(
+      'Saturday',
+      options.saturdayWorking,
+      options.saturdayStart,
+      options.saturdayEnd,
+    ),
+    workingDay('Sunday', false, '09:00', '18:00'),
+  ],
+});
+
+const standardScheduleDays = scheduleDays({
+  weekdayStart: '09:00',
+  weekdayEnd: '18:00',
+  weekdayBreakStart: '13:00',
+  weekdayBreakEnd: '14:00',
+  saturdayWorking: true,
+  saturdayStart: '09:00',
+  saturdayEnd: '13:00',
+});
+const partTimeScheduleDays = scheduleDays({
+  weekdayStart: '09:00',
+  weekdayEnd: '13:00',
+  saturdayWorking: false,
+  saturdayStart: '09:00',
+  saturdayEnd: '18:00',
+});
+const freelanceScheduleDays = scheduleDays({
+  weekdayStart: '10:00',
+  weekdayEnd: '18:00',
+  saturdayWorking: true,
+  saturdayStart: '10:00',
+  saturdayEnd: '18:00',
+});
+const casualScheduleDays = scheduleDays({
+  weekdayStart: '09:00',
+  weekdayEnd: '17:00',
+  weekdayBreakStart: '13:00',
+  weekdayBreakEnd: '14:00',
+  saturdayWorking: true,
+  saturdayStart: '09:00',
+  saturdayEnd: '13:00',
+});
 
 async function seed() {
   const email = process.env.SEED_OWNER_EMAIL?.trim().toLowerCase();
@@ -52,13 +135,6 @@ async function seed() {
       const company = await tx.company.findUniqueOrThrow({
         where: { id: companyId },
       });
-      if (
-        await tx.department.findUnique({
-          where: { companyId_code: { companyId: company.id, code: 'CORP' } },
-        })
-      )
-        return;
-
       const departmentRows = [
         {
           code: 'CORP',
@@ -88,14 +164,18 @@ async function seed() {
       ];
       const departmentIds = new Map<string, string>();
       for (const row of departmentRows) {
-        const department = await tx.department.create({
-          data: {
+        const department = await tx.department.upsert({
+          where: {
+            companyId_code: { companyId: company.id, code: row.code },
+          },
+          create: {
             companyId: company.id,
             ...row,
             status: 'ACTIVE',
             active: true,
             effectiveFrom: day('2026-01-01'),
           },
+          update: {},
         });
         departmentIds.set(row.code, department.id);
       }
@@ -140,19 +220,26 @@ async function seed() {
       ];
       for (const row of positionRows) {
         const { departmentCode, ...position } = row;
-        await tx.position.create({
-          data: {
+        await tx.position.upsert({
+          where: {
+            companyId_code: { companyId: company.id, code: position.code },
+          },
+          create: {
             companyId: company.id,
             departmentId: departmentIds.get(departmentCode) ?? null,
             ...position,
             active: true,
             effectiveFrom: day('2026-01-01'),
           },
+          update: {},
         });
       }
 
-      await tx.workLocation.create({
-        data: {
+      await tx.workLocation.upsert({
+        where: {
+          companyId_code: { companyId: company.id, code: 'HQ-KL' },
+        },
+        create: {
           companyId: company.id,
           code: 'HQ-KL',
           name: 'Kuala Lumpur Head Office',
@@ -165,25 +252,139 @@ async function seed() {
           timezone: 'Asia/Kuala_Lumpur',
           active: true,
         },
+        update: {},
       });
 
-      await tx.workSchedule.create({
-        data: {
-          companyId: company.id,
+      const scheduleRows: Array<{
+        code: string;
+        name: string;
+        employmentType: EmploymentType;
+        workingDays: number[];
+        startMinute: number;
+        endMinute: number;
+        breakMinutes: number;
+        graceMinutes: number;
+        scheduleDays: Record<string, unknown>;
+      }> = [
+        {
           code: 'STANDARD-5D',
-          name: 'Standard 5-Day Week',
-          workingDays: [1, 2, 3, 4, 5],
+          name: 'Permanent - Standard Week',
+          employmentType: 'PERMANENT',
+          workingDays: [1, 2, 3, 4, 5, 6],
           startMinute: 540,
           endMinute: 1080,
           breakMinutes: 60,
           graceMinutes: 15,
-          employmentType: 'Permanent',
-          effectiveFrom: day('2026-01-01'),
-          active: true,
+          scheduleDays: standardScheduleDays,
         },
-      });
+        {
+          code: 'CONTRACT-5D',
+          name: 'Contract - Standard Week',
+          employmentType: 'CONTRACT',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 540,
+          endMinute: 1080,
+          breakMinutes: 60,
+          graceMinutes: 15,
+          scheduleDays: standardScheduleDays,
+        },
+        {
+          code: 'PART-TIME-4H',
+          name: 'Part-time - Morning Shift',
+          employmentType: 'PART-TIME',
+          workingDays: [1, 2, 3, 4, 5],
+          startMinute: 540,
+          endMinute: 780,
+          breakMinutes: 0,
+          graceMinutes: 15,
+          scheduleDays: partTimeScheduleDays,
+        },
+        {
+          code: 'INTERN-5D',
+          name: 'Intern - Standard Week',
+          employmentType: 'INTERN',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 540,
+          endMinute: 1080,
+          breakMinutes: 60,
+          graceMinutes: 15,
+          scheduleDays: standardScheduleDays,
+        },
+        {
+          code: 'TEMPORARY-5D',
+          name: 'Temporary - Standard Week',
+          employmentType: 'TEMPORARY',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 540,
+          endMinute: 1080,
+          breakMinutes: 60,
+          graceMinutes: 15,
+          scheduleDays: standardScheduleDays,
+        },
+        {
+          code: 'TRAINEE-5D',
+          name: 'Trainee - Standard Week',
+          employmentType: 'TRAINEE',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 540,
+          endMinute: 1080,
+          breakMinutes: 60,
+          graceMinutes: 15,
+          scheduleDays: standardScheduleDays,
+        },
+        {
+          code: 'FREELANCE-6D',
+          name: 'Freelance - Flexible Week',
+          employmentType: 'FREELANCE',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 600,
+          endMinute: 1080,
+          breakMinutes: 0,
+          graceMinutes: 0,
+          scheduleDays: freelanceScheduleDays,
+        },
+        {
+          code: 'CASUAL-6D',
+          name: 'Casual - Daily Worker',
+          employmentType: 'CASUAL',
+          workingDays: [1, 2, 3, 4, 5, 6],
+          startMinute: 540,
+          endMinute: 1020,
+          breakMinutes: 60,
+          graceMinutes: 15,
+          scheduleDays: casualScheduleDays,
+        },
+      ];
+      const seededEmploymentTypes = new Set(
+        scheduleRows.map((row) => row.employmentType),
+      );
+      const missingEmploymentTypes = EMPLOYMENT_TYPE_VALUES.filter(
+        (type) => !seededEmploymentTypes.has(type),
+      );
+      if (missingEmploymentTypes.length) {
+        throw new Error(
+          `Missing seeded work schedules for: ${missingEmploymentTypes.join(', ')}`,
+        );
+      }
+      for (const row of scheduleRows) {
+        const { scheduleDays: days, ...schedule } = row;
+        await tx.workSchedule.upsert({
+          where: {
+            companyId_code: { companyId: company.id, code: row.code },
+          },
+          create: {
+            companyId: company.id,
+            ...schedule,
+            scheduleDays: days as Prisma.InputJsonValue,
+            effectiveFrom: day('2026-01-01'),
+            active: true,
+          },
+          update: {},
+        });
+      }
 
       await tx.leavePolicy.createMany({
+        skipDuplicates: true,
         data: [
           {
             companyId: company.id,
@@ -259,6 +460,7 @@ async function seed() {
       });
 
       await tx.claimType.createMany({
+        skipDuplicates: true,
         data: [
           {
             companyId: company.id,
@@ -299,90 +501,101 @@ async function seed() {
         ],
       });
 
-      await tx.publicHoliday.createMany({
-        data: [
-          {
+      const holidayRows = [
+        {
+          companyId: company.id,
+          name: "Lunar New Year's Day",
+          description: 'Chinese New Year public holiday.',
+          scope: 'NATIONAL',
+          startDate: day('2026-02-17'),
+          endDate: day('2026-02-18'),
+          states: [],
+          regions: [],
+          status: 'ACTIVE',
+          active: true,
+        },
+        {
+          companyId: company.id,
+          name: 'Hari Raya Puasa',
+          description: 'Hari Raya Puasa celebration.',
+          scope: 'NATIONAL',
+          startDate: day('2026-03-21'),
+          endDate: day('2026-03-22'),
+          states: [],
+          regions: [],
+          status: 'ACTIVE',
+          active: true,
+        },
+        {
+          companyId: company.id,
+          name: 'Labour Day',
+          description: 'Annual Labour Day public holiday.',
+          scope: 'NATIONAL',
+          startDate: day('2026-05-01'),
+          endDate: day('2026-05-01'),
+          states: [],
+          regions: [],
+          status: 'ACTIVE',
+          active: true,
+        },
+        {
+          companyId: company.id,
+          name: 'Hari Thaipusam',
+          description: 'State public holiday observed in selected locations.',
+          scope: 'STATE',
+          startDate: day('2026-02-01'),
+          endDate: day('2026-02-01'),
+          states: [],
+          regions: [
+            'Johor',
+            'Kuala Lumpur',
+            'Negeri Sembilan',
+            'Penang',
+            'Perak',
+            'Putrajaya',
+            'Selangor',
+          ],
+          status: 'ACTIVE',
+          active: true,
+        },
+        {
+          companyId: company.id,
+          name: 'Gawai Dayak',
+          description: 'Harvest festival public holiday in Sarawak.',
+          scope: 'STATE',
+          startDate: day('2026-06-01'),
+          endDate: day('2026-06-02'),
+          states: [],
+          regions: ['Sarawak'],
+          status: 'ACTIVE',
+          active: true,
+        },
+        {
+          companyId: company.id,
+          name: 'Merdeka Day',
+          description: 'Malaysia National Day.',
+          scope: 'NATIONAL',
+          startDate: day('2026-08-31'),
+          endDate: day('2026-08-31'),
+          states: [],
+          regions: [],
+          status: 'ACTIVE',
+          active: true,
+        },
+      ];
+      for (const holiday of holidayRows) {
+        const existing = await tx.publicHoliday.findFirst({
+          where: {
             companyId: company.id,
-            name: "Lunar New Year's Day",
-            description: 'Chinese New Year public holiday.',
-            scope: 'NATIONAL',
-            startDate: day('2026-02-17'),
-            endDate: day('2026-02-18'),
-            states: [],
-            regions: [],
-            status: 'ACTIVE',
-            active: true,
+            name: holiday.name,
+            startDate: holiday.startDate,
+            endDate: holiday.endDate,
           },
-          {
-            companyId: company.id,
-            name: 'Hari Raya Puasa',
-            description: 'Hari Raya Puasa celebration.',
-            scope: 'NATIONAL',
-            startDate: day('2026-03-21'),
-            endDate: day('2026-03-22'),
-            states: [],
-            regions: [],
-            status: 'ACTIVE',
-            active: true,
-          },
-          {
-            companyId: company.id,
-            name: 'Labour Day',
-            description: 'Annual Labour Day public holiday.',
-            scope: 'NATIONAL',
-            startDate: day('2026-05-01'),
-            endDate: day('2026-05-01'),
-            states: [],
-            regions: [],
-            status: 'ACTIVE',
-            active: true,
-          },
-          {
-            companyId: company.id,
-            name: 'Hari Thaipusam',
-            description: 'State public holiday observed in selected locations.',
-            scope: 'STATE',
-            startDate: day('2026-02-01'),
-            endDate: day('2026-02-01'),
-            states: [],
-            regions: [
-              'Johor',
-              'Kuala Lumpur',
-              'Negeri Sembilan',
-              'Penang',
-              'Perak',
-              'Putrajaya',
-              'Selangor',
-            ],
-            status: 'ACTIVE',
-            active: true,
-          },
-          {
-            companyId: company.id,
-            name: 'Gawai Dayak',
-            description: 'Harvest festival public holiday in Sarawak.',
-            scope: 'STATE',
-            startDate: day('2026-06-01'),
-            endDate: day('2026-06-02'),
-            states: [],
-            regions: ['Sarawak'],
-            status: 'ACTIVE',
-            active: true,
-          },
-          {
-            companyId: company.id,
-            name: 'Merdeka Day',
-            description: 'Malaysia National Day.',
-            scope: 'NATIONAL',
-            startDate: day('2026-08-31'),
-            endDate: day('2026-08-31'),
-            states: [],
-            regions: [],
-            status: 'ACTIVE',
-            active: true,
-          },
-        ],
-      });
+        });
+        if (!existing) {
+          await tx.publicHoliday.create({ data: holiday });
+        }
+      }
     });
   } finally {
     await db.$disconnect();

@@ -18,6 +18,8 @@ import {
   Min,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { EMPLOYMENT_TYPE_VALUES } from './employment-types';
+import type { EmploymentType } from './employment-types';
 export const STATES = [
   'MY-01',
   'MY-02',
@@ -177,22 +179,13 @@ export class ScheduleDto {
   @ApiProperty({ example: 1080 }) @IsInt() @Min(0) @Max(1439) endMinute: number;
   @ApiProperty({ default: 60 }) @IsInt() @Min(0) @Max(720) breakMinutes = 60;
   @ApiProperty({ default: 0 }) @IsInt() @Min(0) @Max(120) graceMinutes = 0;
-  @ApiPropertyOptional({
-    enum: [
-      'Permanent',
-      'Contract',
-      'Part-time',
-      'Intern',
-      'Temporary',
-      'Trainee',
-      'Freelance',
-      'Casual',
-    ],
-  })
+  @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
-  @IsString()
-  @Length(1, 50)
-  employmentType?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(EMPLOYMENT_TYPE_VALUES)
+  employmentType?: EmploymentType;
   @ApiPropertyOptional({ type: 'object' })
   @IsOptional()
   @IsObject()
@@ -210,11 +203,13 @@ export class ScheduleDto {
 export class UpdateScheduleDto extends PartialType(ScheduleDto) {}
 
 export class ScheduleQueryDto extends PageDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
-  @IsString()
-  @Length(1, 50)
-  employmentType?: string;
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(EMPLOYMENT_TYPE_VALUES)
+  employmentType?: EmploymentType;
 
   @ApiPropertyOptional({
     description: 'Filter by active or archived schedules.',
