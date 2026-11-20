@@ -167,9 +167,10 @@ export class LeaveService {
   }
   async policies(m: Membership, q: LeavePolicyQueryDto) {
     const search = q.search?.trim();
+    const active = q.status ? q.status === 'ACTIVE' : q.active;
     const where = {
       companyId: m.companyId,
-      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(active !== undefined ? { active } : {}),
       ...(q.paid !== undefined ? { paid: q.paid } : {}),
       ...(q.approval ? { approval: q.approval } : {}),
       ...(search
@@ -196,14 +197,18 @@ export class LeaveService {
       }),
       this.db.leavePolicy.count({ where }),
     ]);
-    return paginated(data, total, q);
+    return paginated(
+      data.map((row) => this.policyView(row)),
+      total,
+      q,
+    );
   }
   async policy(m: Membership, id: string) {
     const data = await this.db.leavePolicy.findUnique({
       where: { companyId_id: { companyId: m.companyId, id } },
     });
     if (!data) throw new NotFoundException();
-    return { data };
+    return { data: this.policyView(data) };
   }
 
   private policyValues(d: UpdateLeavePolicyDto) {
@@ -214,11 +219,16 @@ export class LeaveService {
       defaultEntitlement,
       maximumCarryForward,
       active,
+      status,
       ...rest
     } = d;
     return {
       ...rest,
-      ...(active !== undefined ? { active } : {}),
+      ...(status !== undefined
+        ? { active: status === 'ACTIVE' }
+        : active !== undefined
+          ? { active }
+          : {}),
       ...(serviceEntitlementTiers !== undefined
         ? {
             serviceEntitlementTiers: serviceEntitlementTiers.map((tier) => ({
@@ -273,7 +283,7 @@ export class LeaveService {
         data: this.policyValues(d),
       });
       await audit(tx, m, 'LEAVE_POLICY_UPDATED', id);
-      return { data };
+      return { data: this.policyView(data) };
     });
   }
 
@@ -288,7 +298,7 @@ export class LeaveService {
         data: { active: false },
       });
       await audit(tx, m, 'LEAVE_POLICY_DEACTIVATED', id);
-      return { data };
+      return { data: this.policyView(data) };
     });
   }
   async createPolicy(m: Membership, d: LeavePolicyDto) {
@@ -300,6 +310,7 @@ export class LeaveService {
           companyId: m.companyId,
           code: d.code,
           name: d.name,
+          active: d.status !== 'INACTIVE',
           ...(d.description !== undefined
             ? { description: d.description }
             : {}),
@@ -362,8 +373,12 @@ export class LeaveService {
         },
       });
       await audit(tx, m, 'LEAVE_POLICY_CREATED', data.id);
-      return { data };
+      return { data: this.policyView(data) };
     });
+  }
+
+  private policyView<T extends { active: boolean }>(data: T) {
+    return { ...data, status: data.active ? 'ACTIVE' : 'INACTIVE' };
   }
   async grant(m: Membership, d: GrantDto) {
     return this.db.$transaction(

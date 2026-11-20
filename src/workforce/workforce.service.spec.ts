@@ -54,7 +54,7 @@ describe('WorkforceService', () => {
       pageSize: 20,
       search: 'hq',
       type: 'OFFICE',
-      state: 'Johor',
+      state: 'JOHOR',
       active: true,
     } as any);
 
@@ -62,7 +62,7 @@ describe('WorkforceService', () => {
       where: expect.objectContaining({
         companyId: 'company',
         type: 'OFFICE',
-        state: 'Johor',
+        state: 'JOHOR',
         active: true,
         OR: expect.any(Array),
       }),

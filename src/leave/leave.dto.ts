@@ -97,6 +97,10 @@ export class LeavePolicyDto {
   @IsString()
   @Length(1, 1000)
   description?: string;
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
   @ApiProperty({ default: true }) @IsBoolean() paid = true;
   @ApiPropertyOptional({ enum: ['DAILY', 'HOURLY'] })
   @IsOptional()
@@ -166,7 +170,11 @@ export class LeavePolicyDto {
   @IsOptional()
   @IsBoolean()
   allowEmployeeSpecificSettings?: boolean;
-  @ApiProperty({ example: '14.00' })
+  @ApiProperty({
+    example: '14.00',
+    description:
+      'Annual entitlement baseline. Service-based policies use serviceEntitlementTiers for the actual entitlement.',
+  })
   @IsString()
   @Matches(/^(0|[1-9]\d{0,2})(\.\d{1,2})?$/)
   annualDays: string;
@@ -193,6 +201,11 @@ export class UpdateLeavePolicyDto extends PartialType(LeavePolicyDto) {
 }
 
 export class LeavePolicyQueryDto extends PageDto {
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
+
   @ApiPropertyOptional({
     description: 'Filter by active or archived policies.',
   })

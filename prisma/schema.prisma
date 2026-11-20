@@ -229,19 +229,19 @@ model Department {
 }
 
 model Position {
-  id            String     @id @default(uuid()) @db.Uuid
-  companyId     String     @db.Uuid
-  departmentId  String     @db.Uuid
+  id            String      @id @default(uuid()) @db.Uuid
+  companyId     String      @db.Uuid
+  departmentId  String?     @db.Uuid
   code          String
   title         String
   jobLevel      String?
   description   String?
   reportsTo     String?
-  effectiveFrom DateTime?  @db.Date
-  effectiveTo   DateTime?  @db.Date
-  active        Boolean    @default(true)
-  company       Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  department    Department @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
+  effectiveFrom DateTime?   @db.Date
+  effectiveTo   DateTime?   @db.Date
+  active        Boolean     @default(true)
+  company       Company     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  department    Department? @relation(fields: [companyId, departmentId], references: [companyId, id], onDelete: Restrict)
   employees     Employee[]
 
   @@unique([companyId, id])
@@ -314,7 +314,7 @@ model PublicHoliday {
   companyId   String   @db.Uuid
   name        String
   description String?
-  scope       String   @default("National")
+  scope       String   @default("NATIONAL")
   startDate   DateTime @db.Date
   endDate     DateTime @db.Date
   states      String[]

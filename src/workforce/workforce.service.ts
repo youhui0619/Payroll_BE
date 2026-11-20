@@ -39,10 +39,11 @@ export class WorkforceService {
   constructor(private db: Database) {}
   async locations(m: Membership, q: LocationQueryDto) {
     const search = q.search?.trim();
+    const state = q.state?.trim().toUpperCase();
     const where = {
       companyId: m.companyId,
       ...(q.type ? { type: q.type } : {}),
-      ...(q.state ? { state: q.state } : {}),
+      ...(state ? { state } : {}),
       ...(q.active !== undefined ? { active: q.active } : {}),
       ...(search
         ? {
@@ -164,7 +165,11 @@ export class WorkforceService {
     validateTimezone(dto.timezone);
     return this.db.$transaction(async (tx) => {
       const data = await tx.workLocation.create({
-        data: { ...dto, companyId: m.companyId },
+        data: {
+          ...dto,
+          state: dto.state.trim().toUpperCase(),
+          companyId: m.companyId,
+        },
       });
       await audit(tx, m, 'LOCATION_CREATED', data.id);
       return { data };
@@ -179,7 +184,12 @@ export class WorkforceService {
     return this.db.$transaction(async (tx) => {
       const data = await tx.workLocation.update({
         where: { companyId_id: { companyId: m.companyId, id } },
-        data: dto,
+        data: {
+          ...dto,
+          ...(dto.state !== undefined
+            ? { state: dto.state.trim().toUpperCase() }
+            : {}),
+        },
       });
       await audit(tx, m, 'LOCATION_UPDATED', id);
       return { data };
@@ -295,6 +305,7 @@ export class WorkforceService {
       fail('INVALID_DATES', 'End date precedes start date.');
     const regions = dto.regions ?? dto.states ?? [];
     const status = dto.status ?? 'ACTIVE';
+    const scope = dto.scope ?? 'NATIONAL';
     return this.db.$transaction(
       async (tx) => {
         const overlaps = await tx.publicHoliday.findMany({
@@ -325,7 +336,7 @@ export class WorkforceService {
             companyId: m.companyId,
             name: dto.name,
             description: dto.description,
-            scope: dto.scope,
+            scope,
             startDate: dateOnly(dto.startDate),
             endDate: dateOnly(dto.endDate),
             states: regions,
@@ -386,6 +397,7 @@ export class WorkforceService {
           endDate: to,
           states: ignoredStates,
           regions: ignoredRegions,
+          scope,
           status: ignoredStatus,
           ...rest
         } = dto;
@@ -398,6 +410,7 @@ export class WorkforceService {
             ...rest,
             ...(from !== undefined ? { startDate: dateOnly(from) } : {}),
             ...(to !== undefined ? { endDate: dateOnly(to) } : {}),
+            ...(scope !== undefined ? { scope } : {}),
             ...(dto.regions !== undefined || dto.states !== undefined
               ? { states: regions, regions }
               : {}),

@@ -16,6 +16,9 @@ import {
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
 
+const emptyStringToNull = ({ value }: { value: unknown }) =>
+  value === '' ? null : value;
+
 export const FINANCIAL_MONTHS = [
   'JANUARY',
   'FEBRUARY',
@@ -45,27 +48,17 @@ export class DepartmentDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Length(1, 50)
-  shortName?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
   @MaxLength(500)
   description?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  remark?: string;
-
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringToNull)
   @IsOptional()
   @IsUUID()
   parentDepartmentId?: string | null;
 
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringToNull)
   @IsOptional()
   @IsUUID()
   headOfDepartmentId?: string | null;
@@ -82,16 +75,20 @@ export class DepartmentDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string | null;
 
-  @ApiPropertyOptional({ enum: ['Active', 'Inactive', 'Draft'] })
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 
 export class UpdateDepartmentDto extends PartialType(DepartmentDto) {}
 
 export class PositionDto {
-  @ApiProperty() @IsUUID() departmentId: string;
+  @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringToNull)
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string | null;
 
   @ApiProperty()
   @Transform(({ value }) =>
@@ -122,6 +119,11 @@ export class PositionDto {
   @Length(1, 120)
   reportsTo?: string | null;
 
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
+
   @ApiPropertyOptional({ example: '2026-01-01', nullable: true })
   @IsOptional()
   @IsDateString({ strict: true })
@@ -138,12 +140,10 @@ export class PositionDto {
 export class UpdatePositionDto extends PartialType(PositionDto) {}
 
 export class DepartmentQueryDto extends PageDto {
-  @ApiPropertyOptional({
-    enum: ['ACTIVE', 'INACTIVE', 'DRAFT', 'Active', 'Inactive', 'Draft'],
-  })
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
   @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE', 'DRAFT', 'Active', 'Inactive', 'Draft'])
-  status?: string;
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   @IsOptional()
@@ -163,6 +163,11 @@ export class PositionQueryDto extends PageDto {
   @IsOptional()
   @IsIn(['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'])
   jobLevel?: string;
+
+  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @IsOptional()
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 
 export class CompanyDto {

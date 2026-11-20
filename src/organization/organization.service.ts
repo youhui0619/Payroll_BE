@@ -63,18 +63,6 @@ export class OrganizationService {
               OR: [
                 { name: { contains: q.search, mode: 'insensitive' as const } },
                 { code: { contains: q.search, mode: 'insensitive' as const } },
-                {
-                  shortName: {
-                    contains: q.search,
-                    mode: 'insensitive' as const,
-                  },
-                },
-                {
-                  remark: {
-                    contains: q.search,
-                    mode: 'insensitive' as const,
-                  },
-                },
               ],
             },
           ]
@@ -104,10 +92,9 @@ export class OrganizationService {
       }),
       this.db.department.count({ where }),
     ]);
-    const data = rows.map(({ _count, ...row }) => ({
-      ...row,
-      totalEmployees: _count.employees,
-    }));
+    const data = rows.map(({ _count, ...row }) =>
+      this.departmentView({ ...row, totalEmployees: _count.employees }),
+    );
     return paginated(data, total, q);
   }
   async department(companyId: string, id: string) {
@@ -126,40 +113,39 @@ export class OrganizationService {
     if (!data) throw new NotFoundException();
     const { _count, ...department } = data;
     return {
-      data: {
+      data: this.departmentView({
         ...department,
         totalEmployees: _count.employees,
         totalPositions: _count.positions,
-      },
+      }),
     };
   }
   async createDepartment(companyId: string, dto: DepartmentDto) {
     const { effectiveFrom, effectiveTo, status, ...rest } = dto;
     const normalizedStatus = status?.toUpperCase() ?? 'ACTIVE';
-    return {
-      data: await this.db.department.create({
-        data: {
-          ...rest,
-          companyId,
-          status: normalizedStatus,
-          active: normalizedStatus !== 'INACTIVE',
-          ...(effectiveFrom !== undefined
-            ? {
-                effectiveFrom: effectiveFrom
-                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-          ...(effectiveTo !== undefined
-            ? {
-                effectiveTo: effectiveTo
-                  ? new Date(effectiveTo + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-        },
-      }),
-    };
+    const data = await this.db.department.create({
+      data: {
+        ...rest,
+        companyId,
+        status: normalizedStatus,
+        active: normalizedStatus !== 'INACTIVE',
+        ...(effectiveFrom !== undefined
+          ? {
+              effectiveFrom: effectiveFrom
+                ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+        ...(effectiveTo !== undefined
+          ? {
+              effectiveTo: effectiveTo
+                ? new Date(effectiveTo + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+      },
+    });
+    return { data: this.departmentView(data) };
   }
   async updateDepartment(
     companyId: string,
@@ -167,34 +153,33 @@ export class OrganizationService {
     dto: UpdateDepartmentDto,
   ) {
     const { effectiveFrom, effectiveTo, status, ...rest } = dto;
-    return {
-      data: await this.db.department.update({
-        where: { companyId_id: { companyId, id } },
-        data: {
-          ...rest,
-          ...(status !== undefined
-            ? {
-                status: status.toUpperCase(),
-                active: status.toUpperCase() !== 'INACTIVE',
-              }
-            : {}),
-          ...(effectiveFrom !== undefined
-            ? {
-                effectiveFrom: effectiveFrom
-                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-          ...(effectiveTo !== undefined
-            ? {
-                effectiveTo: effectiveTo
-                  ? new Date(effectiveTo + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-        },
-      }),
-    };
+    const data = await this.db.department.update({
+      where: { companyId_id: { companyId, id } },
+      data: {
+        ...rest,
+        ...(status !== undefined
+          ? {
+              status: status.toUpperCase(),
+              active: status.toUpperCase() !== 'INACTIVE',
+            }
+          : {}),
+        ...(effectiveFrom !== undefined
+          ? {
+              effectiveFrom: effectiveFrom
+                ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+        ...(effectiveTo !== undefined
+          ? {
+              effectiveTo: effectiveTo
+                ? new Date(effectiveTo + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+      },
+    });
+    return { data: this.departmentView(data) };
   }
   async positions(companyId: string, q: PositionQueryDto) {
     const where = {
@@ -221,6 +206,7 @@ export class OrganizationService {
         : {}),
       ...(q.departmentId ? { departmentId: q.departmentId } : {}),
       ...(q.jobLevel ? { jobLevel: q.jobLevel } : {}),
+      ...(q.status ? { active: q.status === 'ACTIVE' } : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.position.findMany({
@@ -235,26 +221,30 @@ export class OrganizationService {
       }),
       this.db.position.count({ where }),
     ]);
-    const data = rows.map(({ _count, ...row }) => ({
-      ...row,
-      employeeCount: _count.employees,
-    }));
+    const data = rows.map(({ _count, ...row }) =>
+      this.positionView({ ...row, employeeCount: _count.employees }),
+    );
     return paginated(data, total, q);
   }
   async createPosition(companyId: string, dto: PositionDto) {
     return this.db.$transaction(
       async (tx) => {
-        const department = await tx.department.findUnique({
-          where: { companyId_id: { companyId, id: dto.departmentId } },
-        });
-        if (!department || !department.active)
-          throw new NotFoundException('Active department not found.');
-        const { effectiveFrom, effectiveTo, ...rest } = dto;
+        const { effectiveFrom, effectiveTo, status, departmentId, ...rest } =
+          dto;
+        if (departmentId) {
+          const department = await tx.department.findUnique({
+            where: { companyId_id: { companyId, id: departmentId } },
+          });
+          if (!department || !department.active)
+            throw new NotFoundException('Active department not found.');
+        }
         return {
           data: await tx.position.create({
             data: {
               ...rest,
               companyId,
+              departmentId: departmentId ?? null,
+              active: status !== 'INACTIVE',
               ...(effectiveFrom !== undefined
                 ? {
                     effectiveFrom: effectiveFrom
@@ -286,32 +276,35 @@ export class OrganizationService {
     });
     if (!data) throw new NotFoundException();
     const { _count, ...position } = data;
-    return { data: { ...position, employeeCount: _count.employees } };
+    return {
+      data: this.positionView({ ...position, employeeCount: _count.employees }),
+    };
   }
   async updatePosition(companyId: string, id: string, dto: UpdatePositionDto) {
-    const { effectiveFrom, effectiveTo, ...rest } = dto;
-    return {
-      data: await this.db.position.update({
-        where: { companyId_id: { companyId, id } },
-        data: {
-          ...rest,
-          ...(effectiveFrom !== undefined
-            ? {
-                effectiveFrom: effectiveFrom
-                  ? new Date(effectiveFrom + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-          ...(effectiveTo !== undefined
-            ? {
-                effectiveTo: effectiveTo
-                  ? new Date(effectiveTo + 'T00:00:00.000Z')
-                  : null,
-              }
-            : {}),
-        },
-      }),
-    };
+    const { effectiveFrom, effectiveTo, status, departmentId, ...rest } = dto;
+    const data = await this.db.position.update({
+      where: { companyId_id: { companyId, id } },
+      data: {
+        ...rest,
+        ...(departmentId !== undefined ? { departmentId } : {}),
+        ...(status !== undefined ? { active: status !== 'INACTIVE' } : {}),
+        ...(effectiveFrom !== undefined
+          ? {
+              effectiveFrom: effectiveFrom
+                ? new Date(effectiveFrom + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+        ...(effectiveTo !== undefined
+          ? {
+              effectiveTo: effectiveTo
+                ? new Date(effectiveTo + 'T00:00:00.000Z')
+                : null,
+            }
+          : {}),
+      },
+    });
+    return { data: this.positionView(data) };
   }
   async deactivate(
     companyId: string,
@@ -352,9 +345,29 @@ export class OrganizationService {
                 data: { active: false, status: 'INACTIVE' },
               })
             : await tx.position.update({ where, data: { active: false } });
-        return { data };
+        return {
+          data:
+            kind === 'position'
+              ? this.positionView(data)
+              : this.departmentView(data),
+        };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
+  }
+
+  private departmentView<T extends object>(data: T) {
+    if (data == null) return data as T;
+    const { shortName, remark, ...view } = data as T & {
+      shortName?: unknown;
+      remark?: unknown;
+    };
+    void shortName;
+    void remark;
+    return view;
+  }
+
+  private positionView<T extends { active: boolean }>(data: T) {
+    return { ...data, status: data.active ? 'ACTIVE' : 'INACTIVE' };
   }
 }

@@ -36,6 +36,24 @@ export const STATES = [
   'MY-15',
   'MY-16',
 ];
+export const LOCATION_STATES = [
+  'JOHOR',
+  'KEDAH',
+  'KELANTAN',
+  'KUALA LUMPUR',
+  'LABUAN',
+  'MELAKA',
+  'NEGERI SEMBILAN',
+  'PAHANG',
+  'PENANG',
+  'PERAK',
+  'PERLIS',
+  'PUTRAJAYA',
+  'SABAH',
+  'SARAWAK',
+  'SELANGOR',
+  'TERENGGANU',
+] as const;
 export const REGIONS = [
   'Johor',
   'Kedah',
@@ -59,8 +77,11 @@ export const HOLIDAY_REGIONS = [...STATES, ...REGIONS] as const;
 export class LocationDto {
   @ApiProperty() @IsString() @Length(1, 30) code: string;
   @ApiProperty() @IsString() @Length(1, 150) name: string;
-  @ApiProperty({ enum: [...STATES, ...REGIONS] })
-  @IsIn([...STATES, ...REGIONS])
+  @ApiProperty({ enum: LOCATION_STATES })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(LOCATION_STATES)
   state: string;
   @ApiPropertyOptional({ enum: ['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'] })
   @IsOptional()
@@ -79,7 +100,6 @@ export class LocationDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Length(1, 200)
   addressLine2?: string;
   @ApiPropertyOptional()
   @IsOptional()
@@ -114,9 +134,12 @@ export class LocationQueryDto extends PageDto {
   @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
   type?: string;
 
-  @ApiPropertyOptional({ enum: [...STATES, ...REGIONS] })
+  @ApiPropertyOptional({ enum: LOCATION_STATES })
   @IsOptional()
-  @IsIn([...STATES, ...REGIONS])
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
+  @IsIn(LOCATION_STATES)
   state?: string;
 
   @ApiPropertyOptional({
@@ -212,10 +235,10 @@ export class HolidayDto {
   @IsString()
   @Length(1, 1000)
   description?: string;
-  @ApiPropertyOptional({ enum: ['National', 'State'] })
+  @ApiPropertyOptional({ enum: ['NATIONAL', 'STATE'] })
   @IsOptional()
-  @IsIn(['National', 'State'])
-  scope?: string;
+  @IsIn(['NATIONAL', 'STATE'])
+  scope?: 'NATIONAL' | 'STATE';
   @ApiProperty()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -260,10 +283,10 @@ export class HolidayQueryDto extends PageDto {
   @Max(2200)
   year?: number;
 
-  @ApiPropertyOptional({ enum: ['National', 'State'] })
+  @ApiPropertyOptional({ enum: ['NATIONAL', 'STATE'] })
   @IsOptional()
-  @IsIn(['National', 'State'])
-  scope?: string;
+  @IsIn(['NATIONAL', 'STATE'])
+  scope?: 'NATIONAL' | 'STATE';
 
   @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
   @IsOptional()
