@@ -15,6 +15,7 @@ import {
   UpdateScheduleDto,
 } from './workforce.dto';
 import { paginated } from '../common/page.dto';
+import { toWorkingScheduleResponse } from './working-schedule.mapper';
 
 function validateTimezone(timezone: string) {
   try {
@@ -100,14 +101,14 @@ export class WorkforceService {
       }),
       this.db.workSchedule.count({ where }),
     ]);
-    return paginated(data, total, q);
+    return paginated(data.map(toWorkingScheduleResponse), total, q);
   }
   async schedule(m: Membership, id: string) {
     const data = await this.db.workSchedule.findFirst({
       where: { id, companyId: m.companyId },
     });
     if (!data) throw new NotFoundException();
-    return { data };
+    return { data: toWorkingScheduleResponse(data) };
   }
   async holidays(m: Membership, q: HolidayQueryDto) {
     const search = q.search?.trim();
@@ -223,20 +224,27 @@ export class WorkforceService {
     if (dto.effectiveTo && dto.effectiveTo < dto.effectiveFrom)
       fail('INVALID_DATES', 'End date precedes start date.');
     return this.db.$transaction(async (tx) => {
-      const { effectiveFrom, effectiveTo, scheduleDays, ...rest } = dto;
+      const {
+        effectiveFrom,
+        effectiveTo,
+        scheduleDays,
+        workingSchedule,
+        ...rest
+      } = dto;
+      const scheduleDaysValue = workingSchedule ?? scheduleDays;
       const data = await tx.workSchedule.create({
         data: {
           ...rest,
           companyId: m.companyId,
-          ...(scheduleDays !== undefined
-            ? { scheduleDays: scheduleDays as Prisma.InputJsonValue }
+          ...(scheduleDaysValue !== undefined
+            ? { scheduleDays: scheduleDaysValue as Prisma.InputJsonValue }
             : {}),
           effectiveFrom: dateOnly(effectiveFrom),
           effectiveTo: effectiveTo ? dateOnly(effectiveTo) : null,
         },
       });
       await audit(tx, m, 'SCHEDULE_CREATED', data.id);
-      return { data };
+      return { data: toWorkingScheduleResponse(data) };
     });
   }
   async updateSchedule(m: Membership, id: string, dto: UpdateScheduleDto) {
@@ -258,14 +266,21 @@ export class WorkforceService {
           : undefined;
     if (effectiveTo && effectiveTo < effectiveFrom)
       fail('INVALID_DATES', 'End date precedes start date.');
-    const { effectiveFrom: from, effectiveTo: to, scheduleDays, ...rest } = dto;
+    const {
+      effectiveFrom: from,
+      effectiveTo: to,
+      scheduleDays,
+      workingSchedule,
+      ...rest
+    } = dto;
+    const scheduleDaysValue = workingSchedule ?? scheduleDays;
     return this.db.$transaction(async (tx) => {
       const data = await tx.workSchedule.update({
         where: { companyId_id: { companyId: m.companyId, id } },
         data: {
           ...rest,
-          ...(scheduleDays !== undefined
-            ? { scheduleDays: scheduleDays as Prisma.InputJsonValue }
+          ...(scheduleDaysValue !== undefined
+            ? { scheduleDays: scheduleDaysValue as Prisma.InputJsonValue }
             : {}),
           ...(from !== undefined ? { effectiveFrom: dateOnly(from) } : {}),
           ...(to !== undefined
@@ -274,7 +289,7 @@ export class WorkforceService {
         },
       });
       await audit(tx, m, 'SCHEDULE_UPDATED', id);
-      return { data };
+      return { data: toWorkingScheduleResponse(data) };
     });
   }
   async deactivateSchedule(m: Membership, id: string) {

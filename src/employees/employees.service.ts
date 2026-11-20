@@ -15,6 +15,10 @@ import {
 } from './employees.dto';
 import { EMPLOYMENT_STATUS_VALUES } from './employment-statuses';
 import { WORKING_DAY_NAMES } from '../workforce/working-schedule.dto';
+import {
+  normalizeWorkingSchedule,
+  toWorkingScheduleResponse,
+} from '../workforce/working-schedule.mapper';
 
 @Injectable()
 export class EmployeesService {
@@ -227,19 +231,22 @@ export class EmployeesService {
       },
     });
     if (!data) throw new NotFoundException();
-    const { employeeWorkSchedule, ...employee } = data;
+    const { employeeWorkSchedule, schedule, ...employee } = data;
     const salaryHistory = data.salaries.map((salary) => ({
       ...salary,
       amount: salary.amount.toFixed(2),
     }));
     const currentSalary = salaryHistory[0] ?? null;
+    const masterSchedule = schedule
+      ? toWorkingScheduleResponse(schedule)
+      : null;
     return {
       data: {
         ...employee,
-        workingSchedule:
-          employeeWorkSchedule?.scheduleDays ??
-          data.schedule?.scheduleDays ??
-          null,
+        schedule: masterSchedule,
+        workingSchedule: normalizeWorkingSchedule(
+          employeeWorkSchedule?.scheduleDays ?? schedule?.scheduleDays,
+        ),
         salaries: salaryHistory,
         salaryHistory,
         currentSalary,

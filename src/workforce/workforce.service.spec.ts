@@ -72,6 +72,42 @@ describe('WorkforceService', () => {
     });
   });
 
+  it('returns workingSchedule using the FE shape', async () => {
+    const db = database();
+    const schedule = {
+      id: 'schedule',
+      code: 'STANDARD-5D',
+      scheduleDays: {
+        days: [
+          {
+            day: 'Monday',
+            isWorkingDay: true,
+            startTime: '09:00',
+            endTime: '18:00',
+            breakStartTime: '13:00',
+            breakEndTime: '14:00',
+          },
+        ],
+      },
+    };
+    db.workSchedule.findMany.mockResolvedValue([schedule]);
+    db.workSchedule.count.mockResolvedValue(1);
+
+    const result = await new WorkforceService(db).schedules(membership, {
+      page: 1,
+      pageSize: 20,
+    } as any);
+
+    expect(result.data).toEqual([
+      {
+        id: 'schedule',
+        code: 'STANDARD-5D',
+        workingSchedule: schedule.scheduleDays,
+      },
+    ]);
+    expect(result.data[0]).not.toHaveProperty('scheduleDays');
+  });
+
   it('deactivates a schedule only when no active employee uses it', async () => {
     const db = database();
     db.workSchedule.findUnique.mockResolvedValue({ id: 'schedule' });

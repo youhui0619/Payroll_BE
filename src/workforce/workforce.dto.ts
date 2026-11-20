@@ -16,10 +16,12 @@ import {
   Matches,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
 import { EMPLOYMENT_TYPE_VALUES } from './employment-types';
 import type { EmploymentType } from './employment-types';
+import { WorkingScheduleDto } from './working-schedule.dto';
 export const STATES = [
   'MY-01',
   'MY-02',
@@ -190,6 +192,11 @@ export class ScheduleDto {
   @IsOptional()
   @IsObject()
   scheduleDays?: Record<string, unknown>;
+  @ApiPropertyOptional({ type: WorkingScheduleDto, nullable: true })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  workingSchedule?: WorkingScheduleDto;
   @ApiProperty()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
