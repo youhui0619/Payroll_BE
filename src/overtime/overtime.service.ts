@@ -7,6 +7,10 @@ import { Membership, Prisma, RequestStatus } from '@prisma/client';
 import { Database } from '../database.module';
 import { paginated } from '../common/page.dto';
 import {
+  makeStatusCounts,
+  REQUEST_STATUS_VALUES,
+} from '../common/status-summary';
+import {
   audit,
   dateOnly,
   dateString,
@@ -309,7 +313,9 @@ export class OvertimeService {
       q.employeeId = employee.id;
     }
     if (mode === 'all' && !privileged(m, ['OWNER', 'HR', 'FINANCE']))
-      return paginated([], 0, q);
+      return paginated([], 0, q, {
+        summary: { statusCounts: makeStatusCounts(REQUEST_STATUS_VALUES) },
+      });
     if (q.from && q.to && q.to < q.from)
       fail('INVALID_RANGE', 'End date precedes start date.', 400);
 
@@ -326,39 +332,56 @@ export class OvertimeService {
             : { id: '__none__' }),
       };
     }
+    const statusWhere = where;
+    const filters = {
+      departmentId: q.departmentId,
+      overtimeType: q.overtimeType,
+      ...(q.search
+        ? {
+            OR: [
+              {
+                description: {
+                  contains: q.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                earningCode: {
+                  contains: q.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                employee: {
+                  name: { contains: q.search, mode: 'insensitive' as const },
+                },
+              },
+              {
+                employee: {
+                  employeeNo: {
+                    contains: q.search,
+                    mode: 'insensitive' as const,
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+      ...(q.from || q.to
+        ? {
+            overtimeDate: {
+              ...(q.from ? { gte: dateOnly(q.from) } : {}),
+              ...(q.to ? { lte: dateOnly(q.to) } : {}),
+            },
+          }
+        : {}),
+    };
     where = {
       AND: [
-        where,
+        statusWhere,
         {
           status: q.status,
-          departmentId: q.departmentId,
-          overtimeType: q.overtimeType,
-          ...(q.search
-            ? {
-                OR: [
-                  { description: { contains: q.search, mode: 'insensitive' } },
-                  { earningCode: { contains: q.search, mode: 'insensitive' } },
-                  {
-                    employee: {
-                      name: { contains: q.search, mode: 'insensitive' },
-                    },
-                  },
-                  {
-                    employee: {
-                      employeeNo: { contains: q.search, mode: 'insensitive' },
-                    },
-                  },
-                ],
-              }
-            : {}),
-          ...(q.from || q.to
-            ? {
-                overtimeDate: {
-                  ...(q.from ? { gte: dateOnly(q.from) } : {}),
-                  ...(q.to ? { lte: dateOnly(q.to) } : {}),
-                },
-              }
-            : {}),
+          ...filters,
         },
       ],
     };
@@ -372,10 +395,25 @@ export class OvertimeService {
       }),
       this.db.overtimeRequest.count({ where }),
     ]);
+    const statusCountValues = await Promise.all(
+      REQUEST_STATUS_VALUES.map((status) =>
+        this.db.overtimeRequest.count({
+          where: { AND: [statusWhere, { ...filters, status }] },
+        }),
+      ),
+    );
     return paginated(
       rows.map((row) => this.serialize(row)),
       total,
       q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            REQUEST_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
+      },
     );
   }
 

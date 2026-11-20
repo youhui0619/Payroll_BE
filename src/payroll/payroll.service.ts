@@ -4,6 +4,10 @@ import { Database } from '../database.module';
 import { audit, dateOnly, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 import {
+  makeStatusCounts,
+  PAYROLL_STATUS_VALUES,
+} from '../common/status-summary';
+import {
   CreatePayrollDto,
   PayrollProfileDto,
   PayrollDay,
@@ -237,7 +241,19 @@ export class PayrollService {
       }),
       this.db.payrollRun.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      PAYROLL_STATUS_VALUES.map((status) =>
+        this.db.payrollRun.count({ where: { companyId: m.companyId, status } }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(
+          PAYROLL_STATUS_VALUES,
+          statusCountValues,
+        ),
+      },
+    });
   }
 
   async detail(m: Membership, id: string) {

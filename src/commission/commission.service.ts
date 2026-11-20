@@ -3,6 +3,10 @@ import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
 import { paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
+import {
   audit,
   dateOnly,
   dateString,
@@ -18,6 +22,7 @@ import {
   CommissionSettingQueryDto,
   COMMISSION_METHODS,
   ELIGIBILITY_OPTIONS,
+  RECORD_STATUSES,
   UpdateCommissionSettingDto,
 } from './commission.dto';
 
@@ -177,9 +182,8 @@ export class CommissionService {
   }
 
   async listSettings(m: Membership, q: CommissionSettingQueryDto) {
-    const where: Prisma.CommissionIncentiveSettingWhereInput = {
+    const baseWhere: Prisma.CommissionIncentiveSettingWhereInput = {
       companyId: m.companyId,
-      active: q.active,
       ...(q.search
         ? {
             OR: [
@@ -192,6 +196,10 @@ export class CommissionService {
           }
         : {}),
     };
+    const where: Prisma.CommissionIncentiveSettingWhereInput = {
+      ...baseWhere,
+      active: q.active,
+    };
     const [rows, total] = await this.db.$transaction([
       this.db.commissionIncentiveSetting.findMany({
         where,
@@ -202,10 +210,25 @@ export class CommissionService {
       }),
       this.db.commissionIncentiveSetting.count({ where }),
     ]);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.commissionIncentiveSetting.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
     return paginated(
       rows.map((row) => this.serializeSetting(row)),
       total,
       q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            ACTIVE_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
+      },
     );
   }
 
@@ -438,12 +461,14 @@ export class CommissionService {
     q: CommissionRecordQueryDto,
     pending = false,
   ) {
-    if (!privileged(m, ['OWNER', 'HR', 'FINANCE'])) return paginated([], 0, q);
+    if (!privileged(m, ['OWNER', 'HR', 'FINANCE']))
+      return paginated([], 0, q, {
+        summary: { statusCounts: makeStatusCounts(RECORD_STATUSES) },
+      });
     if (q.from && q.to && q.to < q.from)
       fail('INVALID_RANGE', 'End date precedes start date.', 400);
-    const where: Prisma.CommissionPayrollRecordWhereInput = {
+    const baseWhere: Prisma.CommissionPayrollRecordWhereInput = {
       companyId: m.companyId,
-      ...(pending ? { status: 'PENDING_APPROVAL' } : { status: q.status }),
       employeeId: q.employeeId,
       ...(q.planCode ? { planCode: q.planCode.trim().toUpperCase() } : {}),
       ...(q.from || q.to
@@ -473,6 +498,14 @@ export class CommissionService {
           }
         : {}),
     };
+    const where: Prisma.CommissionPayrollRecordWhereInput = {
+      ...baseWhere,
+      ...(pending
+        ? { status: 'PENDING_APPROVAL' }
+        : q.status
+          ? { status: q.status }
+          : {}),
+    };
     const [rows, total] = await this.db.$transaction([
       this.db.commissionPayrollRecord.findMany({
         where,
@@ -483,10 +516,25 @@ export class CommissionService {
       }),
       this.db.commissionPayrollRecord.count({ where }),
     ]);
+    const statusCountValues = await Promise.all(
+      RECORD_STATUSES.map((status) =>
+        this.db.commissionPayrollRecord.count({
+          where: {
+            ...baseWhere,
+            ...(pending ? { status: 'PENDING_APPROVAL' } : { status }),
+          },
+        }),
+      ),
+    );
     return paginated(
       rows.map((row) => this.serializeRecord(row)),
       total,
       q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(RECORD_STATUSES, statusCountValues),
+        },
+      },
     );
   }
 

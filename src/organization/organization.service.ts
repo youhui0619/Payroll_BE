@@ -7,6 +7,10 @@ import { Prisma } from '@prisma/client';
 import { Database } from '../database.module';
 import { paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
+import {
   CompanyDto,
   DepartmentQueryDto,
   DepartmentDto,
@@ -56,7 +60,7 @@ export class OrganizationService {
   }
   async departments(companyId: string, q: DepartmentQueryDto) {
     const status = q.status?.toUpperCase();
-    const filters = [
+    const baseFilters = [
       ...(q.search
         ? [
             {
@@ -70,17 +74,23 @@ export class OrganizationService {
       ...(q.parentDepartmentId
         ? [{ parentDepartmentId: q.parentDepartmentId }]
         : []),
-      ...(status
-        ? [
-            status === 'INACTIVE'
-              ? { OR: [{ status }, { active: false }] }
-              : { status },
-          ]
-        : []),
     ];
-    const where = {
+    const baseWhere = {
       companyId,
-      ...(filters.length ? { AND: filters } : {}),
+      ...(baseFilters.length ? { AND: baseFilters } : {}),
+    };
+    const where = {
+      ...baseWhere,
+      ...(status
+        ? {
+            AND: [
+              ...baseFilters,
+              status === 'INACTIVE'
+                ? { OR: [{ status }, { active: false }] }
+                : { status },
+            ],
+          }
+        : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.department.findMany({
@@ -95,7 +105,18 @@ export class OrganizationService {
     const data = rows.map(({ _count, ...row }) =>
       this.departmentView({ ...row, totalEmployees: _count.employees }),
     );
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((statusValue) =>
+        this.db.department.count({
+          where: { ...baseWhere, active: statusValue === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async department(companyId: string, id: string) {
     const data = await this.db.department.findUnique({
@@ -182,7 +203,7 @@ export class OrganizationService {
     return { data: this.departmentView(data) };
   }
   async positions(companyId: string, q: PositionQueryDto) {
-    const where = {
+    const baseWhere = {
       companyId,
       ...(q.search
         ? {
@@ -206,6 +227,9 @@ export class OrganizationService {
         : {}),
       ...(q.departmentId ? { departmentId: q.departmentId } : {}),
       ...(q.jobLevel ? { jobLevel: q.jobLevel } : {}),
+    };
+    const where = {
+      ...baseWhere,
       ...(q.status ? { active: q.status === 'ACTIVE' } : {}),
     };
     const [rows, total] = await this.db.$transaction([
@@ -224,7 +248,18 @@ export class OrganizationService {
     const data = rows.map(({ _count, ...row }) =>
       this.positionView({ ...row, employeeCount: _count.employees }),
     );
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.position.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async createPosition(companyId: string, dto: PositionDto) {
     return this.db.$transaction(

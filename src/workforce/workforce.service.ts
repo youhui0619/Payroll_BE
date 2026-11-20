@@ -15,6 +15,10 @@ import {
   UpdateScheduleDto,
 } from './workforce.dto';
 import { paginated } from '../common/page.dto';
+import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
 import { toWorkingScheduleResponse } from './working-schedule.mapper';
 
 function validateTimezone(timezone: string) {
@@ -41,11 +45,10 @@ export class WorkforceService {
   async locations(m: Membership, q: LocationQueryDto) {
     const search = q.search?.trim();
     const state = q.state?.trim().toUpperCase();
-    const where = {
+    const baseWhere = {
       companyId: m.companyId,
       ...(q.type ? { type: q.type } : {}),
       ...(state ? { state } : {}),
-      ...(q.active !== undefined ? { active: q.active } : {}),
       ...(search
         ? {
             OR: [
@@ -59,6 +62,10 @@ export class WorkforceService {
           }
         : {}),
     };
+    const where = {
+      ...baseWhere,
+      ...(q.active !== undefined ? { active: q.active } : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.workLocation.findMany({
         where,
@@ -68,7 +75,18 @@ export class WorkforceService {
       }),
       this.db.workLocation.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.workLocation.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async location(m: Membership, id: string) {
     const data = await this.db.workLocation.findFirst({
@@ -79,10 +97,9 @@ export class WorkforceService {
   }
   async schedules(m: Membership, q: ScheduleQueryDto) {
     const search = q.search?.trim();
-    const where = {
+    const baseWhere = {
       companyId: m.companyId,
       ...(q.employmentType ? { employmentType: q.employmentType } : {}),
-      ...(q.active !== undefined ? { active: q.active } : {}),
       ...(search
         ? {
             OR: [
@@ -91,6 +108,10 @@ export class WorkforceService {
             ],
           }
         : {}),
+    };
+    const where = {
+      ...baseWhere,
+      ...(q.active !== undefined ? { active: q.active } : {}),
     };
     const [data, total] = await this.db.$transaction([
       this.db.workSchedule.findMany({
@@ -101,7 +122,18 @@ export class WorkforceService {
       }),
       this.db.workSchedule.count({ where }),
     ]);
-    return paginated(data.map(toWorkingScheduleResponse), total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.workSchedule.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data.map(toWorkingScheduleResponse), total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async schedule(m: Membership, id: string) {
     const data = await this.db.workSchedule.findFirst({
@@ -114,10 +146,9 @@ export class WorkforceService {
     const search = q.search?.trim();
     const yearStart = q.year ? dateOnly(`${q.year}-01-01`) : undefined;
     const yearEnd = q.year ? dateOnly(`${q.year}-12-31`) : undefined;
-    const where = {
+    const baseWhere = {
       companyId: m.companyId,
       ...(q.scope ? { scope: q.scope } : {}),
-      ...(q.status ? { status: q.status } : {}),
       ...(q.region
         ? {
             OR: [{ regions: { has: q.region } }, { states: { has: q.region } }],
@@ -144,6 +175,10 @@ export class WorkforceService {
           }
         : {}),
     };
+    const where = {
+      ...baseWhere,
+      ...(q.status ? { status: q.status } : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.publicHoliday.findMany({
         where,
@@ -153,7 +188,18 @@ export class WorkforceService {
       }),
       this.db.publicHoliday.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.publicHoliday.count({
+          where: { ...baseWhere, status },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async holiday(m: Membership, id: string) {
     const data = await this.db.publicHoliday.findFirst({

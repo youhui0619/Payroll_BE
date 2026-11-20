@@ -19,6 +19,7 @@ import {
   normalizeWorkingSchedule,
   toWorkingScheduleResponse,
 } from '../workforce/working-schedule.mapper';
+import { makeStatusCounts } from '../common/status-summary';
 
 @Injectable()
 export class EmployeesService {
@@ -207,7 +208,21 @@ export class EmployeesService {
       }),
       this.db.employee.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      EMPLOYMENT_STATUS_VALUES.map((status) =>
+        this.db.employee.count({
+          where: { ...where, employmentStatus: status },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(
+          EMPLOYMENT_STATUS_VALUES,
+          statusCountValues,
+        ),
+      },
+    });
   }
   async get(companyId: string, id: string) {
     const data = await this.db.employee.findUnique({

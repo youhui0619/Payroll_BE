@@ -108,6 +108,25 @@ describe('WorkforceService', () => {
     expect(result.data[0]).not.toHaveProperty('scheduleDays');
   });
 
+  it('returns public-holiday status counts in pagination metadata', async () => {
+    const db = database();
+    db.publicHoliday.findMany.mockResolvedValue([]);
+    db.publicHoliday.count
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(2);
+
+    const result = await new WorkforceService(db).holidays(membership, {
+      page: 1,
+      pageSize: 20,
+    } as any);
+
+    expect(result.meta.summary?.statusCounts).toEqual({
+      ACTIVE: 0,
+      INACTIVE: 2,
+    });
+  });
+
   it('deactivates a schedule only when no active employee uses it', async () => {
     const db = database();
     db.workSchedule.findUnique.mockResolvedValue({ id: 'schedule' });

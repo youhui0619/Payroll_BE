@@ -4,6 +4,10 @@ import { Database } from '../database.module';
 import { audit, dateOnly, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
+import {
   ComponentDefinitionDto,
   ComponentListDto,
 } from './component-definitions.dto';
@@ -119,19 +123,39 @@ export class ComponentDefinitionsService {
         });
         if (groups.length > 1000)
           fail('COMPONENT_LIMIT', 'Component code limit exceeded.');
-        const page = groups.slice(
-          (q.page - 1) * q.pageSize,
-          q.page * q.pageSize,
-        );
-        if (!page.length) return paginated([], groups.length, q);
-        const data = await tx.payrollComponentDefinition.findMany({
+        if (!groups.length)
+          return paginated([], 0, q, {
+            summary: {
+              statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES),
+            },
+          });
+        const allData = await tx.payrollComponentDefinition.findMany({
           where: {
             companyId: m.companyId,
-            OR: page.map((g) => ({ code: g.code, revision: g._max.revision })),
+            OR: groups.map((g) => ({
+              code: g.code,
+              revision: g._max.revision,
+            })),
           },
           orderBy: { code: 'asc' },
         });
-        return paginated(data, groups.length, q);
+        const data = allData.slice(
+          (q.page - 1) * q.pageSize,
+          q.page * q.pageSize,
+        );
+        const statusCountValues = ACTIVE_STATUS_VALUES.map(
+          (status) =>
+            allData.filter((row) => row.active === (status === 'ACTIVE'))
+              .length,
+        );
+        return paginated(data, groups.length, q, {
+          summary: {
+            statusCounts: makeStatusCounts(
+              ACTIVE_STATUS_VALUES,
+              statusCountValues,
+            ),
+          },
+        });
       },
       { isolationLevel: 'RepeatableRead' },
     );
@@ -148,6 +172,17 @@ export class ComponentDefinitionsService {
       this.db.payrollComponentDefinition.count({ where }),
     ]);
     if (!total) throw new NotFoundException();
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.payrollComponentDefinition.count({
+          where: { ...where, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
 }

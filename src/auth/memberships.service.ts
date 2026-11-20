@@ -5,6 +5,10 @@ import { hashPassword } from './password';
 import { audit, fail } from '../common/domain';
 import { paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
+import {
   CreateMemberDto,
   MembershipQueryDto,
   UpdateMemberDto,
@@ -16,9 +20,8 @@ export class MembershipsService {
   constructor(private db: Database) {}
   async list(m: Membership, q: MembershipQueryDto) {
     const search = q.search?.trim();
-    const where = {
+    const baseWhere = {
       companyId: m.companyId,
-      ...(q.active !== undefined ? { active: q.active } : {}),
       ...(q.role ? { roles: { has: q.role } } : {}),
       ...(search
         ? {
@@ -41,6 +44,10 @@ export class MembershipsService {
           }
         : {}),
     };
+    const where = {
+      ...baseWhere,
+      ...(q.active !== undefined ? { active: q.active } : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.membership.findMany({
         where,
@@ -51,7 +58,18 @@ export class MembershipsService {
       }),
       this.db.membership.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.membership.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async get(m: Membership, id: string) {
     const data = await this.db.membership.findFirst({

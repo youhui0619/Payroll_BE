@@ -3,6 +3,10 @@ import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
 import { audit, dateOnly, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
+import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
 import { calculateContribution, validateRules } from './calculator';
 import { statutoryCatalog } from './data/catalog';
 import { RulesDto } from './rules.dto';
@@ -53,7 +57,18 @@ export class RulesService {
       }),
       this.db.statutoryRuleset.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.statutoryRuleset.count({
+          where: { companyId: m.companyId, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
   async create(m: Membership, d: RulesDto) {
     validateRules(d.parameters);

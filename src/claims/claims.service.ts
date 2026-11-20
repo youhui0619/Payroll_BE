@@ -7,6 +7,11 @@ import { Membership, Prisma, RequestStatus } from '@prisma/client';
 import { Database } from '../database.module';
 import { PageDto, paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+  REQUEST_STATUS_VALUES,
+} from '../common/status-summary';
+import {
   audit,
   dateOnly,
   DecisionDto,
@@ -56,7 +61,18 @@ export class ClaimsService {
       }),
       this.db.claimType.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.claimType.count({
+          where: { ...where, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+      },
+    });
   }
 
   async createType(m: Membership, d: ClaimTypeDto) {
@@ -236,7 +252,9 @@ export class ClaimsService {
       !m.employeeId &&
       !privileged(m, ['OWNER', 'FINANCE'])
     )
-      return paginated([], 0, q);
+      return paginated([], 0, q, {
+        summary: { statusCounts: makeStatusCounts(REQUEST_STATUS_VALUES) },
+      });
     if (q.from && q.to && q.to < q.from)
       fail('INVALID_RANGE', 'End date precedes start date.', 400);
     let where: Prisma.ClaimWhereInput = { companyId: m.companyId };
@@ -263,24 +281,28 @@ export class ClaimsService {
               ],
             }),
       };
+    const statusWhere = where;
+    const filters = {
+      typeId: q.typeId,
+      employeeId: q.employeeId,
+      ...(q.search
+        ? { description: { contains: q.search, mode: 'insensitive' as const } }
+        : {}),
+      ...(q.from || q.to
+        ? {
+            date: {
+              ...(q.from ? { gte: dateOnly(q.from) } : {}),
+              ...(q.to ? { lte: dateOnly(q.to) } : {}),
+            },
+          }
+        : {}),
+    };
     where = {
       AND: [
-        where,
+        statusWhere,
         {
           status: q.status,
-          typeId: q.typeId,
-          employeeId: q.employeeId,
-          ...(q.search
-            ? { description: { contains: q.search, mode: 'insensitive' } }
-            : {}),
-          ...(q.from || q.to
-            ? {
-                date: {
-                  ...(q.from ? { gte: dateOnly(q.from) } : {}),
-                  ...(q.to ? { lte: dateOnly(q.to) } : {}),
-                },
-              }
-            : {}),
+          ...filters,
         },
       ],
     };
@@ -293,10 +315,25 @@ export class ClaimsService {
       }),
       this.db.claim.count({ where }),
     ]);
+    const statusCountValues = await Promise.all(
+      REQUEST_STATUS_VALUES.map((status) =>
+        this.db.claim.count({
+          where: { AND: [statusWhere, { ...filters, status }] },
+        }),
+      ),
+    );
     return paginated(
       data.map((r) => ({ ...r, amount: r.amount.toFixed(2) })),
       total,
       q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            REQUEST_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
+      },
     );
   }
 

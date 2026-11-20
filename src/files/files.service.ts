@@ -6,6 +6,10 @@ import {
 import { createHash, randomUUID } from 'node:crypto';
 import { Membership, Prisma } from '@prisma/client';
 import { paginated } from '../common/page.dto';
+import {
+  FILE_SCAN_STATUS_VALUES,
+  makeStatusCounts,
+} from '../common/status-summary';
 import { Database } from '../database.module';
 import {
   audit,
@@ -28,7 +32,9 @@ export class FilesService {
   ) {}
   async list(m: Membership, q: FileQueryDto) {
     if (!m.employeeId && !privileged(m, ['OWNER', 'HR', 'FINANCE']))
-      return paginated([], 0, q);
+      return paginated([], 0, q, {
+        summary: { statusCounts: makeStatusCounts(FILE_SCAN_STATUS_VALUES) },
+      });
     const access: Prisma.StoredFileWhereInput = privileged(m, ['OWNER', 'HR'])
       ? {}
       : {
@@ -73,7 +79,19 @@ export class FilesService {
       }),
       this.db.storedFile.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      FILE_SCAN_STATUS_VALUES.map((status) =>
+        this.db.storedFile.count({ where: { ...where, scanStatus: status } }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(
+          FILE_SCAN_STATUS_VALUES,
+          statusCountValues,
+        ),
+      },
+    });
   }
   async archive(m: Membership, id: string) {
     return this.db.$transaction(

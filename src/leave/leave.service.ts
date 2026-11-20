@@ -19,6 +19,11 @@ import {
 } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 import {
+  ACTIVE_STATUS_VALUES,
+  makeStatusCounts,
+  REQUEST_STATUS_VALUES,
+} from '../common/status-summary';
+import {
   GrantDto,
   LeaveDto,
   LeavePolicyQueryDto,
@@ -168,9 +173,8 @@ export class LeaveService {
   async policies(m: Membership, q: LeavePolicyQueryDto) {
     const search = q.search?.trim();
     const active = q.status ? q.status === 'ACTIVE' : q.active;
-    const where = {
+    const baseWhere = {
       companyId: m.companyId,
-      ...(active !== undefined ? { active } : {}),
       ...(q.paid !== undefined ? { paid: q.paid } : {}),
       ...(q.approval ? { approval: q.approval } : {}),
       ...(search
@@ -188,6 +192,10 @@ export class LeaveService {
           }
         : {}),
     };
+    const where = {
+      ...baseWhere,
+      ...(active !== undefined ? { active } : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.leavePolicy.findMany({
         where,
@@ -197,10 +205,25 @@ export class LeaveService {
       }),
       this.db.leavePolicy.count({ where }),
     ]);
+    const statusCountValues = await Promise.all(
+      ACTIVE_STATUS_VALUES.map((status) =>
+        this.db.leavePolicy.count({
+          where: { ...baseWhere, active: status === 'ACTIVE' },
+        }),
+      ),
+    );
     return paginated(
       data.map((row) => this.policyView(row)),
       total,
       q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            ACTIVE_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
+      },
     );
   }
   async policy(m: Membership, id: string) {
@@ -696,7 +719,19 @@ export class LeaveService {
       }),
       this.db.leaveRequest.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      REQUEST_STATUS_VALUES.map((status) =>
+        this.db.leaveRequest.count({ where: { ...where, status } }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(
+          REQUEST_STATUS_VALUES,
+          statusCountValues,
+        ),
+      },
+    });
   }
   async available(
     tx: Prisma.TransactionClient,
@@ -912,7 +947,9 @@ export class LeaveService {
   }
   async pending(m: Membership, q: PageDto) {
     if (!m.employeeId && !privileged(m, ['OWNER', 'HR']))
-      return paginated([], 0, q);
+      return paginated([], 0, q, {
+        summary: { statusCounts: makeStatusCounts(REQUEST_STATUS_VALUES) },
+      });
     const where: Prisma.LeaveRequestWhereInput = {
       companyId: m.companyId,
       status: { in: pending },
@@ -943,6 +980,18 @@ export class LeaveService {
       }),
       this.db.leaveRequest.count({ where }),
     ]);
-    return paginated(data, total, q);
+    const statusCountValues = await Promise.all(
+      REQUEST_STATUS_VALUES.map((status) =>
+        this.db.leaveRequest.count({ where: { ...where, status } }),
+      ),
+    );
+    return paginated(data, total, q, {
+      summary: {
+        statusCounts: makeStatusCounts(
+          REQUEST_STATUS_VALUES,
+          statusCountValues,
+        ),
+      },
+    });
   }
 }

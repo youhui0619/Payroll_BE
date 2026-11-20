@@ -26,12 +26,24 @@ export class PageDto {
   @MaxLength(100)
   search?: string;
 }
+export type PaginationMeta = {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  summary?: {
+    statusCounts?: Record<string, number>;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+};
+
 export function paginated<T>(
   data: T[],
   total: number,
   q: PageDto,
   additionalMeta: Record<string, unknown> = {},
-) {
+): { data: T[]; meta: PaginationMeta } {
   return {
     data,
     meta: {
