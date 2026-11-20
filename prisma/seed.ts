@@ -163,6 +163,7 @@ async function seed() {
         },
       ];
       const departmentIds = new Map<string, string>();
+      const positionIds = new Map<string, string>();
       for (const row of departmentRows) {
         const department = await tx.department.upsert({
           where: {
@@ -220,7 +221,7 @@ async function seed() {
       ];
       for (const row of positionRows) {
         const { departmentCode, ...position } = row;
-        await tx.position.upsert({
+        const positionRow = await tx.position.upsert({
           where: {
             companyId_code: { companyId: company.id, code: position.code },
           },
@@ -233,9 +234,10 @@ async function seed() {
           },
           update: {},
         });
+        positionIds.set(position.code, positionRow.id);
       }
 
-      await tx.workLocation.upsert({
+      const location = await tx.workLocation.upsert({
         where: {
           companyId_code: { companyId: company.id, code: 'HQ-KL' },
         },
@@ -366,9 +368,10 @@ async function seed() {
           `Missing seeded work schedules for: ${missingEmploymentTypes.join(', ')}`,
         );
       }
+      const scheduleIds = new Map<EmploymentType, string>();
       for (const row of scheduleRows) {
         const { scheduleDays: days, ...schedule } = row;
-        await tx.workSchedule.upsert({
+        const scheduleRow = await tx.workSchedule.upsert({
           where: {
             companyId_code: { companyId: company.id, code: row.code },
           },
@@ -378,6 +381,62 @@ async function seed() {
             scheduleDays: days as Prisma.InputJsonValue,
             effectiveFrom: day('2026-01-01'),
             active: true,
+          },
+          update: {},
+        });
+        scheduleIds.set(row.employmentType, scheduleRow.id);
+      }
+
+      const managerRows = [
+        {
+          employeeNo: 'MGR-FIN',
+          name: 'Finance Manager',
+          departmentCode: 'FIN',
+          positionCode: 'FIN-MGR',
+        },
+        {
+          employeeNo: 'MGR-HR',
+          name: 'Human Resources Manager',
+          departmentCode: 'HR',
+          positionCode: 'HR-MGR',
+        },
+        {
+          employeeNo: 'MGR-OPS',
+          name: 'Operations Manager',
+          departmentCode: 'OPS',
+          positionCode: 'OPS-MGR',
+        },
+        {
+          employeeNo: 'MGR-IT',
+          name: 'IT Manager',
+          departmentCode: 'IT',
+          positionCode: 'IT-MGR',
+        },
+      ];
+      for (const row of managerRows) {
+        const positionId = positionIds.get(row.positionCode);
+        const scheduleId = scheduleIds.get('PERMANENT');
+        if (!positionId || !scheduleId)
+          throw new Error(`Missing seed reference for ${row.employeeNo}.`);
+        await tx.employee.upsert({
+          where: {
+            companyId_employeeNo: {
+              companyId: company.id,
+              employeeNo: row.employeeNo,
+            },
+          },
+          create: {
+            companyId: company.id,
+            employeeNo: row.employeeNo,
+            name: row.name,
+            joinedDate: day('2026-01-01'),
+            active: true,
+            departmentId: departmentIds.get(row.departmentCode) ?? null,
+            positionId,
+            locationId: location.id,
+            scheduleId,
+            employmentStatus: 'ACTIVE',
+            employmentType: 'PERMANENT',
           },
           update: {},
         });

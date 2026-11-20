@@ -13,6 +13,7 @@ import {
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
+import { WORKING_DAY_NAMES } from '../workforce/working-schedule.dto';
 
 @Injectable()
 export class EmployeesService {
@@ -68,6 +69,46 @@ export class EmployeesService {
       if (!schedule) throw new NotFoundException('Schedule not found.');
     }
   }
+  private validateWorkingSchedule(
+    schedule: CreateEmployeeDto['workingSchedule'],
+  ) {
+    if (!schedule) return;
+    const days = schedule.days.map((day) => day.day);
+    if (
+      new Set(days).size !== WORKING_DAY_NAMES.length ||
+      WORKING_DAY_NAMES.some((name) => !days.includes(name))
+    )
+      throw new UnprocessableEntityException(
+        'Working schedule must contain exactly one entry for each day of the week.',
+      );
+    for (const day of schedule.days) {
+      if ((day.breakStartTime === '') !== (day.breakEndTime === ''))
+        throw new UnprocessableEntityException(
+          'Break start and end times must both be provided or both be empty.',
+        );
+      if (
+        day.breakStartTime &&
+        day.breakEndTime &&
+        day.breakStartTime >= day.breakEndTime
+      )
+        throw new UnprocessableEntityException(
+          'Break end time must be later than break start time.',
+        );
+    }
+  }
+  private async defaultScheduleId(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+    employmentType?: string,
+  ) {
+    if (!employmentType) return null;
+    const schedule = await tx.workSchedule.findFirst({
+      where: { companyId, employmentType, active: true },
+      orderBy: { effectiveFrom: 'desc' },
+      select: { id: true },
+    });
+    return schedule?.id ?? null;
+  }
   async list(companyId: string, q: EmployeeQueryDto) {
     const search = q.search?.trim();
     const where = {
@@ -100,7 +141,10 @@ export class EmployeesService {
           position: { select: { id: true, code: true, title: true } },
           manager: { select: { id: true, employeeNo: true, name: true } },
           location: { select: { id: true, code: true, name: true } },
-          schedule: { select: { id: true, code: true, name: true } },
+          schedule: {
+            select: { id: true, code: true, name: true, scheduleDays: true },
+          },
+          employeeWorkSchedule: { select: { scheduleDays: true } },
           salaries: {
             orderBy: { effectiveFrom: 'desc' },
             take: 1,
@@ -109,15 +153,50 @@ export class EmployeesService {
       }),
       this.db.employee.count({ where }),
     ]);
-    const data = rows.map(({ salaries, ...employee }) => ({
-      ...employee,
-      currentSalary: salaries[0]
-        ? {
-            ...salaries[0],
-            amount: salaries[0].amount.toFixed(2),
-          }
-        : null,
-    }));
+    const data = rows.map(
+      ({ salaries, employeeWorkSchedule, ...employee }) => ({
+        ...employee,
+        workingSchedule:
+          employeeWorkSchedule?.scheduleDays ??
+          employee.schedule?.scheduleDays ??
+          null,
+        currentSalary: salaries[0]
+          ? {
+              ...salaries[0],
+              amount: salaries[0].amount.toFixed(2),
+            }
+          : null,
+      }),
+    );
+    return paginated(data, total, q);
+  }
+  async managers(companyId: string, q: PageDto) {
+    const where = {
+      companyId,
+      active: true,
+      position: {
+        is: { active: true, jobLevel: 'MANAGER' },
+      },
+    };
+    const [data, total] = await this.db.$transaction([
+      this.db.employee.findMany({
+        where,
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        skip: (q.page - 1) * q.pageSize,
+        take: q.pageSize,
+        select: {
+          id: true,
+          employeeNo: true,
+          name: true,
+          email: true,
+          department: { select: { id: true, code: true, name: true } },
+          position: {
+            select: { id: true, code: true, title: true, jobLevel: true },
+          },
+        },
+      }),
+      this.db.employee.count({ where }),
+    ]);
     return paginated(data, total, q);
   }
   async get(companyId: string, id: string) {
@@ -129,6 +208,7 @@ export class EmployeesService {
         manager: { select: { id: true, employeeNo: true, name: true } },
         location: { select: { id: true, code: true, name: true } },
         schedule: true,
+        employeeWorkSchedule: true,
         membership: {
           select: {
             id: true,
@@ -141,6 +221,7 @@ export class EmployeesService {
       },
     });
     if (!data) throw new NotFoundException();
+    const { employeeWorkSchedule, ...employee } = data;
     const salaryHistory = data.salaries.map((salary) => ({
       ...salary,
       amount: salary.amount.toFixed(2),
@@ -148,7 +229,11 @@ export class EmployeesService {
     const currentSalary = salaryHistory[0] ?? null;
     return {
       data: {
-        ...data,
+        ...employee,
+        workingSchedule:
+          employeeWorkSchedule?.scheduleDays ??
+          data.schedule?.scheduleDays ??
+          null,
         salaries: salaryHistory,
         salaryHistory,
         currentSalary,
@@ -159,6 +244,11 @@ export class EmployeesService {
     return this.db.$transaction(
       async (tx) => {
         await this.validateReferences(tx, companyId, dto);
+        this.validateWorkingSchedule(dto.workingSchedule);
+        const defaultScheduleId =
+          dto.scheduleId !== undefined
+            ? dto.scheduleId
+            : await this.defaultScheduleId(tx, companyId, dto.employmentType);
 
         const {
           joinedDate,
@@ -167,99 +257,19 @@ export class EmployeesService {
           resignationDate,
           overtimeHourlyRate,
           medicalLeaveEntitlement,
+          basicSalary,
+          scheduleId: ignoredScheduleId,
+          workingSchedule,
           ...rest
         } = dto;
-
-        return {
-          data: await tx.employee.create({
-            data: {
-              ...rest,
-              companyId,
-              joinedDate: new Date(joinedDate + 'T00:00:00.000Z'),
-              ...(dateOfBirth !== undefined
-                ? {
-                    dateOfBirth: dateOfBirth
-                      ? new Date(dateOfBirth + 'T00:00:00.000Z')
-                      : null,
-                  }
-                : {}),
-              ...(confirmationDate !== undefined
-                ? {
-                    confirmationDate: confirmationDate
-                      ? new Date(confirmationDate + 'T00:00:00.000Z')
-                      : null,
-                  }
-                : {}),
-              ...(resignationDate !== undefined
-                ? {
-                    resignationDate: resignationDate
-                      ? new Date(resignationDate + 'T00:00:00.000Z')
-                      : null,
-                  }
-                : {}),
-              ...(overtimeHourlyRate !== undefined &&
-              overtimeHourlyRate !== null
-                ? { overtimeHourlyRate: new Prisma.Decimal(overtimeHourlyRate) }
-                : {}),
-              ...(medicalLeaveEntitlement !== undefined &&
-              medicalLeaveEntitlement !== null
-                ? {
-                    medicalLeaveEntitlement: new Prisma.Decimal(
-                      medicalLeaveEntitlement,
-                    ),
-                  }
-                : {}),
-            },
-          }),
-        };
-      },
-      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
-    );
-  }
-  async update(companyId: string, id: string, dto: UpdateEmployeeDto) {
-    const referencesChanged =
-      dto.departmentId !== undefined ||
-      dto.positionId !== undefined ||
-      dto.managerId !== undefined ||
-      dto.locationId !== undefined ||
-      dto.scheduleId !== undefined;
-    const current = referencesChanged
-      ? await this.db.employee.findUnique({
-          where: { companyId_id: { companyId, id } },
-          select: { departmentId: true },
-        })
-      : null;
-    if (referencesChanged && !current) throw new NotFoundException();
-    const {
-      joinedDate,
-      dateOfBirth,
-      confirmationDate,
-      resignationDate,
-      overtimeHourlyRate,
-      medicalLeaveEntitlement,
-      ...rest
-    } = dto;
-
-    return this.db.$transaction(async (tx) => {
-      await this.validateReferences(
-        tx,
-        companyId,
-        dto,
-        current?.departmentId,
-        id,
-      );
-      return {
-        data: await tx.employee.update({
-          where: { companyId_id: { companyId, id } },
+        void ignoredScheduleId;
+        const joined = new Date(joinedDate + 'T00:00:00.000Z');
+        const employee = await tx.employee.create({
           data: {
             ...rest,
-            ...(joinedDate !== undefined
-              ? {
-                  joinedDate: joinedDate
-                    ? new Date(joinedDate + 'T00:00:00.000Z')
-                    : undefined,
-                }
-              : {}),
+            companyId,
+            scheduleId: defaultScheduleId,
+            joinedDate: joined,
             ...(dateOfBirth !== undefined
               ? {
                   dateOfBirth: dateOfBirth
@@ -281,25 +291,186 @@ export class EmployeesService {
                     : null,
                 }
               : {}),
-            ...(overtimeHourlyRate !== undefined
-              ? {
-                  overtimeHourlyRate:
-                    overtimeHourlyRate !== null
-                      ? new Prisma.Decimal(overtimeHourlyRate)
-                      : null,
-                }
+            ...(overtimeHourlyRate !== undefined && overtimeHourlyRate !== null
+              ? { overtimeHourlyRate: new Prisma.Decimal(overtimeHourlyRate) }
               : {}),
-            ...(medicalLeaveEntitlement !== undefined
+            ...(medicalLeaveEntitlement !== undefined &&
+            medicalLeaveEntitlement !== null
               ? {
-                  medicalLeaveEntitlement:
-                    medicalLeaveEntitlement !== null
-                      ? new Prisma.Decimal(medicalLeaveEntitlement)
-                      : null,
+                  medicalLeaveEntitlement: new Prisma.Decimal(
+                    medicalLeaveEntitlement,
+                  ),
                 }
               : {}),
           },
-        }),
-      };
+        });
+        if (workingSchedule) {
+          await tx.employeeWorkSchedule.create({
+            data: {
+              companyId,
+              employeeId: employee.id,
+              scheduleDays: {
+                days: workingSchedule.days.map((day) => ({ ...day })),
+              } as Prisma.InputJsonValue,
+              effectiveFrom: joined,
+            },
+          });
+        }
+        if (basicSalary !== undefined && basicSalary !== null) {
+          await tx.salaryHistory.create({
+            data: {
+              companyId,
+              employeeId: employee.id,
+              amount: new Prisma.Decimal(basicSalary),
+              effectiveFrom: joined,
+            },
+          });
+        }
+
+        return { data: employee };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+  async update(companyId: string, id: string, dto: UpdateEmployeeDto) {
+    const referencesChanged =
+      dto.departmentId !== undefined ||
+      dto.positionId !== undefined ||
+      dto.managerId !== undefined ||
+      dto.locationId !== undefined ||
+      dto.scheduleId !== undefined;
+    const current =
+      referencesChanged ||
+      dto.workingSchedule !== undefined ||
+      dto.basicSalary !== undefined
+        ? await this.db.employee.findUnique({
+            where: { companyId_id: { companyId, id } },
+            select: { departmentId: true, joinedDate: true },
+          })
+        : null;
+    if (
+      (referencesChanged ||
+        dto.workingSchedule !== undefined ||
+        dto.basicSalary !== undefined) &&
+      !current
+    )
+      throw new NotFoundException();
+    this.validateWorkingSchedule(dto.workingSchedule);
+    const {
+      joinedDate,
+      dateOfBirth,
+      confirmationDate,
+      resignationDate,
+      overtimeHourlyRate,
+      medicalLeaveEntitlement,
+      basicSalary,
+      workingSchedule,
+      ...rest
+    } = dto;
+
+    return this.db.$transaction(async (tx) => {
+      await this.validateReferences(
+        tx,
+        companyId,
+        dto,
+        current?.departmentId,
+        id,
+      );
+      const data = await tx.employee.update({
+        where: { companyId_id: { companyId, id } },
+        data: {
+          ...rest,
+          ...(joinedDate !== undefined
+            ? {
+                joinedDate: joinedDate
+                  ? new Date(joinedDate + 'T00:00:00.000Z')
+                  : undefined,
+              }
+            : {}),
+          ...(dateOfBirth !== undefined
+            ? {
+                dateOfBirth: dateOfBirth
+                  ? new Date(dateOfBirth + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(confirmationDate !== undefined
+            ? {
+                confirmationDate: confirmationDate
+                  ? new Date(confirmationDate + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(resignationDate !== undefined
+            ? {
+                resignationDate: resignationDate
+                  ? new Date(resignationDate + 'T00:00:00.000Z')
+                  : null,
+              }
+            : {}),
+          ...(overtimeHourlyRate !== undefined
+            ? {
+                overtimeHourlyRate:
+                  overtimeHourlyRate !== null
+                    ? new Prisma.Decimal(overtimeHourlyRate)
+                    : null,
+              }
+            : {}),
+          ...(medicalLeaveEntitlement !== undefined
+            ? {
+                medicalLeaveEntitlement:
+                  medicalLeaveEntitlement !== null
+                    ? new Prisma.Decimal(medicalLeaveEntitlement)
+                    : null,
+              }
+            : {}),
+        },
+      });
+      if (workingSchedule === null) {
+        await tx.employeeWorkSchedule.deleteMany({
+          where: { companyId, employeeId: id },
+        });
+      } else if (workingSchedule) {
+        await tx.employeeWorkSchedule.upsert({
+          where: { companyId_employeeId: { companyId, employeeId: id } },
+          create: {
+            companyId,
+            employeeId: id,
+            scheduleDays: {
+              days: workingSchedule.days.map((day) => ({ ...day })),
+            } as Prisma.InputJsonValue,
+            effectiveFrom: current?.joinedDate ?? new Date(),
+          },
+          update: {
+            scheduleDays: {
+              days: workingSchedule.days.map((day) => ({ ...day })),
+            } as Prisma.InputJsonValue,
+            active: true,
+          },
+        });
+      }
+      if (basicSalary !== undefined && basicSalary !== null) {
+        const latest = await tx.salaryHistory.findFirst({
+          where: { companyId, employeeId: id },
+          orderBy: { effectiveFrom: 'desc' },
+        });
+        if (latest) {
+          await tx.salaryHistory.update({
+            where: { id: latest.id },
+            data: { amount: new Prisma.Decimal(basicSalary) },
+          });
+        } else {
+          await tx.salaryHistory.create({
+            data: {
+              companyId,
+              employeeId: id,
+              amount: new Prisma.Decimal(basicSalary),
+              effectiveFrom: current?.joinedDate ?? new Date(),
+            },
+          });
+        }
+      }
+      return { data };
     });
   }
   async salaries(companyId: string, id: string, q: PageDto) {

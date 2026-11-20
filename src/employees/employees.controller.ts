@@ -48,6 +48,9 @@ export class EmployeesController {
   @Get() list(@Req() req: TenantRequest, @Query() q: EmployeeQueryDto) {
     return this.service.list(req.membership.companyId, q);
   }
+  @Get('managers') managers(@Req() req: TenantRequest, @Query() q: PageDto) {
+    return this.service.managers(req.membership.companyId, q);
+  }
   @Get(':id') get(
     @Req() req: TenantRequest,
     @Param('id', ParseUUIDPipe) id: string,

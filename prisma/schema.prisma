@@ -37,6 +37,7 @@ model Company {
   active                      Boolean                      @default(true)
   memberships                 Membership[]
   employees                   Employee[]
+  employeeWorkSchedules       EmployeeWorkSchedule[]
   files                       StoredFile[]
   registrationNo              String?
   email                       String?
@@ -115,6 +116,7 @@ model Employee {
   scheduleId             String?                         @db.Uuid
   location               WorkLocation?                   @relation(fields: [companyId, locationId], references: [companyId, id], onDelete: Restrict)
   schedule               WorkSchedule?                   @relation(fields: [companyId, scheduleId], references: [companyId, id], onDelete: Restrict)
+  employeeWorkSchedule   EmployeeWorkSchedule?
   attendance             AttendanceSession[]
   leaveRequests          LeaveRequest[]
   leaveLedger            LeaveLedger[]
@@ -307,6 +309,23 @@ model WorkSchedule {
   @@unique([companyId, id])
   @@unique([companyId, code])
   @@map("work_schedules")
+}
+
+model EmployeeWorkSchedule {
+  id            String    @id @default(uuid()) @db.Uuid
+  companyId     String    @db.Uuid
+  employeeId    String    @db.Uuid
+  scheduleDays  Json
+  effectiveFrom DateTime  @db.Date
+  effectiveTo   DateTime? @db.Date
+  active        Boolean   @default(true)
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee      Employee  @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+
+  @@unique([companyId, id])
+  @@unique([companyId, employeeId])
+  @@index([companyId, employeeId, active])
+  @@map("employee_work_schedules")
 }
 
 model PublicHoliday {

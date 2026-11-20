@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
+import type { TransformFnParams } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -13,10 +14,16 @@ import {
   Length,
   Matches,
   MaxLength,
+  Min,
+  ValidateNested,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
 import { EMPLOYMENT_TYPE_VALUES } from '../workforce/employment-types';
 import type { EmploymentType } from '../workforce/employment-types';
+import { WorkingScheduleDto } from '../workforce/working-schedule.dto';
+
+const emptyStringAsNull = ({ value }: TransformFnParams) =>
+  value === '' ? null : value;
 
 export class EmployeeQueryDto extends PageDto {
   @ApiPropertyOptional({ format: 'uuid' })
@@ -38,11 +45,14 @@ export class EmployeeQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    value === ''
+      ? null
+      : typeof value === 'string'
+        ? value.trim().toUpperCase()
+        : value,
   )
   @IsIn(EMPLOYMENT_TYPE_VALUES)
-  employmentType?: EmploymentType;
-
+  employmentType?: EmploymentType | null;
   @ApiPropertyOptional({
     description: 'Filter by active or archived employees.',
   })
@@ -59,26 +69,44 @@ export class EmployeeQueryDto extends PageDto {
 export class CreateEmployeeDto {
   @ApiProperty() @IsString() @Length(1, 30) employeeNo: string;
   @ApiProperty() @IsString() @Length(1, 200) name: string;
-  @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsNull)
+  @IsEmail()
+  email?: string | null;
   @ApiProperty({ example: '2026-10-01' })
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   joinedDate: string;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsUUID()
   departmentId?: string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() positionId?:
-    string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() managerId?:
-    string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() locationId?:
-    string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() scheduleId?:
-    string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
+  @IsUUID()
+  positionId?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
+  @IsUUID()
+  managerId?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
+  @IsUUID()
+  locationId?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
+  @IsUUID()
+  scheduleId?: string | null;
 
   // Personal Information
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
@@ -89,63 +117,85 @@ export class CreateEmployeeDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   dateOfBirth?: string | null;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 20)
   gender?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   nationality?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 50) race?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  race?: string | null;
+  @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   religion?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 30)
   maritalStatus?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 50) tin?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
+  @IsOptional()
+  @IsString()
+  @Length(1, 50)
+  tin?: string | null;
+  @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @MaxLength(40)
   contactNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @MaxLength(500)
   address?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 200)
   addressLine1?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 200)
   addressLine2?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   city?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 20)
   postcode?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   state?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
@@ -153,6 +203,7 @@ export class CreateEmployeeDto {
 
   // Employment Details
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
@@ -160,10 +211,19 @@ export class CreateEmployeeDto {
   @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    value === ''
+      ? null
+      : typeof value === 'string'
+        ? value.trim().toUpperCase()
+        : value,
   )
   @IsIn(EMPLOYMENT_TYPE_VALUES)
-  employmentType?: EmploymentType;
+  employmentType?: EmploymentType | null;
+  @ApiPropertyOptional({ type: WorkingScheduleDto, nullable: true })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  workingSchedule?: WorkingScheduleDto | null;
   @ApiPropertyOptional({ example: '2026-04-01', nullable: true })
   @IsOptional()
   @IsDateString({ strict: true })
@@ -176,22 +236,31 @@ export class CreateEmployeeDto {
   resignationDate?: string | null;
 
   // Banking & Payroll
+  @ApiPropertyOptional({ example: 2300, nullable: true })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  basicSalary?: number | null;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   salaryType?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   paymentMethod?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   bank?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
@@ -199,41 +268,49 @@ export class CreateEmployeeDto {
 
   // Statutory Identifiers & Rates
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   epfEmployeeNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   epfEmployerNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 20)
   epfRate?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   kwspNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   socsoNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   contributionCategory?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   eisStatus?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
@@ -247,6 +324,7 @@ export class CreateEmployeeDto {
   // Overtime Settings
   @ApiPropertyOptional() @IsOptional() @IsBoolean() includeOvertime?: boolean;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
@@ -255,46 +333,55 @@ export class CreateEmployeeDto {
 
   // Emergency Contact
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   emergencyContactName?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   emergencyContactRelationship?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @MaxLength(40)
   emergencyContactNo?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 200)
   emergencyContactAddressLine1?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 200)
   emergencyContactAddressLine2?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   emergencyContactCity?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 20)
   emergencyContactPostcode?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
   emergencyContactState?: string;
   @ApiPropertyOptional()
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 100)
