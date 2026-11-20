@@ -13,6 +13,7 @@ import {
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
+import { EMPLOYMENT_STATUS_VALUES } from './employment-statuses';
 import { WORKING_DAY_NAMES } from '../workforce/working-schedule.dto';
 
 @Injectable()
@@ -111,12 +112,11 @@ export class EmployeesService {
   }
   async list(companyId: string, q: EmployeeQueryDto) {
     const search = q.search?.trim();
-    const where = {
+    const commonWhere: Prisma.EmployeeWhereInput = {
       companyId,
       ...(q.active !== undefined ? { active: q.active } : {}),
       ...(q.departmentId ? { departmentId: q.departmentId } : {}),
       ...(q.positionId ? { positionId: q.positionId } : {}),
-      ...(q.employmentStatus ? { employmentStatus: q.employmentStatus } : {}),
       ...(q.employmentType ? { employmentType: q.employmentType } : {}),
       ...(search
         ? {
@@ -130,45 +130,51 @@ export class EmployeesService {
           }
         : {}),
     };
+    const where: Prisma.EmployeeWhereInput = {
+      ...commonWhere,
+      ...(q.employmentStatus ? { employmentStatus: q.employmentStatus } : {}),
+    };
     const [rows, total] = await this.db.$transaction([
       this.db.employee.findMany({
         where,
         orderBy: [{ name: 'asc' }, { id: 'asc' }],
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
-        include: {
+        select: {
+          id: true,
+          employeeNo: true,
+          name: true,
+          email: true,
+          active: true,
+          joinedDate: true,
+          employmentStatus: true,
+          employmentType: true,
           department: { select: { id: true, code: true, name: true } },
-          position: { select: { id: true, code: true, title: true } },
+          position: {
+            select: { id: true, code: true, title: true, jobLevel: true },
+          },
           manager: { select: { id: true, employeeNo: true, name: true } },
           location: { select: { id: true, code: true, name: true } },
-          schedule: {
-            select: { id: true, code: true, name: true, scheduleDays: true },
-          },
-          employeeWorkSchedule: { select: { scheduleDays: true } },
-          salaries: {
-            orderBy: { effectiveFrom: 'desc' },
-            take: 1,
-          },
         },
       }),
       this.db.employee.count({ where }),
     ]);
-    const data = rows.map(
-      ({ salaries, employeeWorkSchedule, ...employee }) => ({
-        ...employee,
-        workingSchedule:
-          employeeWorkSchedule?.scheduleDays ??
-          employee.schedule?.scheduleDays ??
-          null,
-        currentSalary: salaries[0]
-          ? {
-              ...salaries[0],
-              amount: salaries[0].amount.toFixed(2),
-            }
-          : null,
-      }),
+    const statusCountValues = await Promise.all(
+      EMPLOYMENT_STATUS_VALUES.map((status) =>
+        this.db.employee.count({
+          where: { ...commonWhere, employmentStatus: status },
+        }),
+      ),
     );
-    return paginated(data, total, q);
+    const statusCounts = Object.fromEntries(
+      EMPLOYMENT_STATUS_VALUES.map((status, index) => [
+        status,
+        statusCountValues[index],
+      ]),
+    );
+    return paginated(rows, total, q, {
+      summary: { statusCounts },
+    });
   }
   async managers(companyId: string, q: PageDto) {
     const where = {

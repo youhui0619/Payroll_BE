@@ -26,7 +26,12 @@ export class PageDto {
   @MaxLength(100)
   search?: string;
 }
-export function paginated<T>(data: T[], total: number, q: PageDto) {
+export function paginated<T>(
+  data: T[],
+  total: number,
+  q: PageDto,
+  additionalMeta: Record<string, unknown> = {},
+) {
   return {
     data,
     meta: {
@@ -34,6 +39,7 @@ export function paginated<T>(data: T[], total: number, q: PageDto) {
       pageSize: q.pageSize,
       total,
       totalPages: Math.ceil(total / q.pageSize),
+      ...additionalMeta,
     },
   };
 }
