@@ -371,7 +371,6 @@ export class LeaveService {
           ...(d.allowEmployeeSpecificSettings !== undefined
             ? { allowEmployeeSpecificSettings: d.allowEmployeeSpecificSettings }
             : {}),
-          annualDays: d.annualDays,
           allowHalfDay: d.allowHalfDay,
           noticeDays: d.noticeDays,
           approval: d.approval,

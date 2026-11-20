@@ -170,14 +170,6 @@ export class LeavePolicyDto {
   @IsOptional()
   @IsBoolean()
   allowEmployeeSpecificSettings?: boolean;
-  @ApiProperty({
-    example: '14.00',
-    description:
-      'Annual entitlement baseline. Service-based policies use serviceEntitlementTiers for the actual entitlement.',
-  })
-  @IsString()
-  @Matches(/^(0|[1-9]\d{0,2})(\.\d{1,2})?$/)
-  annualDays: string;
   @ApiProperty({ default: false }) @IsBoolean() allowHalfDay = false;
   @ApiProperty({ default: 0 }) @IsInt() @Min(0) @Max(365) noticeDays = 0;
   @ApiProperty({ enum: LeaveApproval })

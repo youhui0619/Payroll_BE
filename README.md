@@ -196,7 +196,7 @@ PCB calculation, salary proration, payroll adjustments, approval/publication/pay
 
 ### Leave balances and history
 
-`GET /leave/me/balances?year=2027` returns each relevant policy's posted `balance`, pending `reserved` days and `available` balance. Omitting the year selects the current year in the company timezone. This replaces the earlier all-years response. Active policies within the selected year appear even with no grants; inactive policies with ledger activity or pending requests remain visible. Values are decimal strings. Unpaid policies return `available: null`, since they do not consume paid entitlement. `annualDays` is still a policy setting, not an automatic grant.
+`GET /leave/me/balances?year=2027` returns each relevant policy's posted `balance`, pending `reserved` days and `available` balance. Omitting the year selects the current year in the company timezone. This replaces the earlier all-years response. Active policies within the selected year appear even with no grants; inactive policies with ledger activity or pending requests remain visible. Values are decimal strings. Unpaid policies return `available: null`, since they do not consume paid entitlement. Fixed policies use `defaultEntitlement`; service-based policies use `serviceEntitlementTiers`.
 
 OWNER/HR can use `GET /leave/employees/:id/balances?year=2027` for another employee, including historical inactive profiles. Managers do not receive administrative access to staff balances.
 

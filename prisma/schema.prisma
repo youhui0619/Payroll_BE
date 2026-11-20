@@ -418,7 +418,6 @@ model LeavePolicy {
   maximumCarryForward           Decimal?       @db.Decimal(7, 2)
   requireSupportingDocuments    Boolean        @default(false)
   allowEmployeeSpecificSettings Boolean        @default(true)
-  annualDays                    Decimal        @db.Decimal(7, 2)
   allowHalfDay                  Boolean        @default(false)
   noticeDays                    Int            @default(0)
   approval                      LeaveApproval  @default(HR_ONLY)
