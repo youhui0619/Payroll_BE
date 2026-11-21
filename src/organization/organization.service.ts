@@ -354,32 +354,35 @@ export class OrganizationService {
             ? await tx.department.findUnique({ where })
             : await tx.position.findUnique({ where });
         if (!record) throw new NotFoundException();
-        const employees = await tx.employee.count({
-          where: {
-            companyId,
-            active: true,
-            ...(kind === 'department'
-              ? { departmentId: id }
-              : { positionId: id }),
-          },
-        });
-        const positions =
-          kind === 'department'
-            ? await tx.position.count({
-                where: { companyId, departmentId: id, active: true },
-              })
-            : 0;
-        if (employees || positions)
-          throw new ConflictException(
-            'Reassign active employees and deactivate dependent positions first.',
-          );
+        const active = !record.active;
+        if (!active) {
+          const employees = await tx.employee.count({
+            where: {
+              companyId,
+              active: true,
+              ...(kind === 'department'
+                ? { departmentId: id }
+                : { positionId: id }),
+            },
+          });
+          const positions =
+            kind === 'department'
+              ? await tx.position.count({
+                  where: { companyId, departmentId: id, active: true },
+                })
+              : 0;
+          if (employees || positions)
+            throw new ConflictException(
+              'Reassign active employees and deactivate dependent positions first.',
+            );
+        }
         const data =
           kind === 'department'
             ? await tx.department.update({
                 where,
-                data: { active: false, status: 'INACTIVE' },
+                data: { active, status: active ? 'ACTIVE' : 'INACTIVE' },
               })
-            : await tx.position.update({ where, data: { active: false } });
+            : await tx.position.update({ where, data: { active } });
         return {
           data:
             kind === 'position'

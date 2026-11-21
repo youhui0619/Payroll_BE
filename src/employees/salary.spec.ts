@@ -140,7 +140,10 @@ describe('salary history and organization deactivation', () => {
     ).toBeGreaterThan(0);
   });
   it('blocks department deactivation while employees depend on it', async () => {
-    db.department.findUnique.mockResolvedValue({ id: 'department' });
+    db.department.findUnique.mockResolvedValue({
+      id: 'department',
+      active: true,
+    });
     db.employee.count.mockResolvedValue(1);
     db.position.count.mockResolvedValue(0);
     await expect(
@@ -153,7 +156,10 @@ describe('salary history and organization deactivation', () => {
     expect(db.department.update).not.toHaveBeenCalled();
   });
   it('allows deactivation without active dependents', async () => {
-    db.department.findUnique.mockResolvedValue({ id: 'department' });
+    db.department.findUnique.mockResolvedValue({
+      id: 'department',
+      active: true,
+    });
     db.employee.count.mockResolvedValue(0);
     db.position.count.mockResolvedValue(0);
     await new OrganizationService(db as never).deactivate(

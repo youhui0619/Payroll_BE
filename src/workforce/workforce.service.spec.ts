@@ -129,7 +129,10 @@ describe('WorkforceService', () => {
 
   it('deactivates a schedule only when no active employee uses it', async () => {
     const db = database();
-    db.workSchedule.findUnique.mockResolvedValue({ id: 'schedule' });
+    db.workSchedule.findUnique.mockResolvedValue({
+      id: 'schedule',
+      active: true,
+    });
     db.employee.count.mockResolvedValue(0);
     db.workSchedule.update.mockResolvedValue({
       id: 'schedule',
@@ -148,6 +151,35 @@ describe('WorkforceService', () => {
         companyId: 'company',
         actorId: 'user',
         action: 'SCHEDULE_DEACTIVATED',
+        resourceId: 'schedule',
+      },
+    });
+  });
+
+  it('reactivates an inactive schedule through the same endpoint behavior', async () => {
+    const db = database();
+    db.workSchedule.findUnique.mockResolvedValue({
+      id: 'schedule',
+      active: false,
+    });
+    db.workSchedule.update.mockResolvedValue({
+      id: 'schedule',
+      active: true,
+    });
+
+    await expect(
+      new WorkforceService(db).deactivateSchedule(membership, 'schedule'),
+    ).resolves.toEqual({ data: { id: 'schedule', active: true } });
+    expect(db.employee.count).not.toHaveBeenCalled();
+    expect(db.workSchedule.update).toHaveBeenCalledWith({
+      where: { companyId_id: { companyId: 'company', id: 'schedule' } },
+      data: { active: true },
+    });
+    expect(db.auditEvent.create).toHaveBeenCalledWith({
+      data: {
+        companyId: 'company',
+        actorId: 'user',
+        action: 'SCHEDULE_ACTIVATED',
         resourceId: 'schedule',
       },
     });

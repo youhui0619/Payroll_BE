@@ -248,20 +248,28 @@ export class WorkforceService {
         where: { companyId_id: { companyId: m.companyId, id } },
       });
       if (!existing) throw new NotFoundException();
-      const employees = await tx.employee.count({
-        where: { companyId: m.companyId, locationId: id, active: true },
-      });
-      if (employees)
-        fail(
-          'LOCATION_IN_USE',
-          'Reassign active employees before deactivating this location.',
-          409,
-        );
+      const active = !existing.active;
+      if (!active) {
+        const employees = await tx.employee.count({
+          where: { companyId: m.companyId, locationId: id, active: true },
+        });
+        if (employees)
+          fail(
+            'LOCATION_IN_USE',
+            'Reassign active employees before deactivating this location.',
+            409,
+          );
+      }
       const data = await tx.workLocation.update({
         where: { companyId_id: { companyId: m.companyId, id } },
-        data: { active: false },
+        data: { active },
       });
-      await audit(tx, m, 'LOCATION_DEACTIVATED', id);
+      await audit(
+        tx,
+        m,
+        active ? 'LOCATION_ACTIVATED' : 'LOCATION_DEACTIVATED',
+        id,
+      );
       return { data };
     });
   }
@@ -344,20 +352,28 @@ export class WorkforceService {
         where: { companyId_id: { companyId: m.companyId, id } },
       });
       if (!existing) throw new NotFoundException();
-      const employees = await tx.employee.count({
-        where: { companyId: m.companyId, scheduleId: id, active: true },
-      });
-      if (employees)
-        fail(
-          'SCHEDULE_IN_USE',
-          'Reassign active employees before deactivating this schedule.',
-          409,
-        );
+      const active = !existing.active;
+      if (!active) {
+        const employees = await tx.employee.count({
+          where: { companyId: m.companyId, scheduleId: id, active: true },
+        });
+        if (employees)
+          fail(
+            'SCHEDULE_IN_USE',
+            'Reassign active employees before deactivating this schedule.',
+            409,
+          );
+      }
       const data = await tx.workSchedule.update({
         where: { companyId_id: { companyId: m.companyId, id } },
-        data: { active: false },
+        data: { active },
       });
-      await audit(tx, m, 'SCHEDULE_DEACTIVATED', id);
+      await audit(
+        tx,
+        m,
+        active ? 'SCHEDULE_ACTIVATED' : 'SCHEDULE_DEACTIVATED',
+        id,
+      );
       return { data };
     });
   }
@@ -492,11 +508,17 @@ export class WorkforceService {
         where: { companyId: m.companyId, id },
       });
       if (!existing) throw new NotFoundException();
+      const active = !existing.active;
       const data = await tx.publicHoliday.update({
         where: { id },
-        data: { active: false, status: 'INACTIVE' },
+        data: { active, status: active ? 'ACTIVE' : 'INACTIVE' },
       });
-      await audit(tx, m, 'HOLIDAY_DEACTIVATED', id);
+      await audit(
+        tx,
+        m,
+        active ? 'HOLIDAY_ACTIVATED' : 'HOLIDAY_DEACTIVATED',
+        id,
+      );
       return { data };
     });
   }

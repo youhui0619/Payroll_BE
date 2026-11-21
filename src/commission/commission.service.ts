@@ -305,13 +305,20 @@ export class CommissionService {
           where: { companyId_id: { companyId: m.companyId, id } },
         });
         if (!current) throw new NotFoundException();
-        if (!current.active) return { data: this.serializeSetting(current) };
+        const active = !current.active;
         const data = await tx.commissionIncentiveSetting.update({
           where: { companyId_id: { companyId: m.companyId, id } },
-          data: { active: false },
+          data: { active },
           include: this.settingInclude,
         });
-        await audit(tx, m, 'COMMISSION_SETTING_DEACTIVATED', id);
+        await audit(
+          tx,
+          m,
+          active
+            ? 'COMMISSION_SETTING_ACTIVATED'
+            : 'COMMISSION_SETTING_DEACTIVATED',
+          id,
+        );
         return { data: this.serializeSetting(data) };
       },
       { isolationLevel: 'Serializable' },

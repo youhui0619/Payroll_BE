@@ -316,11 +316,17 @@ export class LeaveService {
         where: { companyId_id: { companyId: m.companyId, id } },
       });
       if (!existing) throw new NotFoundException();
+      const active = !existing.active;
       const data = await tx.leavePolicy.update({
         where: { companyId_id: { companyId: m.companyId, id } },
-        data: { active: false },
+        data: { active },
       });
-      await audit(tx, m, 'LEAVE_POLICY_DEACTIVATED', id);
+      await audit(
+        tx,
+        m,
+        active ? 'LEAVE_POLICY_ACTIVATED' : 'LEAVE_POLICY_DEACTIVATED',
+        id,
+      );
       return { data: this.policyView(data) };
     });
   }
