@@ -348,3 +348,33 @@ EPF allocation for PCB: the employee input preview includes `epfAllocation` with
 Taxable remuneration is not an upper bound for EPF because tax-exempt payments may still bear EPF. Previous-employer openings and normalized PCB inputs therefore permit EPF above taxable income, while retaining non-negative currency validation. These constraint changes are included in the single init; no additional migration is created.
 
 Source reconciliation: LHDN 2026 section 13 illustrates the allocation method with RM297 deducted on RM2,400 salary plus RM250 regular childcare allowance. The selected October 2025 KWSP Part A table gives RM293 for RM2,650 wages. Allocation uses the selected EPF ruleset's amount, not the illustrative RM297. The one-off RM450 allowance and RM3,600 bonus examples reconcile to additional EPF of RM51 and RM396 respectively. See the archived source artifacts and allocation tests.
+
+### FE payroll overview: draft employee roster
+
+`GET /api/v1/payroll/runs/:id/employees` (OWNER/FINANCE) supplies the employee rows for preparing a monthly draft run. Query parameters are `page`, `pageSize` (maximum 100), `search` (employee number/name), and repeated `departmentIds` UUID values for the FE multi-select. Example: `?page=1&pageSize=20&departmentIds=<uuid>&departmentIds=<uuid>`. Omit the department filter to include unassigned employees too. Unknown/other-company department IDs return no matching employees and never widen tenant access.
+
+The response uses `{ data, meta }`. Each row contains `employeeId` (internal UUID), `employeeNo` (display number), `employee` (name), nullable `departmentId`/`department`, and nullable `positionId`/`position`. `meta.total` counts all matching rows, not just this page; metadata also includes `runId`, `year`, `month`, `runStatus: "DRAFT"` and `complete: false`. Active employees joined before the next month's first day are included even if salary/tax setup is incomplete. Assignments are current data, not historical payroll snapshots. Non-draft runs return 409; unknown/other-company runs return 404.
+
+Compared with `Payroll_FE/src/app/pages/payroll/overview/overview.component.ts`, its HTML, `data/payroll/payroll.data.ts`, and `models/payroll/payslip.model.ts` (reviewed 2026-11-22):
+
+| FE mock field/behavior | API mapping |
+| --- | --- |
+| `employeeId` such as `EMP-0042` | Display `employeeNo`; retain UUID `employeeId` for API requests |
+| `employee`, `department`, `position` | Same display fields; missing assignments are null |
+| Department name multi-select | Send department UUIDs from the department API |
+| Employee count card | `meta.total` for the selected filters |
+| Initials | Derive from employee name in the FE |
+| Basic pay, deductions, contributions, net pay and totals | Not supplied by this roster; use individual input previews for available preparation data. Final payroll calculation is still pending |
+| Payslip status/actions | Not available from draft roster; do not infer paid/published status from the run |
+
+Use the existing run API to select/create a monthly draft, this endpoint to list employees, the run preflight to identify setup gaps, and `.../employees/:employeeId/input-preview` for an individual breakdown. The hosted mockup could not be read through the web tool, so comparison used the full local FE source. This feature adds no tables or migration and does not modify FE source.
+
+### Current-employer tax YTD
+
+The employee input preview now includes `taxYtd` with `ready`, decimal-string `totals` (`taxableIncome`, `employeeEpf`, `mtd`, `zakat`), `sources` and `issues`. This is separate from `taxOpening`, which contains previous-employer totals. Never add correction revisions together or copy cumulative totals into a monthly snapshot.
+
+For the current monthly workflow, each earlier employment month in the salary year must have one PAID run and a matching employee calculation. Draft, calculated, approved and published runs are not treated as settled tax deductions. Missing months, missing employee calculations and invalid snapshots block readiness; any returned totals are partial when `ready=false`. No prior months are required for January or the employee's joining month. Mid-year migration/rehire reconciliation remains pending rather than treating absent history as zero.
+
+The internal persisted calculation contract is `PayrollEmployee.snapshot.taxPeriod`, version 1: companyId, employeeId, runId, year, month, taxableIncome, employeeEpf, mtd and zakat. Monetary fields are non-negative decimal strings for that period only. Resolution validates scope, period, version and currency precision; it does not infer taxable wages from gross/net. Source references identify the original run and employee calculation row. Snapshot creation and payroll settlement APIs remain pending; the YTD reader does not manufacture paid history or change payroll status.
+
+The FE's current payslip model has no YTD breakdown. Display `taxYtd.issues` as preparation issues and keep current-period PCB/net columns separate; do not map accumulated MTD into the current month's PCB deduction.

@@ -6,6 +6,7 @@ import { assemblePayrollInputs } from './input-assembly';
 import { resolveUnpaidDays } from './leave-inputs';
 import { resolveContributions } from './contribution-resolver';
 import { allocateEpfForPcb } from './epf-allocation';
+import { resolveTaxYtd } from './tax-ytd';
 
 @Injectable()
 export class InputPreviewService {
@@ -169,6 +170,25 @@ export class InputPreviewService {
             message:
               'Resolve EPF contribution rules before allocating its employee share.',
           };
+        const priorRuns = await tx.payrollRun.findMany({
+          where: {
+            companyId: m.companyId,
+            year: run.year,
+            month: { lt: run.month },
+          },
+          include: {
+            employees: { where: { companyId: m.companyId, employeeId } },
+          },
+          orderBy: { month: 'asc' },
+        });
+        const taxYtd = resolveTaxYtd({
+          companyId: m.companyId,
+          employeeId,
+          year: run.year,
+          month: run.month,
+          joinedDate: employee.joinedDate,
+          runs: priorRuns,
+        });
         return {
           data: {
             runId,
@@ -178,6 +198,7 @@ export class InputPreviewService {
             taxOpening,
             taxFamily,
             taxExpenses,
+            taxYtd,
             epfAllocation,
             epfAllocationIssue,
             complete: false,

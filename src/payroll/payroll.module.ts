@@ -8,6 +8,8 @@ import { TaxOpeningsModule } from './tax-openings.module';
 import { TaxFamilyModule } from './tax-family.module';
 import { TaxExpensesModule } from './tax-expenses.module';
 import { PayrollController } from './payroll.controller';
+import { PayrollRosterController } from './payroll-roster.controller';
+import { PayrollRosterService } from './payroll-roster.service';
 
 @Module({
   imports: [
@@ -18,7 +20,7 @@ import { PayrollController } from './payroll.controller';
     TaxFamilyModule,
     TaxExpensesModule,
   ],
-  controllers: [PayrollController],
-  providers: [PayrollService, InputPreviewService],
+  controllers: [PayrollController, PayrollRosterController],
+  providers: [PayrollService, InputPreviewService, PayrollRosterService],
 })
 export class PayrollModule {}

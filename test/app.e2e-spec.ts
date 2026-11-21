@@ -6,6 +6,7 @@ import { Database } from '../src/database.module';
 import { configureHttp } from '../src/common/http-setup';
 import { openApi } from '../src/common/openapi';
 import { JwtService } from '@nestjs/jwt';
+import { PayrollRosterService } from '../src/payroll/payroll-roster.service';
 
 describe('application HTTP contract', () => {
   let app: INestApplication;
@@ -63,6 +64,8 @@ describe('application HTTP contract', () => {
   it('generates a document containing payroll and membership APIs', () => {
     const doc = openApi(app);
     expect(doc.paths['/api/v1/payroll/runs/{id}/preflight'].get).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/employees'].get).toBeDefined();
+    expect(doc.components.schemas.PayrollRosterResponseDto).toBeDefined();
     expect(doc.paths['/api/v1/memberships'].post).toBeDefined();
     expect(doc.components.schemas.ApiError).toBeDefined();
     expect(doc.components.schemas.LeaveBalanceResponseDto).toBeDefined();
@@ -74,6 +77,66 @@ describe('application HTTP contract', () => {
     expect(
       doc.paths['/api/v1/payroll/runs/{runId}/claims/{claimId}/allocate'].post,
     ).toBeDefined();
+  });
+  it('restricts payroll roster access and validates department filters', async () => {
+    const token = await app.get(JwtService).signAsync({
+      sub: 'user',
+      companyId: 'company',
+      membershipId: 'membership',
+      version: 0,
+    });
+    const path =
+      '/api/v1/payroll/runs/00000000-0000-4000-8000-000000000001/employees';
+    await request(app.getHttpServer()).get(path).expect(401);
+    for (const role of ['HR', 'EMPLOYEE']) {
+      db.membership.findFirst.mockResolvedValue({
+        companyId: 'company',
+        userId: 'user',
+        roles: [role],
+      });
+      await request(app.getHttpServer())
+        .get(path)
+        .set('Authorization', 'Bearer ' + token)
+        .expect(403);
+    }
+    db.membership.findFirst.mockResolvedValue({
+      companyId: 'company',
+      userId: 'user',
+      roles: ['FINANCE'],
+    });
+    for (const query of [
+      'departmentIds=invalid',
+      'page=0',
+      'pageSize=101',
+      'companyId=foreign',
+    ]) {
+      await request(app.getHttpServer())
+        .get(path + '?' + query)
+        .set('Authorization', 'Bearer ' + token)
+        .expect(400);
+    }
+    const spy = jest
+      .spyOn(app.get(PayrollRosterService), 'list')
+      .mockResolvedValue({
+        data: [],
+        meta: { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+      });
+    try {
+      const department = '00000000-0000-4000-8000-000000000002';
+      await request(app.getHttpServer())
+        .get(path + '?departmentIds=' + department)
+        .set('Authorization', 'Bearer ' + token)
+        .expect(200);
+      expect(spy.mock.calls[0][2].departmentIds).toEqual([department]);
+      const second = '00000000-0000-4000-8000-000000000003';
+      await request(app.getHttpServer())
+        .get(path + '?departmentIds=' + department + '&departmentIds=' + second)
+        .set('Authorization', 'Bearer ' + token)
+        .expect(200);
+      expect(spy.mock.calls[1][2].departmentIds).toEqual([department, second]);
+    } finally {
+      spy.mockRestore();
+    }
   });
   it('protects component configuration and validates basis flags and salary months', async () => {
     const token = await app.get(JwtService).signAsync({

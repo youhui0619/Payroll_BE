@@ -43,6 +43,13 @@ class ManualSourceDto {
 class InputPreviewDataDto {
   @ApiProperty({
     type: 'object',
+    additionalProperties: true,
+    description:
+      'Current-employer YTD from prior PAID run taxPeriod snapshots only. Contains ready, totals, source rows and blocking issues. Totals exclude previous-employer taxOpening and are incomplete when ready is false. Missing months are not presumed zero.',
+  })
+  taxYtd: Record<string, unknown>;
+  @ApiProperty({
+    type: 'object',
     nullable: true,
     properties: {
       normalEpf: { type: 'string', example: '264.00' },

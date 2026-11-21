@@ -4,25 +4,24 @@ import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { strict as assert } from 'node:assert';
 import { resolve } from 'node:path';
-import { AttendanceService } from '../src/attendance/attendance.module';
+import { AttendanceService } from '../src/attendance/attendance.service';
 import { LeaveService } from '../src/leave/leave.service';
-import { ClaimsService } from '../src/claims/claims.module';
+import { ClaimsService } from '../src/claims/claims.service';
 import { Database } from '../src/database.module';
 import { PayrollService } from '../src/payroll/payroll.service';
-import { FilesService } from '../src/files/files.module';
-import { RulesService } from '../src/payroll/rules.module';
-import { ComponentDefinitionsService } from '../src/payroll/component-definitions.module';
-import { PayrollInputsService } from '../src/payroll/payroll-inputs.module';
-import { EmployeesService } from '../src/employees/employees.module';
+import { FilesService } from '../src/files/files.service';
+import { RulesService } from '../src/payroll/rules.service';
+import { ComponentDefinitionsService } from '../src/payroll/component-definitions.service';
+import { PayrollInputsService } from '../src/payroll/payroll-inputs.service';
+import { EmployeesService } from '../src/employees/employees.service';
 import { resolveUnpaidDays } from '../src/payroll/leave-inputs';
 import { InputPreviewService } from '../src/payroll/input-preview.service';
-import { ClaimAllocationService } from '../src/payroll/claim-allocation.module';
-import { TaxOpeningsService } from '../src/payroll/tax-openings.module';
-import { TaxExpensesService } from '../src/payroll/tax-expenses.module';
-import {
-  TaxFamilyService,
-  TaxFamilyDto,
-} from '../src/payroll/tax-family.module';
+import { PayrollRosterService } from '../src/payroll/payroll-roster.service';
+import { ClaimAllocationService } from '../src/payroll/claim-allocation.service';
+import { TaxOpeningsService } from '../src/payroll/tax-openings.service';
+import { TaxExpensesService } from '../src/payroll/tax-expenses.service';
+import { TaxFamilyService } from '../src/payroll/tax-family.service';
+import { TaxFamilyDto } from '../src/payroll/tax-family.dto';
 import {
   componentFromDefinition,
   payrollBases,
@@ -1138,6 +1137,94 @@ async function main() {
       },
     });
     const previewService = new InputPreviewService(db as Database);
+    const roster = new PayrollRosterService(db as Database);
+    const rosterDepartment = await db.department.create({
+      data: {
+        companyId: owner.companyId,
+        code: 'ROSTER',
+        name: 'Roster department',
+      },
+    });
+    const rosterPosition = await db.position.create({
+      data: {
+        companyId: owner.companyId,
+        code: 'ROSTER',
+        title: 'Roster position',
+      },
+    });
+    await db.employee.update({
+      where: { id: assemblyEmployee.id },
+      data: {
+        departmentId: rosterDepartment.id,
+        positionId: rosterPosition.id,
+      },
+    });
+    for (const [employeeNo, companyId, joinedDate, active] of [
+      ['ROSTER-INACTIVE', owner.companyId, new Date('2100-01-01'), false],
+      ['ROSTER-FUTURE', owner.companyId, new Date('2100-02-01'), true],
+      ['ROSTER-FOREIGN', other.id, new Date('2100-01-01'), true],
+      ['ROSTER-END', owner.companyId, new Date('2100-01-31'), true],
+    ] as const) {
+      await db.employee.create({
+        data: {
+          employeeNo,
+          companyId,
+          joinedDate,
+          active,
+          name: 'Assembly roster candidate',
+        },
+      });
+    }
+    const rosterPage = await roster.list(owner, assemblyRun.id, {
+      page: 1,
+      pageSize: 1,
+      search: 'assembly',
+    });
+    assert.equal(rosterPage.meta.total, 2);
+    assert.equal(rosterPage.meta.totalPages, 2);
+    assert.equal(rosterPage.data[0].employeeId, assemblyEmployee.id);
+    assert.equal(rosterPage.data[0].employeeNo, 'ASSEMBLY');
+    assert.equal(rosterPage.data[0].department, 'Roster department');
+    assert.equal(rosterPage.data[0].position, 'Roster position');
+    assert.equal(rosterPage.meta.complete, false);
+    const rosterSecondPage = await roster.list(owner, assemblyRun.id, {
+      page: 2,
+      pageSize: 1,
+      search: 'assembly',
+    });
+    assert.equal(rosterSecondPage.data[0].employeeNo, 'ROSTER-END');
+    assert.equal(rosterSecondPage.data[0].department, null);
+    assert.equal(
+      (
+        await roster.list(owner, assemblyRun.id, {
+          page: 1,
+          pageSize: 20,
+          departmentIds: [rosterDepartment.id],
+        })
+      ).meta.total,
+      1,
+    );
+    assert.equal(
+      (
+        await roster.list(owner, assemblyRun.id, {
+          page: 1,
+          pageSize: 20,
+          departmentIds: [randomUUID()],
+        })
+      ).meta.total,
+      0,
+    );
+    await assert.rejects(
+      () =>
+        roster.list({ ...owner, companyId: other.id }, assemblyRun.id, {
+          page: 1,
+          pageSize: 20,
+        }),
+      { status: 404 },
+    );
+    console.log(
+      'PASS draft payroll roster, tenant isolation, period eligibility, filters, pagination and FE identity mapping',
+    );
     const taxOpenings = new TaxOpeningsService(db as Database);
     const opening = {
       year: 2100,
@@ -1237,6 +1324,8 @@ async function main() {
     assert.equal(assembled.gross, '3200.00');
     assert.equal(assembled.bases.EPF, '3200.00');
     assert.equal(assembled.complete, false);
+    assert.equal(assembled.taxYtd.ready, true);
+    assert.equal(assembled.taxYtd.totals.taxableIncome, '0.00');
     assert.equal(assembled.taxOpening?.id, openingRevision.id);
     assert.equal(assembled.taxOpening?.taxableIncome.toFixed(2), '10000.00');
     assert.equal(assembled.contributionPreview.nonPcbReady, true);
@@ -1367,6 +1456,10 @@ async function main() {
     await assert.rejects(() =>
       previewService.preview(owner, assemblyRun.id, assemblyEmployee.id),
     );
+    await assert.rejects(
+      () => roster.list(owner, assemblyRun.id, { page: 1, pageSize: 20 }),
+      { status: 409 },
+    );
     console.log(
       'PASS assembled salary/manual input preview, effective definition, tenant scope and draft-only access',
     );
@@ -1388,6 +1481,70 @@ async function main() {
     await assert.rejects(() => taxExpenses.save(owner, employee.id, expenses));
     console.log(
       'PASS reviewed family relief snapshots, corrections, tenant isolation and payroll locks',
+    );
+    await db.payrollRun.update({
+      where: { id: nextAssemblyRun.id },
+      data: { status: 'DRAFT' },
+    });
+    const unsettledYtd = (
+      await previewService.preview(
+        owner,
+        nextAssemblyRun.id,
+        assemblyEmployee.id,
+      )
+    ).data.taxYtd;
+    assert.equal(unsettledYtd.ready, false);
+    assert.equal(unsettledYtd.issues[0].code, 'PAYROLL_YTD_UNSETTLED');
+    await db.payrollRun.update({
+      where: { id: assemblyRun.id },
+      data: { status: 'PAID' },
+    });
+    const missingYtd = (
+      await previewService.preview(
+        owner,
+        nextAssemblyRun.id,
+        assemblyEmployee.id,
+      )
+    ).data.taxYtd;
+    assert.equal(missingYtd.issues[0].code, 'PAYROLL_YTD_EMPLOYEE_REQUIRED');
+    await db.payrollEmployee.create({
+      data: {
+        companyId: owner.companyId,
+        runId: assemblyRun.id,
+        employeeId: assemblyEmployee.id,
+        gross: '3200',
+        deductions: '144',
+        net: '3056',
+        employerContributions: '64',
+        snapshot: {
+          taxPeriod: {
+            version: 1,
+            companyId: owner.companyId,
+            runId: assemblyRun.id,
+            employeeId: assemblyEmployee.id,
+            year: 2100,
+            month: 1,
+            taxableIncome: '3200.00',
+            employeeEpf: '64.00',
+            mtd: '80.00',
+            zakat: '0.00',
+          },
+        },
+      },
+    });
+    const paidYtd = (
+      await previewService.preview(
+        owner,
+        nextAssemblyRun.id,
+        assemblyEmployee.id,
+      )
+    ).data.taxYtd;
+    assert.equal(paidYtd.ready, true);
+    assert.equal(paidYtd.totals.taxableIncome, '3200.00');
+    assert.equal(paidYtd.totals.mtd, '80.00');
+    assert.equal(paidYtd.sources[0].runId, assemblyRun.id);
+    console.log(
+      'PASS tax YTD paid snapshot resolution, missing/unsettled history and separation from previous-employer openings',
     );
     console.log('ALL DATABASE INTEGRATION CHECKS PASSED');
   } finally {
