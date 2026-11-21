@@ -66,6 +66,12 @@ describe('application HTTP contract', () => {
     expect(doc.paths['/api/v1/payroll/runs/{id}/preflight'].get).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/employees'].get).toBeDefined();
     expect(doc.components.schemas.PayrollRosterResponseDto).toBeDefined();
+    expect(
+      doc.paths[
+        '/api/v1/payroll/runs/{id}/employees/{employeeId}/calculation-preview'
+      ].post,
+    ).toBeDefined();
+    expect(doc.components.schemas.CalculationPreviewDto).toBeDefined();
     expect(doc.paths['/api/v1/memberships'].post).toBeDefined();
     expect(doc.components.schemas.ApiError).toBeDefined();
     expect(doc.components.schemas.LeaveBalanceResponseDto).toBeDefined();
@@ -253,6 +259,51 @@ describe('application HTTP contract', () => {
         .post(path)
         .set('Authorization', 'Bearer ' + token)
         .send({ ...input, ...change })
+        .expect(400);
+    }
+  });
+  it('protects resolved calculation previews and requires explicit tax review', async () => {
+    const token = await app.get(JwtService).signAsync({
+      sub: 'user',
+      companyId: 'company',
+      membershipId: 'membership',
+      version: 0,
+    });
+    const path =
+      '/api/v1/payroll/runs/00000000-0000-4000-8000-000000000001/employees/00000000-0000-4000-8000-000000000002/calculation-preview';
+    await request(app.getHttpServer()).post(path).send({}).expect(401);
+    for (const role of ['HR', 'EMPLOYEE']) {
+      db.membership.findFirst.mockResolvedValue({
+        companyId: 'company',
+        userId: 'user',
+        roles: [role],
+      });
+      await request(app.getHttpServer())
+        .post(path)
+        .set('Authorization', 'Bearer ' + token)
+        .send({})
+        .expect(403);
+    }
+    db.membership.findFirst.mockResolvedValue({
+      companyId: 'company',
+      userId: 'user',
+      roles: ['FINANCE'],
+    });
+    for (const body of [
+      {},
+      { taxRegime: 'REP', currentZakat: '0', zakatEvidence: 'test' },
+      { taxRegime: 'STANDARD', currentZakat: '-1', zakatEvidence: 'test' },
+      {
+        taxRegime: 'STANDARD',
+        currentZakat: '0',
+        zakatEvidence: 'test',
+        accumulatedIncome: '0',
+      },
+    ]) {
+      await request(app.getHttpServer())
+        .post(path)
+        .set('Authorization', 'Bearer ' + token)
+        .send(body)
         .expect(400);
     }
   });

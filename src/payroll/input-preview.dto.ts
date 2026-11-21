@@ -40,7 +40,15 @@ class ManualSourceDto {
   @ApiProperty({ format: 'uuid' }) createdBy: string;
   @ApiProperty({ format: 'date-time' }) createdAt: string;
 }
-class InputPreviewDataDto {
+export class InputPreviewDataDto {
+  @ApiProperty() year: number;
+  @ApiProperty() month: number;
+  @ApiProperty({
+    nullable: true,
+    description:
+      'Effective payroll profile PCB category. Standard calculation supports RESIDENT/NON_RESIDENT.',
+  })
+  pcbCategory: string | null;
   @ApiProperty({
     type: 'object',
     additionalProperties: true,

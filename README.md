@@ -378,3 +378,23 @@ For the current monthly workflow, each earlier employment month in the salary ye
 The internal persisted calculation contract is `PayrollEmployee.snapshot.taxPeriod`, version 1: companyId, employeeId, runId, year, month, taxableIncome, employeeEpf, mtd and zakat. Monetary fields are non-negative decimal strings for that period only. Resolution validates scope, period, version and currency precision; it does not infer taxable wages from gross/net. Source references identify the original run and employee calculation row. Snapshot creation and payroll settlement APIs remain pending; the YTD reader does not manufacture paid history or change payroll status.
 
 The FE's current payslip model has no YTD breakdown. Display `taxYtd.issues` as preparation issues and keep current-period PCB/net columns separate; do not map accumulated MTD into the current month's PCB deduction.
+
+### Resolved employee calculation preview
+
+`POST /api/v1/payroll/runs/:id/employees/:employeeId/calculation-preview` (OWNER/FINANCE) connects the stored salary/manual/allocated-claim inputs, EPF allocation, other contributions, tax declarations and current-employer YTD to the standard 2026 PCB engine and payroll totals. Request:
+
+```json
+{
+  "taxRegime": "STANDARD",
+  "currentZakat": "0.00",
+  "zakatEvidence": "Reviewed declaration: no current-month zakat"
+}
+```
+
+The effective payroll profile `pcbCategory` must be `RESIDENT` or `NON_RESIDENT`, matching the reviewed family declaration. Other categories/special regimes are rejected. Explicit opening, family and TP1 declarations are required, including reviewed zero declarations. Missing contributions/EPF allocation or unsettled/missing prior-month YTD blocks calculation with 409. Caller-supplied accumulated income, PCB amounts and relief totals are not accepted.
+
+The result contains `input` (resolved source records), `pcb` (amount, tax/relief traces and source hash), `totals` (gross, deductions, net and separate statutory rows), `taxPeriod` (period-only snapshot candidate) and `taxReview`. Monetary values remain decimal strings. `currentZakat` is a reviewed current-month PCB credit; it does not create a salary deduction. If zakat is withheld from salary, its separate net-only deduction component must already be included among payroll inputs. Avoid applying that deduction again in the FE.
+
+FE payroll overview/detail mapping: `totals.gross` → grossPay, `totals.net` → netPay, and `pcb.amount` → pcb. Resolve EPF/SOCSO/EIS/LINDUNG rows from `totals.statutory` by scheme, using employeeDeduction/employerCost/remittance; keep LINDUNG separate. Do not map `totals.deductions` into the mock's non-statutory deduction column because it includes statutory deductions. Earnings categories must come from reviewed component lines, not guessed from mock amounts. Traces and tax review are backend extensions to the current FE Payslip model.
+
+The response deliberately remains `previewOnly: true, complete: false`. It calculates the currently resolved inputs using the existing calendar-month salary engine; it does not implement all company calculation settings, automatically collect overtime/commissions/recurring allowances, save payroll, approve it, publish payslips or settle payments. The preview is not a replacement for final payroll processing.

@@ -22,6 +22,7 @@ import { TaxOpeningsService } from '../src/payroll/tax-openings.service';
 import { TaxExpensesService } from '../src/payroll/tax-expenses.service';
 import { TaxFamilyService } from '../src/payroll/tax-family.service';
 import { TaxFamilyDto } from '../src/payroll/tax-family.dto';
+import { verifyPayrollCalculation } from './payroll-calculation.integration';
 import {
   componentFromDefinition,
   payrollBases,
@@ -1546,6 +1547,7 @@ async function main() {
     console.log(
       'PASS tax YTD paid snapshot resolution, missing/unsettled history and separation from previous-employer openings',
     );
+    await verifyPayrollCalculation(db, owner);
     console.log('ALL DATABASE INTEGRATION CHECKS PASSED');
   } finally {
     await db?.$disconnect();
