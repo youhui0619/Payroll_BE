@@ -92,10 +92,11 @@ export class LocationDto {
   @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
   type?: string;
   @ApiPropertyOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsOptional()
   @IsString()
   @Length(1, 500)
-  remark?: string;
+  remark?: string | null;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
