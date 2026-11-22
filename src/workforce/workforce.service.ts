@@ -39,6 +39,10 @@ function validateSchedule(
     fail('INVALID_SCHEDULE', 'Break must be shorter than a non-zero shift.');
 }
 
+function nextPublicHolidayCode(codes: number[]) {
+  return codes.reduce((max, code) => Math.max(max, code), 0) + 1;
+}
+
 @Injectable()
 export class WorkforceService {
   constructor(private db: Database) {}
@@ -385,6 +389,15 @@ export class WorkforceService {
     const scope = dto.scope ?? 'NATIONAL';
     return this.db.$transaction(
       async (tx) => {
+        await tx.$executeRaw`
+          SELECT pg_advisory_xact_lock(
+            hashtextextended(${`${m.companyId}:public-holiday-code`}, 0)
+          )
+        `;
+        const existingCodes = await tx.publicHoliday.findMany({
+          where: { companyId: m.companyId },
+          select: { code: true },
+        });
         const overlaps = await tx.publicHoliday.findMany({
           where: {
             companyId: m.companyId,
@@ -411,6 +424,7 @@ export class WorkforceService {
         const data = await tx.publicHoliday.create({
           data: {
             companyId: m.companyId,
+            code: nextPublicHolidayCode(existingCodes.map((row) => row.code)),
             name: dto.name,
             description: dto.description,
             scope,

@@ -30,10 +30,12 @@ function database() {
       count: jest.fn(),
       findFirst: jest.fn(),
       findUnique: jest.fn(),
+      create: jest.fn(),
       update: jest.fn(),
     },
     employee: { count: jest.fn() },
     auditEvent: { create: jest.fn() },
+    $executeRaw: jest.fn(),
     $transaction: jest.fn(),
   };
   db.$transaction.mockImplementation((input: unknown) => {
@@ -124,6 +126,36 @@ describe('WorkforceService', () => {
     expect(result.meta.summary?.statusCounts).toEqual({
       ACTIVE: 0,
       INACTIVE: 2,
+    });
+  });
+
+  it('generates a company-scoped public-holiday code', async () => {
+    const db = database();
+    db.publicHoliday.findMany
+      .mockResolvedValueOnce([{ code: 7 }])
+      .mockResolvedValueOnce([]);
+    db.publicHoliday.create.mockResolvedValue({
+      id: 'holiday',
+      code: 8,
+    });
+
+    const result = await new WorkforceService(db).createHoliday(membership, {
+      name: 'New Year',
+      startDate: '2027-01-01',
+      endDate: '2027-01-01',
+      scope: 'NATIONAL',
+      regions: [],
+      status: 'ACTIVE',
+    } as any);
+
+    expect(result).toEqual({
+      data: { id: 'holiday', code: 8 },
+    });
+    expect(db.publicHoliday.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        companyId: 'company',
+        code: 8,
+      }),
     });
   });
 

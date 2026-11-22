@@ -8,6 +8,17 @@ import {
 
 const day = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
+async function nextPublicHolidayCode(
+  tx: Prisma.TransactionClient,
+  companyId: string,
+) {
+  const existing = await tx.publicHoliday.findMany({
+    where: { companyId },
+    select: { code: true },
+  });
+  return existing.reduce((max, row) => Math.max(max, row.code), 0) + 1;
+}
+
 const workingDay = (
   dayName: string,
   isWorkingDay: boolean,
@@ -650,7 +661,12 @@ async function seed() {
           },
         });
         if (!existing) {
-          await tx.publicHoliday.create({ data: holiday });
+          await tx.publicHoliday.create({
+            data: {
+              ...holiday,
+              code: await nextPublicHolidayCode(tx, company.id),
+            },
+          });
         }
       }
     });

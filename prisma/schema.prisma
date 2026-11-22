@@ -331,6 +331,7 @@ model EmployeeWorkSchedule {
 model PublicHoliday {
   id          String   @id @default(uuid()) @db.Uuid
   companyId   String   @db.Uuid
+  code        Int
   name        String
   description String?
   scope       String   @default("NATIONAL")
@@ -343,6 +344,7 @@ model PublicHoliday {
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@index([companyId, startDate, endDate])
+  @@unique([companyId, code])
   @@map("public_holidays")
 }
 
