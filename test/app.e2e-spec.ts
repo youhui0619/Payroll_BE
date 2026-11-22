@@ -72,6 +72,11 @@ describe('application HTTP contract', () => {
       ].post,
     ).toBeDefined();
     expect(doc.components.schemas.CalculationPreviewDto).toBeDefined();
+    expect(
+      doc.paths['/api/v1/payroll/runs/{runId}/commissions/{recordId}/allocate']
+        .post,
+    ).toBeDefined();
+    expect(doc.components.schemas.CommissionAllocationHistoryDto).toBeDefined();
     expect(doc.paths['/api/v1/memberships'].post).toBeDefined();
     expect(doc.components.schemas.ApiError).toBeDefined();
     expect(doc.components.schemas.LeaveBalanceResponseDto).toBeDefined();
@@ -352,6 +357,55 @@ describe('application HTTP contract', () => {
         companyId: 'foreign',
       })
       .expect(400);
+  });
+  it('protects commission allocations and validates review reasons', async () => {
+    const token = await app.get(JwtService).signAsync({
+      sub: 'user',
+      companyId: 'company',
+      membershipId: 'membership',
+      version: 0,
+    });
+    const base =
+      '/api/v1/payroll/runs/00000000-0000-4000-8000-000000000001/commissions/00000000-0000-4000-8000-000000000002';
+    await request(app.getHttpServer())
+      .post(base + '/allocate')
+      .send({ reason: 'test' })
+      .expect(401);
+    for (const role of ['HR', 'EMPLOYEE']) {
+      db.membership.findFirst.mockResolvedValue({
+        companyId: 'company',
+        userId: 'user',
+        roles: [role],
+      });
+      for (const action of ['allocate', 'release'])
+        await request(app.getHttpServer())
+          .post(base + '/' + action)
+          .set('Authorization', 'Bearer ' + token)
+          .send({ reason: 'test' })
+          .expect(403);
+      await request(app.getHttpServer())
+        .get(
+          '/api/v1/payroll/commissions/00000000-0000-4000-8000-000000000002/allocation-history',
+        )
+        .set('Authorization', 'Bearer ' + token)
+        .expect(403);
+    }
+    db.membership.findFirst.mockResolvedValue({
+      companyId: 'company',
+      userId: 'user',
+      roles: ['FINANCE'],
+    });
+    for (const body of [
+      {},
+      { reason: '' },
+      { reason: 'test', amount: '1' },
+      { reason: 'test', companyId: 'other' },
+    ])
+      await request(app.getHttpServer())
+        .post(base + '/allocate')
+        .set('Authorization', 'Bearer ' + token)
+        .send(body)
+        .expect(400);
   });
   it('protects previous-employer tax declarations and validates money', async () => {
     const token = await app.get(JwtService).signAsync({

@@ -2,6 +2,8 @@
 
 Run the commands below from the `payrollbe` directory. Use your existing PostgreSQL server; Docker is not required.
 
+**Migration policy (2026-11-23): preserve migration history and use new incremental migrations.** This replaces the earlier single-init/reset workflow mentioned in historical feature notes below. For an existing database, apply pending migrations with `npx prisma migrate deploy`, then run `npm run db:generate`. Do not drop or reseed it for normal updates. Fresh-database setup follows below.
+
 ## 1. Create a fresh database
 
 After you have recreated your database, skip this SQL step. Otherwise, connect to the `postgres` maintenance database using pgAdmin or your SQL client and run:
@@ -157,9 +159,9 @@ The employee can log in through `/api/v1/auth/login`, change their password, and
 
 ## Later schema changes
 
-During the current MVP development/reset phase, keep implemented models in `prisma/schema.prisma` and consolidate their SQL into `prisma/migrations/20261028132921_init/migration.sql`. This is the agreed workflow until the initial schema is frozen. Tables for unimplemented modules will be added as those modules are developed; the current init contains the tables listed above, plus a partial unique index preventing two open attendance sessions per employee and check constraints for dates, amounts and membership roles. Recreate the development database when applying a revised init. Do not try to upgrade an old init with `migrate deploy` alone.
+Keep `prisma/schema.prisma` and new migration files in sync. Preserve the existing init and all later migrations, including their check constraints and partial indexes. Do not consolidate migration history or rewrite applied SQL. The user ended the single-init workflow on 2026-11-23.
 
-After the initial schema is frozen and data must be preserved, create separate migrations for new schema changes:
+Create separate migrations for new schema changes against your designated development database:
 
 ```powershell
 npm run db:migrate -- --name describe_your_change
@@ -398,3 +400,13 @@ The result contains `input` (resolved source records), `pcb` (amount, tax/relief
 FE payroll overview/detail mapping: `totals.gross` → grossPay, `totals.net` → netPay, and `pcb.amount` → pcb. Resolve EPF/SOCSO/EIS/LINDUNG rows from `totals.statutory` by scheme, using employeeDeduction/employerCost/remittance; keep LINDUNG separate. Do not map `totals.deductions` into the mock's non-statutory deduction column because it includes statutory deductions. Earnings categories must come from reviewed component lines, not guessed from mock amounts. Traces and tax review are backend extensions to the current FE Payslip model.
 
 The response deliberately remains `previewOnly: true, complete: false`. It calculates the currently resolved inputs using the existing calendar-month salary engine; it does not implement all company calculation settings, automatically collect overtime/commissions/recurring allowances, save payroll, approve it, publish payslips or settle payments. The preview is not a replacement for final payroll processing.
+
+### Commission allocation to payroll
+
+OWNER/FINANCE can allocate or release a ready commission using `POST /api/v1/payroll/runs/:runId/commissions/:recordId/allocate` or `/release`, with `{ "reason": "Reviewed payout" }`. The saved record supplies its amount and `payrollEarningCode`; the request cannot override either. Configure that code as an active gross/net earning with reviewed statutory/PCB treatment for the salary month. BASIC and UNPAID_LEAVE are reserved. An employee can have at most 100 allocated commission records per run; the shared component count limit also applies.
+
+Only READY_FOR_PAYROLL records and DRAFT runs are eligible. CURRENT_PAYROLL permits the record's creation month or later; NEXT_PAYROLL permits the following month or later. SEPARATE_PAYOUT and unclassified timing cannot enter this monthly workflow. These are earliest-month checks, allowing reviewed delayed payouts; the API does not automatically select a run. Employees must be active and joined by period end. A record cannot belong to two runs; same-state retries do not duplicate events. Release preserves the approved record and its original amount.
+
+`GET /api/v1/payroll/commissions/:recordId/allocation-history` returns paginated allocation/release events with run, actor, time and reason. Allocations feed both input and calculation previews through COMMISSION source lines and `commissionSources`. They retain the saved plan code/name, amount, earning code and reference, rather than recomputing from a plan that may have changed.
+
+FE comparison: `Payroll_FE/src/app/models/commission/commission-payroll-record.model.ts`, its mock data and the payroll commission overview distinguish PENDING_APPROVAL, READY_FOR_PAYROLL and PAID. Allocation keeps READY_FOR_PAYROLL; `payrollRunId` identifies its assigned run. Show release only for a draft run. The FE Payslip's commissionReferences/commissionItems can use source IDs and the corresponding records; amounts remain decimal strings in the API. The new lowercase commission_allocation_events table retains allocation history. Payroll payment settlement and separate payouts remain pending.

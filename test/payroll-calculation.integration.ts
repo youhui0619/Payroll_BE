@@ -8,6 +8,7 @@ import { TaxFamilyService } from '../src/payroll/tax-family.service';
 import { TaxExpensesService } from '../src/payroll/tax-expenses.service';
 import { InputPreviewService } from '../src/payroll/input-preview.service';
 import { CalculationPreviewService } from '../src/payroll/calculation-preview.service';
+import { CommissionAllocationService } from '../src/payroll/commission-allocation.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -165,6 +166,136 @@ export async function verifyPayrollCalculation(
         zakatEvidence: ' ',
       }),
     { status: 400 },
+  );
+  const commissions = new CommissionAllocationService(database);
+  await new ComponentDefinitionsService(database).save(actor, {
+    code: 'COMM',
+    name: 'Commission',
+    kind: 'EARNING',
+    active: true,
+    affectsGross: true,
+    affectsNet: true,
+    effectiveFrom: '2026-01-01',
+    statutoryBases: ['EPF', 'PCB'],
+    pcbTreatment: 'ADDITIONAL',
+    reason: 'Reviewed commission definition',
+  });
+  const record = await db.commissionPayrollRecord.create({
+    data: {
+      companyId: company.id,
+      employeeId: employee.id,
+      planCode: 'SALES',
+      planName: 'Saved sales plan',
+      payrollEarningCode: 'COMM',
+      amount: '200',
+      status: 'READY_FOR_PAYROLL',
+      payoutTiming: 'CURRENT_PAYROLL',
+      createdDate: new Date('2026-01-01'),
+    },
+  });
+  const reason = { reason: 'Reviewed payout' };
+  await commissions.change(actor, run.id, record.id, reason, true);
+  await commissions.change(actor, run.id, record.id, reason, true);
+  assert.equal(
+    (await commissions.history(actor, record.id, { page: 1, pageSize: 20 }))
+      .meta.total,
+    1,
+  );
+  const withCommission = (
+    await service.preview(actor, run.id, employee.id, review)
+  ).data;
+  assert.equal(withCommission.totals.gross, '5700.00');
+  assert.equal(withCommission.input.commissionSources[0].amount, '200.00');
+  assert.equal(withCommission.taxPeriod.employeeEpf, '627.00');
+  assert.equal(
+    (
+      await db.commissionPayrollRecord.findUniqueOrThrow({
+        where: { id: record.id },
+      })
+    ).status,
+    'READY_FOR_PAYROLL',
+  );
+  await assert.rejects(
+    () => commissions.change(owner, run.id, record.id, reason, true),
+    { status: 404 },
+  );
+  await commissions.change(
+    actor,
+    run.id,
+    record.id,
+    { reason: 'Reassign' },
+    false,
+  );
+  await commissions.change(
+    actor,
+    run.id,
+    record.id,
+    { reason: 'Retry release' },
+    false,
+  );
+  assert.equal(
+    (await commissions.history(actor, record.id, { page: 1, pageSize: 20 }))
+      .meta.total,
+    2,
+  );
+  assert.equal(
+    (await service.preview(actor, run.id, employee.id, review)).data.totals
+      .gross,
+    '5500.00',
+  );
+  const nextRun = (await payroll.create(actor, { year: 2026, month: 2 })).data;
+  await db.commissionPayrollRecord.update({
+    where: { id: record.id },
+    data: { payoutTiming: 'NEXT_PAYROLL' },
+  });
+  await assert.rejects(() =>
+    commissions.change(actor, run.id, record.id, reason, true),
+  );
+  await commissions.change(actor, nextRun.id, record.id, reason, true);
+  await assert.rejects(
+    () => commissions.change(actor, run.id, record.id, reason, false),
+    { status: 409 },
+  );
+  await commissions.change(actor, nextRun.id, record.id, reason, false);
+  await db.commissionPayrollRecord.update({
+    where: { id: record.id },
+    data: { payoutTiming: 'SEPARATE_PAYOUT' },
+  });
+  await assert.rejects(() =>
+    commissions.change(actor, nextRun.id, record.id, reason, true),
+  );
+  await db.commissionPayrollRecord.update({
+    where: { id: record.id },
+    data: { payoutTiming: 'CURRENT_PAYROLL' },
+  });
+  const allocationRace = await Promise.allSettled([
+    commissions.change(actor, run.id, record.id, reason, true),
+    commissions.change(actor, nextRun.id, record.id, reason, true),
+  ]);
+  assert.equal(
+    allocationRace.filter((r) => r.status === 'fulfilled').length,
+    1,
+  );
+  const allocated = await db.commissionPayrollRecord.findUniqueOrThrow({
+    where: { id: record.id },
+  });
+  await db.payrollRun.update({
+    where: { id: allocated.payrollRunId! },
+    data: { status: 'CALCULATED' },
+  });
+  await assert.rejects(
+    () =>
+      commissions.change(
+        actor,
+        allocated.payrollRunId!,
+        record.id,
+        reason,
+        false,
+      ),
+    { status: 409 },
+  );
+  console.log(
+    'PASS commission payroll allocation, history/idempotency, payout timing, source amounts, concurrency and period locks',
   );
   await db.payrollRun.update({
     where: { id: run.id },

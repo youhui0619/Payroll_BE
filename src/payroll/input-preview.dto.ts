@@ -2,7 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { StatutoryScheme } from '@prisma/client';
 
 class SourceDto {
-  @ApiProperty({ enum: ['SALARY', 'UNPAID_LEAVE', 'MANUAL', 'CLAIM'] })
+  @ApiProperty({
+    enum: ['SALARY', 'UNPAID_LEAVE', 'MANUAL', 'CLAIM', 'COMMISSION'],
+  })
   type: string;
   @ApiProperty() id: string;
 }
@@ -41,6 +43,23 @@ class ManualSourceDto {
   @ApiProperty({ format: 'date-time' }) createdAt: string;
 }
 export class InputPreviewDataDto {
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        planCode: { type: 'string' },
+        planName: { type: 'string', nullable: true },
+        payrollEarningCode: { type: 'string' },
+        amount: { type: 'string' },
+        referenceId: { type: 'string', nullable: true },
+      },
+    },
+    description:
+      'Allocated ready commission records; amounts and plan labels come from saved records, not current plan settings.',
+  })
+  commissionSources: Record<string, unknown>[];
   @ApiProperty() year: number;
   @ApiProperty() month: number;
   @ApiProperty({

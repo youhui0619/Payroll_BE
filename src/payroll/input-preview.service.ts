@@ -85,8 +85,16 @@ export class InputPreviewService {
     });
     if (claims.length > 400)
       fail('PAYROLL_INPUT_LIMIT', 'Too many allocated claims.');
+    const commissions = await tx.commissionPayrollRecord.findMany({
+      where: { companyId: m.companyId, employeeId, payrollRunId: runId },
+      orderBy: { id: 'asc' },
+      take: 101,
+    });
+    if (commissions.length > 100)
+      fail('PAYROLL_INPUT_LIMIT', 'Too many allocated commission records.');
     const result = assemblePayrollInputs({
       claims,
+      commissions,
       companyId: m.companyId,
       runId,
       employeeId,
@@ -217,7 +225,7 @@ export class InputPreviewService {
         complete: false,
         limitations: [
           'Contribution preview excludes PCB. Final net pay is not calculated; profile eligibility still requires reviewed declarations.',
-          'Unallocated claims, overtime and recurring allowances are not included.',
+          'Unallocated claims/commissions, overtime and recurring allowances are not included.',
         ],
       },
     };

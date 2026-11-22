@@ -343,8 +343,8 @@ model PublicHoliday {
   status      String   @default("ACTIVE")
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
-  @@index([companyId, startDate, endDate])
   @@unique([companyId, code])
+  @@index([companyId, startDate, endDate])
   @@map("public_holidays")
 }
 
@@ -800,23 +800,24 @@ enum PayrollStatus {
 }
 
 model PayrollRun {
-  claims            Claim[]
-  overtimeRequests  OvertimeRequest[]
-  commissionRecords CommissionPayrollRecord[]
-  id                String                    @id @default(uuid()) @db.Uuid
-  companyId         String                    @db.Uuid
-  year              Int
-  month             Int
-  status            PayrollStatus             @default(DRAFT)
-  createdBy         String                    @db.Uuid
-  approvedBy        String?                   @db.Uuid
-  approvedAt        DateTime?                 @db.Timestamptz(3)
-  paidAt            DateTime?                 @db.Timestamptz(3)
-  paymentReference  String?
-  createdAt         DateTime                  @default(now()) @db.Timestamptz(3)
-  company           Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  employees         PayrollEmployee[]
-  inputs            PayrollInput[]
+  commissionAllocationEvents CommissionAllocationEvent[]
+  claims                     Claim[]
+  overtimeRequests           OvertimeRequest[]
+  commissionRecords          CommissionPayrollRecord[]
+  id                         String                      @id @default(uuid()) @db.Uuid
+  companyId                  String                      @db.Uuid
+  year                       Int
+  month                      Int
+  status                     PayrollStatus               @default(DRAFT)
+  createdBy                  String                      @db.Uuid
+  approvedBy                 String?                     @db.Uuid
+  approvedAt                 DateTime?                   @db.Timestamptz(3)
+  paidAt                     DateTime?                   @db.Timestamptz(3)
+  paymentReference           String?
+  createdAt                  DateTime                    @default(now()) @db.Timestamptz(3)
+  company                    Company                     @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employees                  PayrollEmployee[]
+  inputs                     PayrollInput[]
 
   @@unique([companyId, id])
   @@unique([companyId, year, month])
@@ -961,6 +962,7 @@ model CommissionIncentiveSetting {
 }
 
 model CommissionPayrollRecord {
+  allocationEvents     CommissionAllocationEvent[]
   id                   String                      @id @default(uuid()) @db.Uuid
   companyId            String                      @db.Uuid
   employeeId           String                      @db.Uuid
@@ -992,6 +994,22 @@ model CommissionPayrollRecord {
   @@index([companyId, employeeId, status])
   @@index([companyId, payrollRunId])
   @@map("commission_payroll_records")
+}
+
+model CommissionAllocationEvent {
+  id        String                  @id @default(uuid()) @db.Uuid
+  companyId String                  @db.Uuid
+  recordId  String                  @db.Uuid
+  runId     String                  @db.Uuid
+  actorId   String                  @db.Uuid
+  action    String
+  reason    String
+  createdAt DateTime                @default(now()) @db.Timestamptz(3)
+  record    CommissionPayrollRecord @relation(fields: [companyId, recordId], references: [companyId, id], onDelete: Restrict)
+  run       PayrollRun              @relation(fields: [companyId, runId], references: [companyId, id], onDelete: Restrict)
+
+  @@index([companyId, recordId, createdAt])
+  @@map("commission_allocation_events")
 }
 
 model NotificationSettings {

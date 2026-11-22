@@ -1,5 +1,6 @@
 import {
   Claim,
+  CommissionPayrollRecord,
   PayrollComponentDefinition,
   PayrollInput,
   Prisma,
@@ -16,6 +17,7 @@ export function assemblePayrollInputs(input: {
   definitions: readonly PayrollComponentDefinition[];
   manualInputs: readonly PayrollInput[];
   claims?: readonly Claim[];
+  commissions?: readonly CommissionPayrollRecord[];
 }) {
   const month = new Date(
     Date.UTC(input.salary.year, input.salary.month - 1, 1),
@@ -161,10 +163,78 @@ export function assemblePayrollInputs(input: {
       date: claim.date.toISOString().slice(0, 10),
     });
   }
+  const commissionSources: {
+    id: string;
+    planCode: string;
+    planName: string | null;
+    payrollEarningCode: string;
+    amount: string;
+    referenceId: string | null;
+  }[] = [];
+  for (const record of input.commissions ?? []) {
+    if (
+      record.companyId !== input.companyId ||
+      record.employeeId !== input.employeeId ||
+      record.payrollRunId !== input.runId ||
+      record.status !== 'READY_FOR_PAYROLL'
+    )
+      fail(
+        'INVALID_PAYROLL_COMMISSION',
+        'Only ready commissions allocated to this employee and run can be included.',
+      );
+    const earliest = new Date(
+      Date.UTC(
+        record.createdDate.getUTCFullYear(),
+        record.createdDate.getUTCMonth() +
+          (record.payoutTiming === 'NEXT_PAYROLL' ? 1 : 0),
+        1,
+      ),
+    );
+    if (
+      !['CURRENT_PAYROLL', 'NEXT_PAYROLL'].includes(
+        record.payoutTiming ?? '',
+      ) ||
+      month < earliest
+    )
+      fail(
+        'COMMISSION_PERIOD_INELIGIBLE',
+        'The saved commission payout timing does not permit this payroll month.',
+      );
+    if (['BASIC', 'UNPAID_LEAVE'].includes(record.payrollEarningCode))
+      fail(
+        'RESERVED_PAYROLL_COMPONENT',
+        'Commissions require their own earning component.',
+      );
+    const definition = resolve(record.payrollEarningCode);
+    if (
+      definition.kind !== 'EARNING' ||
+      !definition.affectsGross ||
+      !definition.affectsNet
+    )
+      fail(
+        'INVALID_COMMISSION_COMPONENT',
+        'Commission must use an earning component affecting gross and net.',
+      );
+    components.push(
+      componentFromDefinition(definition, record.amount.toFixed(2), {
+        type: 'COMMISSION',
+        id: record.id,
+      }),
+    );
+    commissionSources.push({
+      id: record.id,
+      planCode: record.planCode,
+      planName: record.planName,
+      payrollEarningCode: record.payrollEarningCode,
+      amount: record.amount.toFixed(2),
+      referenceId: record.referenceId,
+    });
+  }
   return {
     ...payrollBases(components),
     salaryTrace: salary.trace,
     manualSources,
     claimSources,
+    commissionSources,
   };
 }

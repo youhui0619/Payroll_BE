@@ -1,4 +1,5 @@
 import {
+  CommissionPayrollRecord,
   PayrollComponentDefinition,
   PayrollInput,
   Prisma,
@@ -52,6 +53,56 @@ const base = {
   manualInputs: [manual],
 };
 describe('payroll input assembly', () => {
+  const commission = {
+    id: 'commission',
+    companyId: 'company',
+    employeeId: 'employee',
+    payrollRunId: 'run',
+    status: 'READY_FOR_PAYROLL',
+    payrollEarningCode: 'BONUS',
+    payoutTiming: 'CURRENT_PAYROLL',
+    createdDate: new Date('2026-01-01'),
+    amount: new Prisma.Decimal(200),
+    planCode: 'SALES',
+    planName: 'Saved plan',
+    referenceId: 'sale-1',
+  } as CommissionPayrollRecord;
+  it('adds the saved commission amount and source exactly once', () => {
+    const result = assemblePayrollInputs({
+      ...base,
+      commissions: [commission],
+    });
+    expect(result.gross).toBe('3400.00');
+    expect(result.commissionSources[0]).toMatchObject({
+      id: 'commission',
+      amount: '200.00',
+      planName: 'Saved plan',
+    });
+    expect(result.lines.at(-1).source).toEqual({
+      type: 'COMMISSION',
+      id: 'commission',
+    });
+    expect(() =>
+      assemblePayrollInputs({ ...base, commissions: [commission, commission] }),
+    ).toThrow();
+  });
+  it.each([
+    { companyId: 'foreign' },
+    { employeeId: 'foreign' },
+    { payrollRunId: 'foreign' },
+    { status: 'PAID' },
+    { status: 'PENDING_APPROVAL' },
+    { payoutTiming: 'SEPARATE_PAYOUT' },
+    { payoutTiming: 'NEXT_PAYROLL' },
+    { payrollEarningCode: 'BASIC' },
+  ])('rejects ineligible commission %j', (change) => {
+    expect(() =>
+      assemblePayrollInputs({
+        ...base,
+        commissions: [{ ...commission, ...change }],
+      }),
+    ).toThrow();
+  });
   it('combines salary, frozen unpaid dates and manual amounts with source traces', () => {
     const result = assemblePayrollInputs(base);
     expect(result.gross).toBe('3200.00');

@@ -12,6 +12,8 @@ import { PayrollRosterController } from './payroll-roster.controller';
 import { PayrollRosterService } from './payroll-roster.service';
 import { CalculationPreviewController } from './calculation-preview.controller';
 import { CalculationPreviewService } from './calculation-preview.service';
+import { CommissionAllocationController } from './commission-allocation.controller';
+import { CommissionAllocationService } from './commission-allocation.service';
 
 @Module({
   imports: [
@@ -26,12 +28,14 @@ import { CalculationPreviewService } from './calculation-preview.service';
     PayrollController,
     PayrollRosterController,
     CalculationPreviewController,
+    CommissionAllocationController,
   ],
   providers: [
     PayrollService,
     InputPreviewService,
     PayrollRosterService,
     CalculationPreviewService,
+    CommissionAllocationService,
   ],
 })
 export class PayrollModule {}
