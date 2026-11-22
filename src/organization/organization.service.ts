@@ -59,7 +59,6 @@ export class OrganizationService {
     return { ...data, logoUrl: data.logo };
   }
   async departments(companyId: string, q: DepartmentQueryDto) {
-    const status = q.status?.toUpperCase();
     const baseFilters = [
       ...(q.search
         ? [
@@ -81,16 +80,7 @@ export class OrganizationService {
     };
     const where = {
       ...baseWhere,
-      ...(status
-        ? {
-            AND: [
-              ...baseFilters,
-              status === 'INACTIVE'
-                ? { OR: [{ status }, { active: false }] }
-                : { status },
-            ],
-          }
-        : {}),
+      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.department.findMany({
@@ -230,7 +220,7 @@ export class OrganizationService {
     };
     const where = {
       ...baseWhere,
-      ...(q.status ? { active: q.status === 'ACTIVE' } : {}),
+      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.position.findMany({

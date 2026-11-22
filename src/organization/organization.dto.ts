@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import {
   IsDateString,
+  IsBoolean,
   IsEmail,
   IsIn,
   IsInt,
@@ -140,10 +141,18 @@ export class PositionDto {
 export class UpdatePositionDto extends PartialType(PositionDto) {}
 
 export class DepartmentQueryDto extends PageDto {
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Filter by active state.',
+  })
   @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  isActive?: boolean;
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   @IsOptional()
@@ -164,10 +173,18 @@ export class PositionQueryDto extends PageDto {
   @IsIn(['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'])
   jobLevel?: string;
 
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Filter by active state.',
+  })
   @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  isActive?: boolean;
 }
 
 export class CompanyDto {

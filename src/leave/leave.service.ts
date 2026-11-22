@@ -172,7 +172,7 @@ export class LeaveService {
   }
   async policies(m: Membership, q: LeavePolicyQueryDto) {
     const search = q.search?.trim();
-    const active = q.status ? q.status === 'ACTIVE' : q.active;
+    const active = q.isActive;
     const baseWhere = {
       companyId: m.companyId,
       ...(q.paid !== undefined ? { paid: q.paid } : {}),

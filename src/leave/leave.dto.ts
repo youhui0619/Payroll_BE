@@ -193,12 +193,8 @@ export class UpdateLeavePolicyDto extends PartialType(LeavePolicyDto) {
 }
 
 export class LeavePolicyQueryDto extends PageDto {
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
-  @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
-
   @ApiPropertyOptional({
+    type: Boolean,
     description: 'Filter by active or archived policies.',
   })
   @IsOptional()
@@ -208,7 +204,7 @@ export class LeavePolicyQueryDto extends PageDto {
     return value;
   })
   @IsBoolean()
-  active?: boolean;
+  isActive?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

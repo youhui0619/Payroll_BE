@@ -181,7 +181,7 @@ export class WorkforceService {
     };
     const where = {
       ...baseWhere,
-      ...(q.status ? { status: q.status } : {}),
+      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
     };
     const [data, total] = await this.db.$transaction([
       this.db.publicHoliday.findMany({
@@ -195,7 +195,7 @@ export class WorkforceService {
     const statusCountValues = await Promise.all(
       ACTIVE_STATUS_VALUES.map((status) =>
         this.db.publicHoliday.count({
-          where: { ...baseWhere, status },
+          where: { ...baseWhere, active: status === 'ACTIVE' },
         }),
       ),
     );

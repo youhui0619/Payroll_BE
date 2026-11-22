@@ -121,8 +121,15 @@ describe('WorkforceService', () => {
     const result = await new WorkforceService(db).holidays(membership, {
       page: 1,
       pageSize: 20,
+      isActive: false,
     } as any);
 
+    expect(db.publicHoliday.findMany).toHaveBeenCalledWith({
+      where: expect.objectContaining({ active: false }),
+      skip: 0,
+      take: 20,
+      orderBy: { startDate: 'asc' },
+    });
     expect(result.meta.summary?.statusCounts).toEqual({
       ACTIVE: 0,
       INACTIVE: 2,

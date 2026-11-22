@@ -291,10 +291,18 @@ export class HolidayQueryDto extends PageDto {
   @IsIn(['NATIONAL', 'STATE'])
   scope?: 'NATIONAL' | 'STATE';
 
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Filter by active state.',
+  })
   @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @Transform(({ value }) => {
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  isActive?: boolean;
 
   @ApiPropertyOptional({ enum: HOLIDAY_REGIONS })
   @IsOptional()
