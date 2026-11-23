@@ -259,3 +259,12 @@ export class GrantDto {
   @ApiProperty() @IsString() @Length(1, 500) reason: string;
   @ApiProperty() @IsUUID() idempotencyKey: string;
 }
+
+export class LeaveAccrualDto {
+  @ApiProperty({ minimum: 2000, maximum: 2200, example: 2026 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2200)
+  year: number;
+}

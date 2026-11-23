@@ -487,6 +487,52 @@ async function main() {
     };
     await leave.grant(owner, grant);
     await leave.grant(owner, grant);
+    await db.employee.update({
+      where: { id: employee.id },
+      data: { employmentType: 'PERMANENT' },
+    });
+    const accrualPolicy = (
+      await leave.createPolicy(owner, {
+        code: 'ACCR',
+        name: 'Accrued annual',
+        paid: true,
+        defaultEntitlement: 12,
+        entitlementGrantMethod: 'ANNUAL',
+        eligibility: 'PERMANENT',
+        carryForwardPolicy: 'LIMITED',
+        maximumCarryForward: 5,
+        allowHalfDay: false,
+        noticeDays: 0,
+        approval: 'HR_ONLY',
+        effectiveFrom: '2020-01-01',
+      })
+    ).data;
+    await leave.grant(owner, {
+      employeeId: employee.id,
+      policyId: accrualPolicy.id,
+      year: 2098,
+      days: '10',
+      reason: 'Previous-year balance',
+      idempotencyKey: randomUUID(),
+    });
+    const accrualRun = await leave.accrue(owner, { year: 2099 });
+    assert.equal(accrualRun.data.createdCount, 2);
+    assert.equal(
+      await db.leaveLedger.count({
+        where: {
+          employeeId: employee.id,
+          policyId: accrualPolicy.id,
+          year: 2099,
+        },
+      }),
+      2,
+    );
+    const accrualRetry = await leave.accrue(owner, { year: 2099 });
+    assert.equal(accrualRetry.data.createdCount, 0);
+    assert.equal(accrualRetry.data.skippedCount, 2);
+    console.log(
+      'PASS leave annual accrual, eligibility, carry-forward and idempotency',
+    );
     const day = new Date('2099-01-05');
     while (![1, 2, 3, 4, 5].includes(day.getUTCDay()))
       day.setUTCDate(day.getUTCDate() + 1);
@@ -648,7 +694,7 @@ async function main() {
       'PASS leave draft edits, balance reservations, retained decisions and tenant access',
     );
     const balance = await db.leaveLedger.aggregate({
-      where: { employeeId: employee.id },
+      where: { employeeId: employee.id, policyId: policy.id },
       _sum: { days: true },
     });
     assert.equal(balance._sum.days?.toString(), '14');
@@ -1328,7 +1374,7 @@ async function main() {
     assert.equal(
       (
         await db.leaveLedger.aggregate({
-          where: { employeeId: employee.id },
+          where: { employeeId: employee.id, policyId: policy.id },
           _sum: { days: true },
         })
       )._sum.days?.toString(),

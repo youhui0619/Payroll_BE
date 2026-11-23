@@ -163,6 +163,8 @@ OWNER/HR can use the explicit employee lifecycle commands `POST /api/v1/employee
 
 Attendance self-service includes `POST /api/v1/attendance/adjustments` and `GET /api/v1/attendance/me/adjustments`. The request accepts a date, one or both corrected clock times, an idempotency key and a reason. Manager/HR queues use `GET /api/v1/attendance/adjustments` and `/adjustments/pending`; decisions use `POST /api/v1/attendance/adjustments/:id/decision`. OWNER/HR can make a direct reasoned correction with `POST /api/v1/attendance/adjustments/correct`. Approval creates or updates the attendance session and recalculates duration, worked minutes and overtime. Adjustments are rejected for calculated/finalized payroll periods and retain a complete decision event history.
 
+OWNER/HR can run leave accruals with `POST /api/v1/leave/accruals/run` and `{ "year": 2026 }`. The run uses the policy’s grant method, default/service-tier entitlement and eligibility settings, prorates annual grants for employment dates, calculates monthly or service-anniversary grants, and carries prior-year balances according to `NONE`, `LIMITED`, `UNLIMITED` or `HR_REVIEW`. Carry-forward caps use `maximumCarryForward`; HR-review carry is intentionally not auto-posted. Each ledger entry has a deterministic key, so rerunning a year does not duplicate balances. The command is audited; scheduling and expiry jobs remain future work.
+
 ## Later schema changes
 
 Keep `prisma/schema.prisma` and new migration files in sync. Preserve the existing init and all later migrations, including their check constraints and partial indexes. Do not consolidate migration history or rewrite applied SQL. The user ended the single-init workflow on 2026-11-23.

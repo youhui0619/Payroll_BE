@@ -31,7 +31,9 @@ import {
   LeavePolicyDto,
   LeaveBalanceQueryDto,
   UpdateLeavePolicyDto,
+  LeaveAccrualDto,
 } from './leave.dto';
+import { accrualDays, carryForwardDays } from './leave-accrual';
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
 export function workingDates(
   start: Date,
@@ -497,6 +499,137 @@ export class LeaveService {
         return { data };
       },
       { isolationLevel: 'Serializable' },
+    );
+  }
+
+  async accrue(m: Membership, d: LeaveAccrualDto) {
+    const start = new Date(Date.UTC(d.year, 0, 1));
+    const end = new Date(Date.UTC(d.year, 11, 31));
+    return this.db.$transaction(
+      async (tx) => {
+        const [policies, employees] = await Promise.all([
+          tx.leavePolicy.findMany({
+            where: {
+              companyId: m.companyId,
+              active: true,
+              effectiveFrom: { lte: end },
+              OR: [{ effectiveTo: null }, { effectiveTo: { gte: start } }],
+            },
+            orderBy: { code: 'asc' },
+          }),
+          tx.employee.findMany({
+            where: {
+              companyId: m.companyId,
+              joinedDate: { lte: end },
+              OR: [
+                { resignationDate: null },
+                { resignationDate: { gte: start } },
+              ],
+            },
+            select: {
+              id: true,
+              joinedDate: true,
+              resignationDate: true,
+              employmentType: true,
+              employmentStatus: true,
+              active: true,
+            },
+          }),
+        ]);
+        const created: {
+          employeeId: string;
+          policyId: string;
+          kind: string;
+          days: string;
+        }[] = [];
+        let skipped = 0;
+        for (const employee of employees) {
+          for (const policy of policies) {
+            const amount = accrualDays(policy, employee, d.year);
+            const previous = await tx.leaveLedger.aggregate({
+              where: {
+                companyId: m.companyId,
+                employeeId: employee.id,
+                policyId: policy.id,
+                year: d.year - 1,
+              },
+              _sum: { days: true },
+            });
+            const carry = carryForwardDays(
+              policy,
+              new Prisma.Decimal(previous._sum.days ?? 0),
+            );
+            const entries = [
+              ...(carry.isZero()
+                ? []
+                : [
+                    {
+                      kind: 'CARRY_FORWARD',
+                      days: carry,
+                      idempotencyKey: `carry-forward:${d.year}:${employee.id}:${policy.id}`,
+                      reason: `Carry-forward from leave year ${d.year - 1}`,
+                    },
+                  ]),
+              ...(amount.isZero() || policy.entitlementGrantMethod === 'MANUAL'
+                ? []
+                : [
+                    {
+                      kind: 'ACCRUAL',
+                      days: amount,
+                      idempotencyKey: `accrual:${d.year}:${employee.id}:${policy.id}`,
+                      reason: `Automatic ${policy.entitlementGrantMethod.toLowerCase()} entitlement for ${d.year}`,
+                    },
+                  ]),
+            ];
+            for (const entry of entries) {
+              const existing = await tx.leaveLedger.findUnique({
+                where: {
+                  companyId_idempotencyKey: {
+                    companyId: m.companyId,
+                    idempotencyKey: entry.idempotencyKey,
+                  },
+                },
+              });
+              if (existing) {
+                skipped += 1;
+                continue;
+              }
+              await tx.leaveLedger.create({
+                data: {
+                  companyId: m.companyId,
+                  employeeId: employee.id,
+                  policyId: policy.id,
+                  year: d.year,
+                  days: entry.days,
+                  kind: entry.kind,
+                  reason: entry.reason,
+                  idempotencyKey: entry.idempotencyKey,
+                },
+              });
+              created.push({
+                employeeId: employee.id,
+                policyId: policy.id,
+                kind: entry.kind,
+                days: entry.days.toFixed(2),
+              });
+            }
+          }
+        }
+        await audit(tx, m, 'LEAVE_ACCRUAL_RUN', `leave-accrual:${d.year}`, {
+          year: d.year,
+          createdCount: created.length,
+          skippedCount: skipped,
+        });
+        return {
+          data: {
+            year: d.year,
+            createdCount: created.length,
+            skippedCount: skipped,
+            entries: created,
+          },
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
   }
   async balance(

@@ -26,6 +26,7 @@ import {
   GrantDto,
   LeaveBalanceQueryDto,
   LeaveBalanceResponseDto,
+  LeaveAccrualDto,
 } from './leave.dto';
 import { LeaveService } from './leave.service';
 
@@ -73,6 +74,11 @@ export class LeaveController {
   @Roles('OWNER', 'HR')
   grant(@Req() r: TenantRequest, @Body() d: GrantDto) {
     return this.service.grant(r.membership, d);
+  }
+  @Post('accruals/run')
+  @Roles('OWNER', 'HR')
+  accrue(@Req() r: TenantRequest, @Body() d: LeaveAccrualDto) {
+    return this.service.accrue(r.membership, d);
   }
   @Get('me/balances')
   @ApiOkResponse({ type: LeaveBalanceResponseDto })
