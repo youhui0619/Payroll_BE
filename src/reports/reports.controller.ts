@@ -3,7 +3,11 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { Roles, TenantRequest } from '../auth/auth.decorators';
 import { DateRangeDto } from '../workforce/workforce.dto';
-import { PayslipHistoryQueryDto, ReportYearQueryDto } from './reports.dto';
+import {
+  DashboardQueryDto,
+  PayslipHistoryQueryDto,
+  ReportYearQueryDto,
+} from './reports.dto';
 import { ReportsService } from './reports.service';
 
 @ApiBearerAuth()
@@ -12,8 +16,11 @@ import { ReportsService } from './reports.service';
 @Controller()
 export class ReportsController {
   constructor(private service: ReportsService) {}
-  @Get('dashboard') dashboard(@Req() r: TenantRequest) {
-    return this.service.dashboard(r.membership);
+  @Get('dashboard') dashboard(
+    @Req() r: TenantRequest,
+    @Query() q: DashboardQueryDto,
+  ) {
+    return this.service.dashboard(r.membership, q);
   }
   @Get('reports/attendance.csv') @Roles('OWNER', 'HR') async attendance(
     @Req() r: TenantRequest,

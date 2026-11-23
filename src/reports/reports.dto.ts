@@ -21,3 +21,5 @@ export class PayslipHistoryQueryDto extends ReportYearQueryDto {
   @Max(12)
   month?: number;
 }
+
+export class DashboardQueryDto extends ReportYearQueryDto {}

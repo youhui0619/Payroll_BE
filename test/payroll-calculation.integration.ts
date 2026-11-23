@@ -652,6 +652,16 @@ export async function verifyPayrollCalculation(
   console.log(
     'PASS finalized payroll corrections, later-period trace, idempotency and draft-only voiding',
   );
+  const dashboard = await new ReportsService(database).dashboard(actor, {
+    year: 2026,
+  });
+  assert.ok(dashboard.data.activeEmployees >= 1);
+  assert.equal(dashboard.data.latestPayroll?.runId, run.id);
+  assert.equal(dashboard.data.latestPayroll?.status, 'PAID');
+  assert.ok(dashboard.data.payrollTrend.some((row) => row.runId === run.id));
+  console.log(
+    'PASS dashboard aggregates, payroll trend, team counts and upcoming calendar data',
+  );
   console.log(
     'PASS persisted payroll calculation, approval, publication, payslip mapping, payment settlement and locked reads',
   );

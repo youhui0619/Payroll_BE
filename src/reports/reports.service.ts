@@ -3,63 +3,224 @@ import { Membership } from '@prisma/client';
 import { Database } from '../database.module';
 import { audit, dateOnly, fail, localDate } from '../common/domain';
 import { DateRangeDto } from '../workforce/workforce.dto';
-import { PayslipHistoryQueryDto, ReportYearQueryDto } from './reports.dto';
+import {
+  DashboardQueryDto,
+  PayslipHistoryQueryDto,
+  ReportYearQueryDto,
+} from './reports.dto';
 import { csv } from './reports.utils';
 
 @Injectable()
 export class ReportsService {
   constructor(private db: Database) {}
-  async dashboard(m: Membership) {
+  async dashboard(m: Membership, q: DashboardQueryDto = {}) {
     const company = await this.db.company.findUniqueOrThrow({
       where: { id: m.companyId },
     });
     const today = dateOnly(localDate(new Date(), company.timezone));
+    const selectedYear = q.year ?? today.getUTCFullYear();
+    const futureEnd = new Date(today);
+    futureEnd.setUTCDate(futureEnd.getUTCDate() + 31);
     const payroll = await this.db.payrollRun.groupBy({
       by: ['status'],
       where: { companyId: m.companyId },
       _count: { _all: true },
     });
-    const [employees, pendingLeave, pendingClaims, openSessions, holidays] =
-      await this.db.$transaction([
-        this.db.employee.count({
-          where: { companyId: m.companyId, active: true },
-        }),
-        this.db.leaveRequest.count({
-          where: {
-            companyId: m.companyId,
-            status: { in: ['PENDING_MANAGER', 'PENDING_HR'] },
-          },
-        }),
-        this.db.claim.count({
-          where: {
-            companyId: m.companyId,
-            status: { in: ['PENDING_MANAGER', 'PENDING_FINANCE'] },
-          },
-        }),
-        this.db.attendanceSession.count({
-          where: { companyId: m.companyId, clockOut: null },
-        }),
-        this.db.publicHoliday.findMany({
-          where: {
-            companyId: m.companyId,
-            active: true,
-            endDate: { gte: today },
-          },
-          orderBy: { startDate: 'asc' },
-          take: 5,
-        }),
-      ]);
+    const [
+      employeeRows,
+      pendingLeave,
+      pendingClaims,
+      pendingOvertime,
+      pendingAttendance,
+      openSessions,
+      presentRows,
+      holidays,
+      leaveCalendar,
+      runs,
+      finalizedRuns,
+    ] = await this.db.$transaction([
+      this.db.employee.findMany({
+        where: { companyId: m.companyId, active: true },
+        select: {
+          id: true,
+          department: { select: { id: true, code: true, name: true } },
+        },
+        orderBy: [{ id: 'asc' }],
+      }),
+      this.db.leaveRequest.count({
+        where: {
+          companyId: m.companyId,
+          status: { in: ['PENDING_MANAGER', 'PENDING_HR'] },
+        },
+      }),
+      this.db.claim.count({
+        where: {
+          companyId: m.companyId,
+          status: { in: ['PENDING_MANAGER', 'PENDING_FINANCE'] },
+        },
+      }),
+      this.db.overtimeRequest.count({
+        where: {
+          companyId: m.companyId,
+          status: { in: ['PENDING_MANAGER', 'PENDING_HR'] },
+        },
+      }),
+      this.db.attendanceAdjustment.count({
+        where: {
+          companyId: m.companyId,
+          status: { in: ['PENDING_MANAGER', 'PENDING_HR'] },
+        },
+      }),
+      this.db.attendanceSession.count({
+        where: { companyId: m.companyId, clockOut: null },
+      }),
+      this.db.attendanceSession.findMany({
+        where: {
+          companyId: m.companyId,
+          date: today,
+          employee: { active: true },
+        },
+        select: { employeeId: true },
+        distinct: ['employeeId'],
+      }),
+      this.db.publicHoliday.findMany({
+        where: {
+          companyId: m.companyId,
+          active: true,
+          endDate: { gte: today },
+        },
+        orderBy: { startDate: 'asc' },
+        take: 5,
+      }),
+      this.db.leaveRequest.findMany({
+        where: {
+          companyId: m.companyId,
+          status: 'APPROVED',
+          startDate: { lte: futureEnd },
+          endDate: { gte: today },
+        },
+        include: {
+          employee: { select: { employeeNo: true, name: true } },
+          policy: { select: { code: true, name: true } },
+        },
+        orderBy: [{ startDate: 'asc' }, { id: 'asc' }],
+        take: 500,
+      }),
+      this.db.payrollRun.findMany({
+        where: { companyId: m.companyId, year: selectedYear },
+        select: { id: true, year: true, month: true, status: true },
+        orderBy: [{ month: 'asc' }, { id: 'asc' }],
+      }),
+      this.db.payrollRun.findMany({
+        where: {
+          companyId: m.companyId,
+          status: { in: ['PUBLISHED', 'PAID'] },
+        },
+        select: { id: true, year: true, month: true, status: true },
+        orderBy: [{ year: 'desc' }, { month: 'desc' }, { id: 'desc' }],
+        take: 12,
+      }),
+    ]);
+    const statusCounts = Object.fromEntries(
+      payroll.map((row) => [row.status, row._count._all]),
+    );
+    const teamCounts = new Map<
+      string,
+      { departmentId: string | null; department: string; count: number }
+    >();
+    for (const row of employeeRows) {
+      const key = row.department?.id ?? 'UNASSIGNED';
+      const current = teamCounts.get(key) ?? {
+        departmentId: row.department?.id ?? null,
+        department: row.department?.name ?? 'Unassigned',
+        count: 0,
+      };
+      current.count += 1;
+      teamCounts.set(key, current);
+    }
+    const payrollTotals = async (run: (typeof finalizedRuns)[number]) => {
+      const totals = await this.db.payrollEmployee.aggregate({
+        where: { companyId: m.companyId, runId: run.id },
+        _sum: {
+          gross: true,
+          deductions: true,
+          employerContributions: true,
+          net: true,
+        },
+      });
+      return {
+        runId: run.id,
+        year: run.year,
+        month: run.month,
+        status: run.status,
+        gross: totals._sum.gross?.toFixed(2) ?? '0.00',
+        deductions: totals._sum.deductions?.toFixed(2) ?? '0.00',
+        employerContributions:
+          totals._sum.employerContributions?.toFixed(2) ?? '0.00',
+        net: totals._sum.net?.toFixed(2) ?? '0.00',
+      };
+    };
+    const trend = await Promise.all(
+      runs.map(async (run) => {
+        const totals = await this.db.payrollEmployee.aggregate({
+          where: { companyId: m.companyId, runId: run.id },
+          _sum: { gross: true, net: true, employerContributions: true },
+        });
+        return {
+          runId: run.id,
+          year: run.year,
+          month: run.month,
+          status: run.status,
+          gross: totals._sum.gross?.toFixed(2) ?? '0.00',
+          net: totals._sum.net?.toFixed(2) ?? '0.00',
+          employerContributions:
+            totals._sum.employerContributions?.toFixed(2) ?? '0.00',
+        };
+      }),
+    );
+    const latestPayroll = finalizedRuns[0]
+      ? await payrollTotals(finalizedRuns[0])
+      : null;
     return {
       data: {
-        activeEmployees: employees,
+        year: selectedYear,
+        activeEmployees: employeeRows.length,
+        presentToday: presentRows.length,
         pendingLeave,
         pendingClaims,
+        pendingOvertime,
+        pendingAttendance,
+        pendingApprovals:
+          pendingLeave + pendingClaims + pendingOvertime + pendingAttendance,
         currentlyClockedIn: openSessions,
         payroll: payroll.map((r) => ({
           status: r.status,
           count: r._count._all,
         })),
-        upcomingHolidays: holidays,
+        payrollStatusCounts: statusCounts,
+        latestPayroll,
+        payrollTrend: trend,
+        teamOverview: [...teamCounts.values()].sort(
+          (a, b) =>
+            b.count - a.count || a.department.localeCompare(b.department),
+        ),
+        upcomingHolidays: holidays.map((holiday) => ({
+          ...holiday,
+          startDate: holiday.startDate.toISOString().slice(0, 10),
+          endDate: holiday.endDate.toISOString().slice(0, 10),
+        })),
+        leaveCalendar: leaveCalendar.map((row) => ({
+          id: row.id,
+          employeeNo: row.employee.employeeNo,
+          employee: row.employee.name,
+          policyCode: row.policy.code,
+          policy: row.policy.name,
+          startDate: row.startDate.toISOString().slice(0, 10),
+          endDate: row.endDate.toISOString().slice(0, 10),
+          days: row.days.toFixed(2),
+          halfDay: row.halfDay,
+          paid: row.paid,
+        })),
       },
     };
   }
