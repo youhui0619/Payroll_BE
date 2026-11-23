@@ -204,6 +204,12 @@ OWNER/HR can use `GET /leave/employees/:id/balances?year=2027` for another emplo
 
 Employees can replace their draft using `PATCH /leave/applications/:id` with the same body as creation. Editing recalculates eligibility and duration; submitted applications cannot be edited. `GET /leave/applications/:id` returns the application and all retained workflow events, including each manager/HR decision and comment. Access is limited to the employee, assigned manager, OWNER and HR. Submission still revalidates eligibility; approval posts usage and cancellation reverses it atomically.
 
+### Employee import
+
+`POST /api/v1/employees/import/preview` accepts a JSON batch with an `idempotencyKey` UUID and up to 1,000 employee rows. Required fields are `employeeNo`, `name` and `joinedDate`; optional department/position/manager/location/schedule UUIDs, employment type, salary and payment fields are validated against the authenticated company. The response reports normalized rows, row numbers, duplicate/reference errors and `canCommit` without writing employees.
+
+`POST /api/v1/employees/import/commit` repeats the same batch after review. It creates employees and optional opening salary rows in one serializable transaction, records an `import_batches` row and audit event, and returns the original result on a repeated company/entity/idempotency key. It never updates an existing employee. Spreadsheet/file parsing and provider-specific column mappings can be layered over this stable JSON contract later.
+
 The revised init migration includes `leave_events`. These changes do not migrate an already-applied older init.
 
 ### Claims and receipts

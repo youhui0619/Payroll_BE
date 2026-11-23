@@ -109,6 +109,8 @@ describe('application HTTP contract', () => {
     expect(
       doc.paths['/api/v1/payroll/runs/{id}/statutory-exports/{scheme}'].get,
     ).toBeDefined();
+    expect(doc.paths['/api/v1/employees/import/preview'].post).toBeDefined();
+    expect(doc.paths['/api/v1/employees/import/commit'].post).toBeDefined();
     expect(doc.paths['/api/v1/notifications'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications/{id}/read'].patch).toBeDefined();
   });

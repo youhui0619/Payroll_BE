@@ -4,8 +4,9 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
+import { audit, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 import {
   CreateEmployeeDto,
@@ -13,6 +14,7 @@ import {
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
+import { EmployeeImportDto, EmployeeImportRowDto } from './employee-import.dto';
 import { EMPLOYMENT_STATUS_VALUES } from './employment-statuses';
 import { WORKING_DAY_NAMES } from '../workforce/working-schedule.dto';
 import {
@@ -114,6 +116,182 @@ export class EmployeesService {
       select: { id: true },
     });
     return schedule?.id ?? null;
+  }
+
+  private normalizeImportRow(row: EmployeeImportRowDto) {
+    return {
+      ...row,
+      employeeNo: row.employeeNo?.trim(),
+      name: row.name?.trim(),
+      email: row.email?.trim() || null,
+      joinedDate: row.joinedDate?.trim(),
+      salaryType: row.salaryType?.trim() || null,
+      paymentMethod: row.paymentMethod?.trim() || null,
+      bank: row.bank?.trim() || null,
+      bankAccount: row.bankAccount?.trim() || null,
+    };
+  }
+
+  private async validateImportRows(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+    rows: EmployeeImportRowDto[],
+  ) {
+    const normalized = rows.map((row) => this.normalizeImportRow(row));
+    const employeeNos = normalized
+      .map((row) => row.employeeNo)
+      .filter((value): value is string => !!value);
+    const existing = await tx.employee.findMany({
+      where: { companyId, employeeNo: { in: employeeNos } },
+      select: { employeeNo: true },
+    });
+    const existingNos = new Set(existing.map((row) => row.employeeNo));
+    const seen = new Set<string>();
+    return Promise.all(
+      normalized.map(async (row, index) => {
+        const errors: string[] = [];
+        if (!row.employeeNo) errors.push('Employee number is required.');
+        if (!row.name) errors.push('Name is required.');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(row.joinedDate ?? ''))
+          errors.push('Joined date must use YYYY-MM-DD.');
+        else if (
+          Number.isNaN(new Date(`${row.joinedDate}T00:00:00.000Z`).getTime())
+        )
+          errors.push('Joined date is invalid.');
+        if (row.employeeNo && seen.has(row.employeeNo))
+          errors.push('Employee number is duplicated in this import.');
+        if (row.employeeNo) seen.add(row.employeeNo);
+        if (row.employeeNo && existingNos.has(row.employeeNo))
+          errors.push('Employee number already exists.');
+        try {
+          if (!errors.length) await this.validateReferences(tx, companyId, row);
+        } catch (error) {
+          errors.push(
+            error instanceof Error ? error.message : 'Invalid reference.',
+          );
+        }
+        return {
+          rowNumber: index + 1,
+          employeeNo: row.employeeNo ?? '',
+          valid: errors.length === 0,
+          errors,
+          normalized: row,
+        };
+      }),
+    );
+  }
+
+  async importPreview(companyId: string, dto: EmployeeImportDto) {
+    return this.db.$transaction(async (tx) => {
+      const rows = await this.validateImportRows(tx, companyId, dto.rows);
+      return {
+        data: {
+          entityType: 'EMPLOYEE',
+          rowCount: rows.length,
+          validCount: rows.filter((row) => row.valid).length,
+          errorCount: rows.filter((row) => !row.valid).length,
+          canCommit: rows.every((row) => row.valid),
+          rows,
+        },
+      };
+    });
+  }
+
+  async importCommit(m: Membership, dto: EmployeeImportDto) {
+    return this.db.$transaction(
+      async (tx) => {
+        const entityType = 'EMPLOYEE';
+        const existingBatch = await tx.importBatch.findUnique({
+          where: {
+            companyId_entityType_idempotencyKey: {
+              companyId: m.companyId,
+              entityType,
+              idempotencyKey: dto.idempotencyKey,
+            },
+          },
+        });
+        if (existingBatch)
+          return { data: existingBatch.summary, idempotent: true };
+        const rows = await this.validateImportRows(tx, m.companyId, dto.rows);
+        if (rows.some((row) => !row.valid))
+          fail(
+            'IMPORT_VALIDATION_FAILED',
+            'Resolve all row errors in the import preview before committing.',
+            422,
+          );
+        const created: { id: string; employeeNo: string }[] = [];
+        for (const row of rows) {
+          const value = row.normalized;
+          const joinedDate = new Date(`${value.joinedDate}T00:00:00.000Z`);
+          const scheduleId =
+            value.scheduleId !== undefined
+              ? value.scheduleId
+              : await this.defaultScheduleId(
+                  tx,
+                  m.companyId,
+                  value.employmentType,
+                );
+          const employee = await tx.employee.create({
+            data: {
+              companyId: m.companyId,
+              employeeNo: value.employeeNo,
+              name: value.name,
+              email: value.email,
+              joinedDate,
+              departmentId: value.departmentId ?? null,
+              positionId: value.positionId ?? null,
+              managerId: value.managerId ?? null,
+              locationId: value.locationId ?? null,
+              scheduleId,
+              employmentType: value.employmentType ?? null,
+              salaryType: value.salaryType,
+              paymentMethod: value.paymentMethod,
+              bank: value.bank,
+              bankAccount: value.bankAccount,
+            },
+          });
+          if (value.basicSalary !== undefined && value.basicSalary !== null)
+            await tx.salaryHistory.create({
+              data: {
+                companyId: m.companyId,
+                employeeId: employee.id,
+                amount: new Prisma.Decimal(value.basicSalary),
+                effectiveFrom: joinedDate,
+              },
+            });
+          created.push({ id: employee.id, employeeNo: employee.employeeNo });
+        }
+        const summary = {
+          entityType,
+          rowCount: rows.length,
+          validCount: rows.length,
+          errorCount: 0,
+          created,
+        };
+        const storedSummary = JSON.parse(
+          JSON.stringify(summary),
+        ) as Prisma.InputJsonValue;
+        const batch = await tx.importBatch.create({
+          data: {
+            companyId: m.companyId,
+            actorId: m.userId,
+            entityType,
+            idempotencyKey: dto.idempotencyKey,
+            rowCount: rows.length,
+            createdCount: created.length,
+            errorCount: 0,
+            summary: storedSummary,
+          },
+        });
+        await audit(tx, m, 'EMPLOYEE_IMPORT_COMMITTED', batch.id, {
+          entityType,
+          idempotencyKey: dto.idempotencyKey,
+          rowCount: rows.length,
+        });
+        return { data: summary, idempotent: false };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
   async list(companyId: string, q: EmployeeQueryDto) {
     const search = q.search?.trim();

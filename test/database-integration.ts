@@ -106,6 +106,72 @@ async function main() {
       employeeId: null,
       roles: ['OWNER'],
     } as Membership;
+    const employeesService = new EmployeesService(db as Database);
+    const importPreview = await employeesService.importPreview(company.id, {
+      idempotencyKey: randomUUID(),
+      rows: [
+        {
+          employeeNo: 'IMPORT-001',
+          name: 'Imported employee',
+          joinedDate: '2026-01-01',
+          scheduleId: schedule.id,
+          basicSalary: 3200,
+        },
+        {
+          employeeNo: 'E',
+          name: 'Duplicate employee',
+          joinedDate: '2026-01-01',
+        },
+      ],
+    });
+    assert.equal(importPreview.data.canCommit, false);
+    assert.equal(importPreview.data.rows[0].valid, true);
+    assert.equal(importPreview.data.rows[1].valid, false);
+    const importDto = {
+      idempotencyKey: randomUUID(),
+      rows: [
+        {
+          employeeNo: 'IMPORT-001',
+          name: 'Imported employee',
+          joinedDate: '2026-01-01',
+          scheduleId: schedule.id,
+          basicSalary: 3200,
+        },
+      ],
+    };
+    const importResult = await employeesService.importCommit(owner, importDto);
+    assert.equal(importResult.idempotent, false);
+    assert.equal(
+      (importResult.data as any).created[0].employeeNo,
+      'IMPORT-001',
+    );
+    assert.equal(
+      await db.salaryHistory.count({
+        where: {
+          companyId: company.id,
+          employee: { employeeNo: 'IMPORT-001' },
+        },
+      }),
+      1,
+    );
+    const importRetry = await employeesService.importCommit(owner, importDto);
+    assert.equal(importRetry.idempotent, true);
+    assert.equal(
+      await db.importBatch.count({
+        where: { companyId: company.id, entityType: 'EMPLOYEE' },
+      }),
+      1,
+    );
+    const importBatch = await db.importBatch.findFirstOrThrow({
+      where: { companyId: company.id, entityType: 'EMPLOYEE' },
+    });
+    const importAudit = await db.auditEvent.findFirst({
+      where: { companyId: company.id, action: 'EMPLOYEE_IMPORT_COMMITTED' },
+    });
+    assert.equal(importAudit?.resourceId, importBatch.id);
+    console.log(
+      'PASS employee import preview, row errors, idempotent commit and audit',
+    );
     const rules = new RulesService(db as Database);
     const imported = await rules.importCatalog(owner, 'EIS_2024_10');
     const lindungRule = await rules.importCatalog(

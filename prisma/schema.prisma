@@ -75,6 +75,7 @@ model Company {
   notificationSettings        NotificationSettings?
   notifications               Notification[]
   regionalSettings            RegionalSettings?
+  importBatches               ImportBatch[]
 
   @@map("companies")
 }
@@ -93,6 +94,26 @@ model Membership {
   @@unique([companyId, userId])
   @@unique([companyId, employeeId])
   @@map("company_memberships")
+}
+
+model ImportBatch {
+  id             String   @id @default(uuid()) @db.Uuid
+  companyId      String   @db.Uuid
+  actorId        String   @db.Uuid
+  entityType     String
+  idempotencyKey String   @db.Uuid
+  status         String   @default("COMMITTED")
+  rowCount       Int
+  createdCount   Int
+  errorCount     Int
+  summary        Json
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, id])
+  @@unique([companyId, entityType, idempotencyKey])
+  @@index([companyId, entityType, createdAt])
+  @@map("import_batches")
 }
 
 model Employee {

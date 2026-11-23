@@ -22,6 +22,7 @@ import {
   UpdateEmployeeDto,
   SalaryDto,
 } from './employees.dto';
+import { EmployeeImportDto } from './employee-import.dto';
 import { EmployeesService } from './employees.service';
 
 @ApiBearerAuth()
@@ -50,6 +51,18 @@ export class EmployeesController {
   }
   @Get('managers') managers(@Req() req: TenantRequest, @Query() q: PageDto) {
     return this.service.managers(req.membership.companyId, q);
+  }
+  @Post('import/preview') importPreview(
+    @Req() req: TenantRequest,
+    @Body() dto: EmployeeImportDto,
+  ) {
+    return this.service.importPreview(req.membership.companyId, dto);
+  }
+  @Post('import/commit') importCommit(
+    @Req() req: TenantRequest,
+    @Body() dto: EmployeeImportDto,
+  ) {
+    return this.service.importCommit(req.membership, dto);
   }
   @Get(':id') get(
     @Req() req: TenantRequest,
