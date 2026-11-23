@@ -26,6 +26,22 @@ type OvertimeSettings = {
   salaryProrationMethod: string;
 };
 
+/** Resolved once per payroll transaction so previews and persisted runs share
+ * the same FE-configured inclusion policy. */
+export type PayrollInclusionSettings = {
+  includeBasicSalary: boolean;
+  includeOvertime: boolean;
+  includeClaimsAndAllowance: boolean;
+  includeBonus: boolean;
+  includeCommissionAndIncentives: boolean;
+  includeEpf: boolean;
+  includeSocso: boolean;
+  includeEis: boolean;
+  includePcb: boolean;
+  includeHrdCorpLevy: boolean;
+  salaryProrationMethod: string;
+};
+
 export function calculateOvertimeAmount(input: {
   year: number;
   month: number;
@@ -125,10 +141,12 @@ export function assemblePayrollInputs(input: {
     overtimeHourlyRate: Prisma.Decimal | null;
   };
   overtimeSettings?: OvertimeSettings | null;
+  payrollSettings?: PayrollInclusionSettings | null;
 }) {
   const month = new Date(
     Date.UTC(input.salary.year, input.salary.month - 1, 1),
   );
+  const settings = input.payrollSettings;
   const salary = calculateSalary(input.salary);
   const definitions = new Map<string, PayrollComponentDefinition>();
   for (const definition of input.definitions) {
@@ -151,25 +169,31 @@ export function assemblePayrollInputs(input: {
       );
     return definition;
   };
-  const basic = resolve('BASIC');
-  if (basic.statutoryBases.includes('PCB') && basic.pcbTreatment !== 'NORMAL')
+  const basic =
+    settings?.includeBasicSalary === false ? null : resolve('BASIC');
+  if (basic?.statutoryBases.includes('PCB') && basic.pcbTreatment !== 'NORMAL')
     fail(
       'INVALID_BASIC_COMPONENT',
       'Basic salary must use normal PCB remuneration.',
     );
-  if (basic.kind !== 'EARNING' || !basic.affectsGross || !basic.affectsNet)
+  if (
+    basic &&
+    (basic.kind !== 'EARNING' || !basic.affectsGross || !basic.affectsNet)
+  )
     fail(
       'INVALID_BASIC_COMPONENT',
       'BASIC must be an earning affecting gross and net pay.',
     );
   const sourceId = input.runId + ':' + input.employeeId;
-  const components = [
-    componentFromDefinition(basic, salary.employedSalary, {
-      type: 'SALARY',
-      id: sourceId,
-    }),
-  ];
-  if (new Prisma.Decimal(salary.unpaidDeduction).gt(0)) {
+  const components = basic
+    ? [
+        componentFromDefinition(basic, salary.employedSalary, {
+          type: 'SALARY',
+          id: sourceId,
+        }),
+      ]
+    : [];
+  if (basic && new Prisma.Decimal(salary.unpaidDeduction).gt(0)) {
     const unpaid = resolve('UNPAID_LEAVE');
     if (
       unpaid.statutoryBases.includes('PCB') &&
@@ -219,6 +243,12 @@ export function assemblePayrollInputs(input: {
         'RESERVED_PAYROLL_COMPONENT',
         'BASIC and UNPAID_LEAVE are generated from salary and approved leave; use a separate adjustment code.',
       );
+    if (row.componentCode === 'BONUS' && settings?.includeBonus === false)
+      fail(
+        'PAYROLL_COMPONENT_DISABLED',
+        'Bonus is disabled in payroll settings; void the input or enable bonus processing.',
+        409,
+      );
     components.push(
       componentFromDefinition(
         resolve(row.componentCode),
@@ -235,6 +265,12 @@ export function assemblePayrollInputs(input: {
   }
   const claimSources: { id: string; description: string; date: string }[] = [];
   for (const claim of input.claims ?? []) {
+    if (settings?.includeClaimsAndAllowance === false)
+      fail(
+        'PAYROLL_COMPONENT_DISABLED',
+        'Claims and allowances are disabled in payroll settings; release the allocation or enable them.',
+        409,
+      );
     if (
       claim.companyId !== input.companyId ||
       claim.employeeId !== input.employeeId ||
@@ -279,6 +315,12 @@ export function assemblePayrollInputs(input: {
     referenceId: string | null;
   }[] = [];
   for (const record of input.commissions ?? []) {
+    if (settings?.includeCommissionAndIncentives === false)
+      fail(
+        'PAYROLL_COMPONENT_DISABLED',
+        'Commission and incentives are disabled in payroll settings; release the allocation or enable them.',
+        409,
+      );
     if (
       record.companyId !== input.companyId ||
       record.employeeId !== input.employeeId ||
@@ -356,7 +398,10 @@ export function assemblePayrollInputs(input: {
         'INVALID_PAYROLL_OVERTIME',
         'Only approved overtime allocated to this employee can be included.',
       );
-    if (input.overtimeSettings && !input.overtimeSettings.includeOvertime)
+    if (
+      (input.overtimeSettings && !input.overtimeSettings.includeOvertime) ||
+      settings?.includeOvertime === false
+    )
       fail(
         'OVERTIME_DISABLED',
         'Overtime is disabled in payroll settings.',

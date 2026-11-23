@@ -249,4 +249,57 @@ describe('payroll input assembly', () => {
       }),
     ).toThrow();
   });
+
+  it('honours earning inclusion switches and rejects already allocated disabled sources', () => {
+    const noBasic = assemblePayrollInputs({
+      ...base,
+      payrollSettings: {
+        includeBasicSalary: false,
+        includeOvertime: true,
+        includeClaimsAndAllowance: true,
+        includeBonus: true,
+        includeCommissionAndIncentives: true,
+        includeEpf: true,
+        includeSocso: true,
+        includeEis: true,
+        includePcb: true,
+        includeHrdCorpLevy: false,
+        salaryProrationMethod: 'CALENDAR_DAYS',
+      },
+    });
+    expect(noBasic.gross).toBe('200.00');
+    expect(noBasic.lines.map((line) => line.code)).toEqual(['BONUS']);
+    expect(() =>
+      assemblePayrollInputs({
+        ...base,
+        payrollSettings: {
+          includeBasicSalary: true,
+          includeOvertime: true,
+          includeClaimsAndAllowance: false,
+          includeBonus: true,
+          includeCommissionAndIncentives: true,
+          includeEpf: true,
+          includeSocso: true,
+          includeEis: true,
+          includePcb: true,
+          includeHrdCorpLevy: false,
+          salaryProrationMethod: 'CALENDAR_DAYS',
+        },
+        claims: [
+          {
+            id: 'claim',
+            companyId: 'company',
+            employeeId: 'employee',
+            payrollRunId: 'run',
+            status: 'APPROVED',
+            paymentMethod: 'PAYROLL',
+            payrollComponentCode: 'BONUS',
+            amount: new Prisma.Decimal(10),
+            description: 'Taxi',
+            date: new Date('2026-01-02'),
+          } as any,
+        ],
+      }),
+    ).toThrow();
+  });
 });

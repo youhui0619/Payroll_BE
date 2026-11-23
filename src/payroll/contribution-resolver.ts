@@ -23,6 +23,7 @@ export function resolveContributions(input: {
   bases: Record<StatutoryScheme, string>;
   profiles: readonly EmployeePayrollProfileVersion[];
   rulesets: readonly StatutoryRuleset[];
+  enabledSchemes?: readonly StatutoryScheme[];
 }) {
   if (
     !Number.isInteger(input.year) ||
@@ -60,6 +61,9 @@ export function resolveContributions(input: {
   const issues: { code: string; message: string; scheme?: StatutoryScheme }[] =
     [];
   const contributions = [];
+  const enabled = new Set<StatutoryScheme>(
+    input.enabledSchemes ?? (Object.keys(fields) as StatutoryScheme[]),
+  );
   if (!profile)
     issues.push({
       code: 'PAYROLL_PROFILE_REQUIRED',
@@ -67,6 +71,7 @@ export function resolveContributions(input: {
     });
   else
     for (const scheme of Object.keys(fields) as (keyof typeof fields)[]) {
+      if (!enabled.has(scheme)) continue;
       const matching = input.rulesets.filter(
         (r) =>
           r.active &&

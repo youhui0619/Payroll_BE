@@ -132,6 +132,21 @@ describe('effective payroll contribution resolution', () => {
       }).nonPcbReady,
     ).toBe(true);
   });
+  it('skips disabled schemes without requiring their rulesets', () => {
+    const resolved = resolveContributions({
+      ...base,
+      enabledSchemes: ['EPF', 'LINDUNG_24_JAM'],
+      rulesets: rules.filter((rule) =>
+        ['EPF', 'LINDUNG_24_JAM'].includes(rule.scheme),
+      ),
+    });
+    expect(resolved.nonPcbReady).toBe(true);
+    expect(resolved.contributions.map((row) => row.scheme)).toEqual([
+      'EPF',
+      'LINDUNG_24_JAM',
+    ]);
+    expect(resolved.issues).toEqual([]);
+  });
   it('rejects tenant leakage and reports missing profiles', () => {
     expect(() =>
       resolveContributions({

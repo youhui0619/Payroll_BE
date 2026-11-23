@@ -1334,7 +1334,7 @@ async function main() {
     assert.equal(assembled.epfAllocation?.normalEpf, '62.00');
     assert.equal(assembled.epfAllocation?.additionalEpf, '2.00');
     assert.equal(assembled.epfAllocation?.totalEmployeeEpf, '64.00');
-    assert.equal(assembled.contributionPreview.contributions.length, 5);
+    assert.equal(assembled.contributionPreview.contributions.length, 4);
     assert.equal(
       assembled.contributionPreview.contributions[0].employeeDeduction,
       '64.00',

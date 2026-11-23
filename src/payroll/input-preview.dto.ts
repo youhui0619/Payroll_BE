@@ -51,6 +51,25 @@ class ManualSourceDto {
 }
 export class InputPreviewDataDto {
   @ApiProperty({
+    type: 'object',
+    properties: {
+      includeBasicSalary: { type: 'boolean' },
+      includeOvertime: { type: 'boolean' },
+      includeClaimsAndAllowance: { type: 'boolean' },
+      includeBonus: { type: 'boolean' },
+      includeCommissionAndIncentives: { type: 'boolean' },
+      includeEpf: { type: 'boolean' },
+      includeSocso: { type: 'boolean' },
+      includeEis: { type: 'boolean' },
+      includePcb: { type: 'boolean' },
+      includeHrdCorpLevy: { type: 'boolean' },
+      salaryProrationMethod: { type: 'string' },
+    },
+    description:
+      'Resolved payroll settings used for this preview. Missing settings use the documented defaults.',
+  })
+  payrollSettings: Record<string, unknown>;
+  @ApiProperty({
     type: 'array',
     items: {
       type: 'object',

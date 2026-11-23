@@ -44,34 +44,47 @@ export class CalculationPreviewService {
         400,
       );
     const { data: input } = await this.inputs.resolve(tx, m, runId, employeeId);
-    if (!input.contributionPreview.nonPcbReady || !input.epfAllocation)
+    const pcbEnabled = input.payrollSettings?.includePcb ?? true;
+    if (
+      !input.contributionPreview.nonPcbReady ||
+      (pcbEnabled && !input.epfAllocation)
+    )
       fail(
         'STATUTORY_INPUTS_INCOMPLETE',
         'Resolve contribution rules, participation and EPF classifications before calculation.',
         409,
       );
-    if (!input.taxYtd.ready)
+    if (pcbEnabled && !input.taxYtd.ready)
       fail(
         'TAX_YTD_INCOMPLETE',
         'Resolve all prior payroll tax history issues before calculation.',
         409,
       );
-    if (!input.taxOpening || !input.taxFamily || !input.taxExpenses)
+    if (
+      pcbEnabled &&
+      (!input.taxOpening || !input.taxFamily || !input.taxExpenses)
+    )
       fail(
         'TAX_DECLARATIONS_REQUIRED',
         'Record previous-employer, family and TP1 declarations, including reviewed zero declarations where applicable.',
         409,
       );
-    if (new Prisma.Decimal(input.pcbRemuneration.unclassified).gt(0))
+    if (
+      pcbEnabled &&
+      new Prisma.Decimal(input.pcbRemuneration.unclassified).gt(0)
+    )
       fail(
         'PCB_CLASSIFICATION_REQUIRED',
         'Classify every taxable remuneration line before calculation.',
         409,
       );
-    const family = input.taxFamily.declaration as unknown as FamilyReliefInput;
+    const family = input.taxFamily?.declaration as unknown as
+      FamilyReliefInput | undefined;
     if (
-      !['RESIDENT', 'NON_RESIDENT'].includes(input.pcbCategory ?? '') ||
-      input.pcbCategory !== family.residency
+      pcbEnabled &&
+      (!family ||
+        !['RESIDENT', 'NON_RESIDENT'].includes(input.pcbCategory ?? '') ||
+        input.pcbCategory !== family.residency)
     )
       fail(
         'PCB_CATEGORY_UNSUPPORTED',
@@ -84,41 +97,52 @@ export class CalculationPreviewService {
       new Prisma.Decimal(input.taxYtd.totals[field])
         .plus(input.taxOpening[field])
         .toFixed(2);
-    const pcb = calculateDeclaredPcb(
-      {
-        year: input.year,
-        month: input.month,
-        normal: input.pcbRemuneration.normal,
-        additional: input.pcbRemuneration.additional,
-        normalEpf: input.epfAllocation.normalEpf,
-        additionalEpf: input.epfAllocation.additionalEpf,
-        accumulatedIncome: accumulated('taxableIncome'),
-        accumulatedEpf: accumulated('employeeEpf'),
-        accumulatedMtd: accumulated('mtd'),
-        accumulatedZakat: accumulated('zakat'),
-        currentZakat: d.currentZakat,
-      },
-      family,
-      input.taxExpenses.amounts as Partial<Record<Tp1Code, string>>,
-    );
+    const pcb = pcbEnabled
+      ? calculateDeclaredPcb(
+          {
+            year: input.year,
+            month: input.month,
+            normal: input.pcbRemuneration.normal,
+            additional: input.pcbRemuneration.additional,
+            normalEpf: input.epfAllocation!.normalEpf,
+            additionalEpf: input.epfAllocation!.additionalEpf,
+            accumulatedIncome: accumulated('taxableIncome'),
+            accumulatedEpf: accumulated('employeeEpf'),
+            accumulatedMtd: accumulated('mtd'),
+            accumulatedZakat: accumulated('zakat'),
+            currentZakat: d.currentZakat,
+          },
+          family!,
+          input.taxExpenses!.amounts as Partial<Record<Tp1Code, string>>,
+        )
+      : {
+          amount: '0.00',
+          trace: { disabled: true },
+          reliefTrace: null,
+          sourceSha256: null,
+        };
     const totals = payrollTotals(input.lines, [
       ...input.contributionPreview.contributions,
-      {
-        scheme: 'PCB',
-        rulesetId: 'PCB_2026:' + PCB_SOURCE_SHA256,
-        version: 'PCB_2026_V1',
-        result: {
-          employee: pcb.amount,
-          employer: '0.00',
-          total: pcb.amount,
-          basis: input.bases.PCB,
-          trace: {
-            ...pcb.trace,
-            reliefTrace: pcb.reliefTrace,
-            sourceSha256: pcb.sourceSha256,
-          },
-        },
-      },
+      ...(pcbEnabled
+        ? [
+            {
+              scheme: 'PCB' as const,
+              rulesetId: 'PCB_2026:' + PCB_SOURCE_SHA256,
+              version: 'PCB_2026_V1',
+              result: {
+                employee: pcb.amount,
+                employer: '0.00',
+                total: pcb.amount,
+                basis: input.bases.PCB,
+                trace: {
+                  ...pcb.trace,
+                  reliefTrace: pcb.reliefTrace,
+                  sourceSha256: pcb.sourceSha256,
+                },
+              },
+            },
+          ]
+        : []),
     ]);
     const taxPeriod: TaxPeriodSnapshot = {
       version: 1,
@@ -128,7 +152,7 @@ export class CalculationPreviewService {
       year: input.year,
       month: input.month,
       taxableIncome: input.bases.PCB,
-      employeeEpf: input.epfAllocation.totalEmployeeEpf,
+      employeeEpf: input.epfAllocation?.totalEmployeeEpf ?? '0.00',
       mtd: pcb.amount,
       zakat: new Prisma.Decimal(d.currentZakat).toFixed(2),
     };
@@ -148,7 +172,7 @@ export class CalculationPreviewService {
         complete: false,
         limitations: [
           'No calculation or status change is persisted.',
-          'Uses the current calendar-month input engine; other proration methods and all company inclusion switches are not yet applied.',
+          'Salary proration uses the resolved payroll policy; statutory and earning inclusion switches are applied to this calculation.',
           'Unallocated claims, overtime and recurring allowances are not automatically collected. Zakat credit does not create a salary deduction.',
         ],
       },

@@ -2,7 +2,10 @@ import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
 import { fail } from '../common/domain';
-import { assemblePayrollInputs } from './input-assembly';
+import {
+  assemblePayrollInputs,
+  PayrollInclusionSettings,
+} from './input-assembly';
 import { resolveUnpaidDays } from './leave-inputs';
 import { resolveContributions } from './contribution-resolver';
 import { allocateEpfForPcb } from './epf-allocation';
@@ -108,6 +111,24 @@ export class InputPreviewService {
     const overtimeSettings = await tx.payrollSettings.findUnique({
       where: { companyId: m.companyId },
     });
+    const payrollPolicy: PayrollInclusionSettings = {
+      includeBasicSalary: overtimeSettings?.includeBasicSalary ?? true,
+      includeOvertime: overtimeSettings?.includeOvertime ?? true,
+      includeClaimsAndAllowance:
+        overtimeSettings?.includeClaimsAndAllowance ?? true,
+      includeBonus: overtimeSettings?.includeBonus ?? true,
+      includeCommissionAndIncentives:
+        overtimeSettings?.includeCommissionAndIncentives ?? true,
+      includeEpf: overtimeSettings?.includeEpf ?? true,
+      includeSocso: overtimeSettings?.includeSocso ?? true,
+      includeEis: overtimeSettings?.includeEis ?? true,
+      includePcb: overtimeSettings?.includePcb ?? true,
+      // Keep the legacy no-settings behavior (all catalog schemes resolved);
+      // an explicitly saved false still disables HRD for that company.
+      includeHrdCorpLevy: overtimeSettings?.includeHrdCorpLevy ?? true,
+      salaryProrationMethod:
+        overtimeSettings?.salaryProrationMethod ?? 'CALENDAR_DAYS',
+    };
     const result = assemblePayrollInputs({
       claims,
       commissions,
@@ -123,6 +144,7 @@ export class InputPreviewService {
         overtimeHourlyRate: employee.overtimeHourlyRate,
       },
       overtimeSettings,
+      payrollSettings: payrollPolicy,
       salary: {
         year: run.year,
         month: run.month,
@@ -154,6 +176,13 @@ export class InputPreviewService {
         OR: [{ effectiveTo: null }, { effectiveTo: { gte: start } }],
       },
     });
+    const enabledSchemes = [
+      ...(payrollPolicy.includeEpf ? (['EPF'] as const) : []),
+      ...(payrollPolicy.includeSocso ? (['SOCSO'] as const) : []),
+      ...(payrollPolicy.includeEis ? (['EIS'] as const) : []),
+      'LINDUNG_24_JAM' as const,
+      ...(payrollPolicy.includeHrdCorpLevy ? (['HRD'] as const) : []),
+    ];
     const contributionPreview = resolveContributions({
       companyId: m.companyId,
       employeeId,
@@ -162,6 +191,7 @@ export class InputPreviewService {
       bases: result.bases,
       profiles,
       rulesets,
+      enabledSchemes,
     });
     const taxOpening = await tx.employeeTaxOpening.findFirst({
       where: {
@@ -205,7 +235,7 @@ export class InputPreviewService {
           message: string;
         };
       }
-    } else
+    } else if (payrollPolicy.includePcb)
       epfAllocationIssue = {
         code: 'EPF_RULESET_REQUIRED',
         message:
@@ -242,6 +272,7 @@ export class InputPreviewService {
         taxOpening,
         taxFamily,
         taxExpenses,
+        payrollSettings: payrollPolicy,
         taxYtd,
         epfAllocation,
         epfAllocationIssue,
