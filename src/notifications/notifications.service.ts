@@ -47,6 +47,43 @@ export async function createNotificationInTransaction(
   return tx.notification.upsert({ where, create: data, update: {} });
 }
 
+export async function notifyEmployeeInTransaction(
+  tx: Prisma.TransactionClient,
+  input: Omit<NotificationCreate, 'userId'> & {
+    employeeId: string;
+    settingKey?: 'leaveApplications' | 'claims' | 'payrollPayslips';
+  },
+) {
+  if (!tx.membership?.findFirst) return;
+  const membership = await tx.membership.findFirst({
+    where: {
+      companyId: input.companyId,
+      employeeId: input.employeeId,
+      active: true,
+    },
+    select: { userId: true },
+  });
+  if (!membership) return;
+  if (input.settingKey && tx.notificationSettings?.findUnique) {
+    const settings = await tx.notificationSettings.findUnique({
+      where: { companyId: input.companyId },
+      select: { [input.settingKey]: true },
+    });
+    if (settings && settings[input.settingKey] === false) return;
+  }
+  const {
+    employeeId: _employeeId,
+    settingKey: _settingKey,
+    ...notification
+  } = input;
+  void _employeeId;
+  void _settingKey;
+  return createNotificationInTransaction(tx, {
+    ...notification,
+    userId: membership.userId,
+  });
+}
+
 @Injectable()
 export class NotificationsService {
   constructor(private db: Database) {}

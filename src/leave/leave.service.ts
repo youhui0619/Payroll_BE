@@ -18,6 +18,7 @@ import {
   selfEmployee,
 } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
+import { notifyEmployeeInTransaction } from '../notifications/notifications.service';
 import {
   ACTIVE_STATUS_VALUES,
   makeStatusCounts,
@@ -116,6 +117,30 @@ export class LeaveService {
       },
     });
     await audit(tx, m, action, id);
+    if (action === 'LEAVE_APPROVE' || action === 'LEAVE_REJECT') {
+      const request = await tx.leaveRequest.findUnique({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        select: { employeeId: true },
+      });
+      if (request)
+        await notifyEmployeeInTransaction(tx, {
+          companyId: m.companyId,
+          employeeId: request.employeeId,
+          kind: 'LEAVE_DECISION',
+          title: status === 'APPROVED' ? 'Leave approved' : 'Leave updated',
+          message:
+            status === 'APPROVED'
+              ? 'Your leave application was approved.'
+              : status === 'REJECTED'
+                ? 'Your leave application was rejected.'
+                : 'Your leave application moved to the next approval stage.',
+          dedupeKey: `LEAVE_DECISION:${id}:${status}`,
+          sourceType: 'LEAVE_REQUEST',
+          sourceId: id,
+          settingKey: 'leaveApplications',
+          payload: { requestId: id, status },
+        });
+    }
   }
   async detail(m: Membership, id: string) {
     const data = await this.db.leaveRequest.findUnique({

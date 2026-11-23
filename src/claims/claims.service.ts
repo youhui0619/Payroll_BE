@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Membership, Prisma, RequestStatus } from '@prisma/client';
 import { Database } from '../database.module';
+import { notifyEmployeeInTransaction } from '../notifications/notifications.service';
 import { PageDto, paginated } from '../common/page.dto';
 import {
   ACTIVE_STATUS_VALUES,
@@ -168,6 +169,30 @@ export class ClaimsService {
       },
     });
     await audit(tx, m, action, id);
+    if (action === 'CLAIM_APPROVE' || action === 'CLAIM_REJECT') {
+      const claim = await tx.claim.findUnique({
+        where: { companyId_id: { companyId: m.companyId, id } },
+        select: { employeeId: true },
+      });
+      if (claim)
+        await notifyEmployeeInTransaction(tx, {
+          companyId: m.companyId,
+          employeeId: claim.employeeId,
+          kind: 'CLAIM_DECISION',
+          title: status === 'REJECTED' ? 'Claim rejected' : 'Claim updated',
+          message:
+            status === 'REJECTED'
+              ? 'Your claim was rejected.'
+              : status === 'APPROVED'
+                ? 'Your claim was approved.'
+                : 'Your claim moved to the next approval stage.',
+          dedupeKey: `CLAIM_DECISION:${id}:${status}`,
+          sourceType: 'CLAIM',
+          sourceId: id,
+          settingKey: 'claims',
+          payload: { claimId: id, status },
+        });
+    }
   }
 
   async detail(m: Membership, id: string) {

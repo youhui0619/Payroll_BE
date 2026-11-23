@@ -363,6 +363,16 @@ async function main() {
       }),
       1,
     );
+    assert.equal(
+      await db.notification.count({
+        where: {
+          companyId: company.id,
+          userId: user.id,
+          kind: 'LEAVE_DECISION',
+        },
+      }),
+      1,
+    );
     const approvedBalance = (
       await leave.balance(member, { year: 2099 })
     ).data.find((row) => row.policyId === policy.id);
@@ -506,6 +516,16 @@ async function main() {
       where: { companyId: company.id, claimId: claim.id },
     });
     assert.equal(events.length, 5);
+    assert.equal(
+      await db.notification.count({
+        where: {
+          companyId: company.id,
+          userId: user.id,
+          kind: 'CLAIM_DECISION',
+        },
+      }),
+      2,
+    );
     assert.equal(
       events.filter((event) => event.action === 'CLAIM_PAID').length,
       1,
