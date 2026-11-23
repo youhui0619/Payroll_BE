@@ -430,6 +430,14 @@ export async function verifyPayrollCalculation(
   const calculated = await execution.calculate(actor, run.id, review);
   assert.equal(calculated.data.status, 'CALCULATED');
   assert.equal(await db.payrollEmployee.count({ where: { runId: run.id } }), 1);
+  const register = await execution.register(actor, run.id, {
+    page: 1,
+    pageSize: 20,
+    search: 'CALCULATION',
+  });
+  assert.equal(register.meta.total, 1);
+  assert.equal(register.data[0].employeeNo, 'CALCULATION');
+  assert.equal(register.data[0].grossPay, expectedGross);
   const approved = await execution.approve(actor, run.id);
   assert.equal(approved.data.status, 'APPROVED');
   const published = await execution.publish(actor, run.id);

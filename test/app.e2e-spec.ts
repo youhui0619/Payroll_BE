@@ -93,6 +93,7 @@ describe('application HTTP contract', () => {
     expect(doc.paths['/api/v1/payroll/runs/{id}/publish'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/pay'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/payslips'].get).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/register'].get).toBeDefined();
   });
   it('restricts payroll roster access and validates department filters', async () => {
     const token = await app.get(JwtService).signAsync({

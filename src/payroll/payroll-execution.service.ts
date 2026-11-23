@@ -9,6 +9,7 @@ import {
   CalculatePayrollDto,
   PayrollPaymentDto,
 } from './payroll-execution.dto';
+import { PayrollRegisterQueryDto } from './payroll-register.dto';
 
 const jsonValue = (value: unknown) =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -481,6 +482,105 @@ export class PayrollExecutionService {
         ? (settings.footerText ?? '')
         : null,
     };
+  }
+
+  async register(m: Membership, runId: string, q: PayrollRegisterQueryDto) {
+    return this.db.$transaction(async (tx) => {
+      const run = await this.run(tx, m, runId);
+      if (run.status === 'DRAFT')
+        return paginated([], 0, q, {
+          runId: run.id,
+          year: run.year,
+          month: run.month,
+          status: run.status,
+          calculated: false,
+        });
+      const search = q.search?.trim();
+      const employeeWhere: Prisma.EmployeeWhereInput = {
+        ...(q.departmentIds?.length
+          ? { departmentId: { in: q.departmentIds } }
+          : {}),
+        ...(search
+          ? {
+              OR: [
+                { employeeNo: { contains: search, mode: 'insensitive' } },
+                { name: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+      };
+      const where: Prisma.PayrollEmployeeWhereInput = {
+        companyId: m.companyId,
+        runId,
+        ...(Object.keys(employeeWhere).length
+          ? { employee: employeeWhere }
+          : {}),
+      };
+      const [rows, total] = await Promise.all([
+        tx.payrollEmployee.findMany({
+          where,
+          include: {
+            employee: {
+              include: {
+                department: true,
+                position: true,
+              },
+            },
+          },
+          orderBy: { employee: { employeeNo: 'asc' } },
+          skip: (q.page - 1) * q.pageSize,
+          take: q.pageSize,
+        }),
+        tx.payrollEmployee.count({ where }),
+      ]);
+      const data = rows.map((row) => {
+        const full = this.payslipData(
+          {
+            ...row,
+            snapshot: {
+              ...(row.snapshot as any),
+              payslipSettings: {},
+            },
+          },
+          run,
+        ) as any;
+        return {
+          employeeId: row.employeeId,
+          employeeNo: row.employee.employeeNo,
+          employee: row.employee.name,
+          departmentId: row.employee.department?.id ?? null,
+          department: row.employee.department?.name ?? null,
+          positionId: row.employee.position?.id ?? null,
+          position: row.employee.position?.title ?? null,
+          status: run.status,
+          payslipNumber: row.payslipNumber,
+          basicPay: full.earnings?.basicPay ?? 0,
+          overtime: full.earnings?.overtime ?? 0,
+          deduction: full.deductions?.total ?? 0,
+          allowance: full.earnings?.allowance ?? 0,
+          bonus: full.earnings?.bonus ?? 0,
+          commission: full.earnings?.commissions ?? 0,
+          grossPay: full.earnings?.grossPay ?? Number(row.gross),
+          epf: full.deductions?.epf ?? 0,
+          epfEmployer: full.employerContributions?.epf ?? 0,
+          socso: full.deductions?.socso ?? 0,
+          socsoEmployer: full.employerContributions?.socso ?? 0,
+          lindungan24Jam: full.deductions?.lindungan24Jam ?? 0,
+          eis: full.deductions?.eis ?? 0,
+          eisEmployer: full.employerContributions?.eis ?? 0,
+          pcb: full.deductions?.pcb ?? 0,
+          advance: full.deductions?.advance ?? 0,
+          netPay: full.netPay,
+        };
+      });
+      return paginated(data, total, q, {
+        runId: run.id,
+        year: run.year,
+        month: run.month,
+        status: run.status,
+        calculated: true,
+      });
+    });
   }
 
   async payslips(m: Membership, runId: string, q: PageDto) {

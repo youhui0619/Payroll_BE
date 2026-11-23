@@ -18,6 +18,7 @@ import { OvertimeAllocationModule } from './overtime-allocation.module';
 import { PayrollExecutionController } from './payroll-execution.controller';
 import { PayslipController } from './payslip.controller';
 import { PayrollExecutionService } from './payroll-execution.service';
+import { PayrollRegisterController } from './payroll-register.controller';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PayrollExecutionService } from './payroll-execution.service';
     CommissionAllocationController,
     PayrollExecutionController,
     PayslipController,
+    PayrollRegisterController,
   ],
   providers: [
     PayrollService,
