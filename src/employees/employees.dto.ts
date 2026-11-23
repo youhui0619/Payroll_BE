@@ -113,6 +113,7 @@ export class CreateEmployeeDto {
   nricPassportNo?: string;
   @ApiPropertyOptional({ example: '1990-01-01', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   dateOfBirth?: string | null;
@@ -226,11 +227,13 @@ export class CreateEmployeeDto {
   workingSchedule?: WorkingScheduleDto | null;
   @ApiPropertyOptional({ example: '2026-04-01', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   confirmationDate?: string | null;
   @ApiPropertyOptional({ example: '2026-12-31', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   resignationDate?: string | null;
@@ -238,6 +241,7 @@ export class CreateEmployeeDto {
   // Banking & Payroll
   @ApiPropertyOptional({ example: 2300, nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   basicSalary?: number | null;

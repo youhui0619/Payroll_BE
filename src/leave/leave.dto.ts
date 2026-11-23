@@ -21,6 +21,9 @@ import { Type } from 'class-transformer';
 import { Transform } from 'class-transformer';
 import { PageDto } from '../common/page.dto';
 
+const emptyStringAsNull = ({ value }: { value: unknown }) =>
+  value === '' ? null : value;
+
 export class LeaveBalanceQueryDto {
   @ApiPropertyOptional({
     minimum: 2000,
@@ -72,18 +75,21 @@ export class LeaveBalanceResponseDto {
 export class LeaveServiceEntitlementTierDto {
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   serviceFrom?: number | null;
 
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   serviceTo?: number | null;
 
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   daysPerYear?: number | null;
@@ -112,6 +118,7 @@ export class LeavePolicyDto {
   entitlementCalculationMethod?: string;
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   defaultEntitlement?: number | null;
@@ -159,6 +166,7 @@ export class LeavePolicyDto {
   carryForwardPolicy?: string;
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   maximumCarryForward?: number | null;
@@ -235,6 +243,7 @@ export class LeaveDto {
   @ApiProperty() @IsString() @Length(1, 1000) reason: string;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsString()
   @Length(1, 100)
   reference?: string | null;

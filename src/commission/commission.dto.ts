@@ -69,7 +69,7 @@ export const RECORD_STATUSES = [
 const decimal = /^(0|[1-9]\d{0,11})(\.\d{1,4})?$/;
 
 const asString = ({ value }: { value: unknown }) =>
-  value === null || value === undefined ? value : String(value);
+  value === null || value === undefined || value === '' ? null : String(value);
 
 export class CommissionSettingDto {
   @ApiProperty({ maxLength: 20 })
@@ -117,6 +117,7 @@ export class CommissionSettingDto {
 
   @ApiPropertyOptional({ nullable: true, maxLength: 250 })
   @IsOptional()
+  @Transform(asString)
   @IsString()
   @Length(1, 250)
   description?: string | null;
@@ -202,12 +203,14 @@ export class CommissionRecordDto {
 
   @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
+  @Transform(asString)
   @IsString()
   @Length(1, 100)
   referenceId?: string | null;
 
   @ApiPropertyOptional({ maxLength: 2000 })
   @IsOptional()
+  @Transform(asString)
   @IsString()
   @Length(1, 2000)
   notes?: string | null;

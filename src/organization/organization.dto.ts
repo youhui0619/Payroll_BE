@@ -66,12 +66,14 @@ export class DepartmentDto {
 
   @ApiPropertyOptional({ example: '2026-01-01', nullable: true })
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveFrom?: string | null;
 
   @ApiPropertyOptional({ example: '2026-12-31', nullable: true })
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string | null;
@@ -128,12 +130,14 @@ export class PositionDto {
 
   @ApiPropertyOptional({ example: '2026-01-01', nullable: true })
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveFrom?: string | null;
 
   @ApiPropertyOptional({ example: '2026-12-31', nullable: true })
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string | null;

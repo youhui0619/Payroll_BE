@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsDateString,
@@ -13,6 +14,9 @@ import {
   Matches,
   ValidateIf,
 } from 'class-validator';
+
+const emptyStringAsNull = ({ value }: { value: unknown }) =>
+  value === '' ? null : value;
 
 export type PayrollDay = number | 'LAST_DAY';
 
@@ -99,10 +103,12 @@ export class PayrollSettingsDto {
   includeCommissionAndIncentives?: boolean;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   standardWorkingHoursPerDay?: number | null;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   normalWorkingDayMultiplier?: number | null;
   @ApiPropertyOptional()
@@ -116,6 +122,7 @@ export class PayrollSettingsDto {
   configureRestDayRates?: boolean;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   restDayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()
@@ -129,6 +136,7 @@ export class PayrollSettingsDto {
   configurePublicHolidayRates?: boolean;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
   publicHolidayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()

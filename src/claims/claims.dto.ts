@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
@@ -13,10 +14,14 @@ import {
 import { RequestStatus } from '@prisma/client';
 import { PageDto } from '../common/page.dto';
 
+const emptyStringAsNull = ({ value }: { value: unknown }) =>
+  value === '' ? null : value;
+
 export class ClaimTypeDto {
   @ApiProperty() @IsString() @Length(1, 30) code: string;
   @ApiProperty() @IsString() @Length(1, 150) name: string;
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 1000)
@@ -33,16 +38,19 @@ export class ClaimTypeDto {
     nullable: true,
     description: 'Per-claim maximum, or null for no limit.',
   })
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Matches(/^(0|[1-9]\d{0,11})(\.\d{1,2})?$/)
   maxAmount?: string | null;
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveFrom?: string | null;
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringAsNull)
   @IsOptional()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
