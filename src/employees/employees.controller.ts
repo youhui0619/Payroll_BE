@@ -8,8 +8,10 @@ import {
   Post,
   Query,
   Req,
+  Res,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { Roles, TenantRequest } from '../auth/auth.decorators';
 import { PageDto } from '../common/page.dto';
 import {
@@ -59,6 +61,17 @@ export class EmployeesController {
   }
   @Get() list(@Req() req: TenantRequest, @Query() q: EmployeeQueryDto) {
     return this.service.list(req.membership.companyId, q);
+  }
+  @Get('export.csv') @Roles('OWNER', 'HR', 'FINANCE') export(
+    @Req() req: TenantRequest,
+    @Query() q: EmployeeQueryDto,
+    @Res() res: Response,
+  ) {
+    return this.service
+      .exportCsv(req.membership, q)
+      .then((content) =>
+        res.type('text/csv').attachment('employees.csv').send(content),
+      );
   }
   @Get('managers') managers(@Req() req: TenantRequest, @Query() q: PageDto) {
     return this.service.managers(req.membership.companyId, q);

@@ -476,6 +476,10 @@ The source must be `PUBLISHED` or `PAID`, the target must be a later calendar mo
 ### Dashboard aggregates
 
 `GET /api/v1/dashboard?year=2026` returns tenant-scoped data for the dashboard widgets. `activeEmployees`, `presentToday`, `currentlyClockedIn`, and the individual pending counts cover the summary cards; `pendingApprovals` is their total. `payrollStatusCounts` and `payrollTrend` provide run status and selected-year totals, while `latestPayroll` contains the newest published/paid gross, deductions, employer contributions and net totals as decimal strings. `teamOverview` contains department counts (including `Unassigned`), `upcomingHolidays` contains the next five active holidays and `leaveCalendar` contains approved leave in the next 31 days. The existing `payroll` status-count array remains for compatibility.
+
+### Employee export
+
+`GET /api/v1/employees/export.csv` accepts the employee list filters (`search`, `active`, `departmentId`, `positionId`, `employmentStatus`, and `employmentType`) and returns a UTF-8 CSV bounded to 5,000 rows. OWNER, HR and FINANCE can export employee number, identity/contact, employment status/type, department, position, manager and location labels. Bank account, salary and statutory membership fields are intentionally excluded. Formula-like cells use the shared CSV safety encoder, and every export records `EMPLOYEES_EXPORTED` with the filter summary and row count.
 Publication snapshots the configured payslip visibility and masking settings. Bank account details are opt-in and account numbers are masked to their final four digits when masking is enabled; footer text is returned only when configured. Hidden sections are returned as `null` so the FE can honor the saved layout without changing the immutable calculation totals. `employeeVisibility=ADMINS_ONLY` is enforced from that immutable snapshot for list, detail and PDF reads, and `notifyEmployees=false` suppresses publication notifications.
 
 ### Overtime allocation to payroll

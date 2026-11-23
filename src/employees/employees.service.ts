@@ -23,6 +23,7 @@ import {
   toWorkingScheduleResponse,
 } from '../workforce/working-schedule.mapper';
 import { makeStatusCounts } from '../common/status-summary';
+import { csv } from '../reports/reports.utils';
 
 @Injectable()
 export class EmployeesService {
@@ -359,6 +360,98 @@ export class EmployeesService {
     return paginated(rows, total, q, {
       summary: { statusCounts },
     });
+  }
+
+  async exportCsv(m: Membership, q: EmployeeQueryDto) {
+    const search = q.search?.trim();
+    const where: Prisma.EmployeeWhereInput = {
+      companyId: m.companyId,
+      ...(q.active !== undefined ? { active: q.active } : {}),
+      ...(q.departmentId ? { departmentId: q.departmentId } : {}),
+      ...(q.positionId ? { positionId: q.positionId } : {}),
+      ...(q.employmentType ? { employmentType: q.employmentType } : {}),
+      ...(q.employmentStatus ? { employmentStatus: q.employmentStatus } : {}),
+      ...(search
+        ? {
+            OR: [
+              {
+                employeeNo: { contains: search, mode: 'insensitive' as const },
+              },
+              { name: { contains: search, mode: 'insensitive' as const } },
+              { email: { contains: search, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
+    };
+    const rows = await this.db.employee.findMany({
+      where,
+      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      take: 5001,
+      select: {
+        employeeNo: true,
+        name: true,
+        email: true,
+        active: true,
+        joinedDate: true,
+        employmentStatus: true,
+        employmentType: true,
+        department: { select: { code: true, name: true } },
+        position: { select: { code: true, title: true } },
+        manager: { select: { employeeNo: true, name: true } },
+        location: { select: { code: true, name: true } },
+      },
+    });
+    if (rows.length > 5000)
+      fail(
+        'EXPORT_TOO_LARGE',
+        'Narrow the employee filters before exporting.',
+        400,
+      );
+    await audit(this.db, m, 'EMPLOYEES_EXPORTED', m.companyId, {
+      search: q.search ?? null,
+      active: q.active ?? null,
+      departmentId: q.departmentId ?? null,
+      positionId: q.positionId ?? null,
+      employmentStatus: q.employmentStatus ?? null,
+      employmentType: q.employmentType ?? null,
+      rowCount: rows.length,
+    });
+    return csv(
+      [
+        'Employee number',
+        'Name',
+        'Email',
+        'Active',
+        'Joined date',
+        'Employment status',
+        'Employment type',
+        'Department code',
+        'Department',
+        'Position code',
+        'Position',
+        'Manager employee number',
+        'Manager',
+        'Location code',
+        'Location',
+      ],
+      rows.map((row) => [
+        row.employeeNo,
+        row.name,
+        row.email ?? '',
+        row.active,
+        row.joinedDate.toISOString().slice(0, 10),
+        row.employmentStatus ?? '',
+        row.employmentType ?? '',
+        row.department?.code ?? '',
+        row.department?.name ?? '',
+        row.position?.code ?? '',
+        row.position?.title ?? '',
+        row.manager?.employeeNo ?? '',
+        row.manager?.name ?? '',
+        row.location?.code ?? '',
+        row.location?.name ?? '',
+      ]),
+    );
   }
   async managers(companyId: string, q: PageDto) {
     const where = {

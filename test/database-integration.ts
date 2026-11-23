@@ -187,6 +187,19 @@ async function main() {
       where: { companyId: company.id, action: 'EMPLOYEE_IMPORT_COMMITTED' },
     });
     assert.equal(importAudit?.resourceId, importBatch.id);
+    const employeeExport = await employeesService.exportCsv(owner, {
+      page: 1,
+      pageSize: 20,
+      search: 'IMPORT-001',
+    });
+    assert.equal(employeeExport.includes('IMPORT-001'), true);
+    assert.equal(employeeExport.includes('Bank account'), false);
+    assert.equal(
+      await db.auditEvent.count({
+        where: { companyId: company.id, action: 'EMPLOYEES_EXPORTED' },
+      }),
+      1,
+    );
     console.log(
       'PASS employee import preview, row errors, idempotent commit and audit',
     );
