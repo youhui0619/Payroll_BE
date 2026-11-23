@@ -6,7 +6,6 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
-  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -103,7 +102,7 @@ export class LeaveController {
   detail(@Req() r: TenantRequest, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.detail(r.membership, id);
   }
-  @Put('applications/:id')
+  @Patch('applications/:id')
   @ApiOperation({
     summary: 'Replace an employee-owned draft; eligibility is recalculated.',
   })

@@ -202,13 +202,13 @@ PCB calculation, salary proration, payroll adjustments, approval/publication/pay
 
 OWNER/HR can use `GET /leave/employees/:id/balances?year=2027` for another employee, including historical inactive profiles. Managers do not receive administrative access to staff balances.
 
-Employees can replace their draft using `PUT /leave/applications/:id` with the same body as creation. Editing recalculates eligibility and duration; submitted applications cannot be edited. `GET /leave/applications/:id` returns the application and all retained workflow events, including each manager/HR decision and comment. Access is limited to the employee, assigned manager, OWNER and HR. Submission still revalidates eligibility; approval posts usage and cancellation reverses it atomically.
+Employees can replace their draft using `PATCH /leave/applications/:id` with the same body as creation. Editing recalculates eligibility and duration; submitted applications cannot be edited. `GET /leave/applications/:id` returns the application and all retained workflow events, including each manager/HR decision and comment. Access is limited to the employee, assigned manager, OWNER and HR. Submission still revalidates eligibility; approval posts usage and cancellation reverses it atomically.
 
 The revised init migration includes `leave_events`. These changes do not migrate an already-applied older init.
 
 ### Claims and receipts
 
-OWNER, HR and FINANCE can create claim types with `POST /claims/types` and replace settings with `PUT /claims/types/:id`. Read a type with `GET /claims/types/:id`. Example settings:
+OWNER, HR and FINANCE can create claim types with `POST /claims/types` and replace settings with `PATCH /claims/types/:id`. Read a type with `GET /claims/types/:id`. Example settings:
 
 ```json
 {
@@ -223,9 +223,9 @@ OWNER, HR and FINANCE can create claim types with `POST /claims/types` and repla
 }
 ```
 
-The maximum is **per claim**, not an annual allowance. Effective dates are inclusive and apply to the expense date. A null amount/date removes that restriction. PUT replaces settings: omitted optional fields return to defaults (active=true, receiptRequired=false, other optional settings=null). These settings are company-defined and do not supply statutory rules.
+The maximum is **per claim**, not an annual allowance. Effective dates are inclusive and apply to the expense date. A null amount/date removes that restriction. PATCH replaces settings: omitted optional fields return to defaults (active=true, receiptRequired=false, other optional settings=null). These settings are company-defined and do not supply statutory rules.
 
-Employees create a draft, edit it with `PUT /claims/:id`, attach receipts through `POST /files`, and submit it. Submission revalidates the current type, employment, active reporting manager, amount and receipts, then saves the policy and receipt IDs in a snapshot. Later type changes affect drafts and new submissions only. Unscanned receipts require the explicit development bypass; production requires CLEAN scans.
+Employees create a draft, edit it with `PATCH /claims/:id`, attach receipts through `POST /files`, and submit it. Submission revalidates the current type, employment, active reporting manager, amount and receipts, then saves the policy and receipt IDs in a snapshot. Later type changes affect drafts and new submissions only. Unscanned receipts require the explicit development bypass; production requires CLEAN scans.
 
 `GET /claims/:id` returns accessible claim details, receipt metadata and all workflow events with actor, time, action, status and decision comment. Claim lists (`/claims`, `/claims/me`, `/claims/pending`) accept `status`, `typeId`, `employeeId`, `from`, `to`, `search`, `page` and `pageSize`. Filters narrow the caller's existing permissions.
 
@@ -243,7 +243,7 @@ Configure `CLAMAV_HOST` and optionally `CLAMAV_PORT` for upload scanning. Scanne
 
 ### Effective-month payroll profiles
 
-`PUT /employees/:id/payroll-profile` (OWNER/HR) now requires `effectiveFrom` (the first day of a month), `reason`, `lindungParticipation` and all six statutory categories. Participation is `ENROLLED`, `OPTED_OUT`, `MANDATORY` or `NOT_ELIGIBLE`; these are recorded declarations, not automatic legal eligibility decisions. Keep supporting references in the reason. Preflight requires contribution rules for enrolled/mandatory participation and an explicit exemption ruleset for opted-out/ineligible participation.
+`PATCH /employees/:id/payroll-profile` (OWNER/HR) now requires `effectiveFrom` (the first day of a month), `reason`, `lindungParticipation` and all six statutory categories. Participation is `ENROLLED`, `OPTED_OUT`, `MANDATORY` or `NOT_ELIGIBLE`; these are recorded declarations, not automatic legal eligibility decisions. Keep supporting references in the reason. Preflight requires contribution rules for enrolled/mandatory participation and an explicit exemption ruleset for opted-out/ineligible participation.
 
 Every write appends an immutable revision. Same-month corrections preserve earlier revisions; dates before the latest recorded effective month are rejected. Changes affecting any calculated or finalized company payroll are rejected. The latest-profile GET includes revision/effective-month/actor metadata, including future scheduled changes. `GET /employees/:id/payroll-profile/history` returns paginated revisions for OWNER/HR/FINANCE.
 

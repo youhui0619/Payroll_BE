@@ -2,10 +2,10 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Param,
   ParseUUIDPipe,
   Post,
-  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -55,7 +55,7 @@ export class PayrollController {
   @Get('payroll/settings') settings(@Req() r: TenantRequest) {
     return this.service.settings(r.membership);
   }
-  @Put('payroll/settings')
+  @Patch('payroll/settings')
   @Roles('OWNER')
   saveSettings(@Req() r: TenantRequest, @Body() d: PayrollSettingsDto) {
     return this.service.saveSettings(r.membership, d);
@@ -70,7 +70,7 @@ export class PayrollController {
   profile(@Req() r: TenantRequest, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.profile(r.membership, id);
   }
-  @Put('employees/:id/payroll-profile')
+  @Patch('employees/:id/payroll-profile')
   @Roles('OWNER', 'HR')
   @ApiOkResponse({ type: PayrollProfileResponseDto })
   @ApiOperation({

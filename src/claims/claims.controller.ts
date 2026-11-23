@@ -3,8 +3,8 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   ParseUUIDPipe,
-  Put,
   Post,
   Query,
   Req,
@@ -44,7 +44,7 @@ export class ClaimsController {
   @Post() create(@Req() r: TenantRequest, @Body() d: ClaimDto) {
     return this.service.create(r.membership, d);
   }
-  @Put('types/:id')
+  @Patch('types/:id')
   @Roles('OWNER', 'HR', 'FINANCE')
   @ApiOperation({
     summary:
@@ -90,7 +90,7 @@ export class ClaimsController {
   detail(@Req() r: TenantRequest, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.detail(r.membership, id);
   }
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Replace an employee-owned draft claim.' })
   edit(
     @Req() r: TenantRequest,

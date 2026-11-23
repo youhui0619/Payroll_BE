@@ -3,9 +3,9 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   ParseUUIDPipe,
   Post,
-  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -53,7 +53,7 @@ export class OvertimeController {
     return this.service.detail(r.membership, id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   edit(
     @Req() r: TenantRequest,
     @Param('id', ParseUUIDPipe) id: string,
