@@ -357,6 +357,7 @@ model AuditEvent {
   actorId    String   @db.Uuid
   action     String
   resourceId String
+  metadata   Json?
   createdAt  DateTime @default(now()) @db.Timestamptz(3)
   company    Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 

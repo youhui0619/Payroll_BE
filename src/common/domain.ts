@@ -45,9 +45,16 @@ export async function audit(
   m: Membership,
   action: string,
   resourceId: string,
+  metadata?: Prisma.InputJsonValue,
 ) {
   await tx.auditEvent.create({
-    data: { companyId: m.companyId, actorId: m.userId, action, resourceId },
+    data: {
+      companyId: m.companyId,
+      actorId: m.userId,
+      action,
+      resourceId,
+      ...(metadata === undefined ? {} : { metadata }),
+    },
   });
 }
 export class DecisionDto {

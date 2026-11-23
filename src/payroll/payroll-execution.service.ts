@@ -9,6 +9,7 @@ import {
   CalculatePayrollDto,
   PayrollPaymentDto,
 } from './payroll-execution.dto';
+import { PayrollReopenDto } from './payroll-reopen.dto';
 import { PayrollRegisterQueryDto } from './payroll-register.dto';
 import { createNotificationInTransaction } from '../notifications/notifications.service';
 
@@ -216,6 +217,36 @@ export class PayrollExecutionService {
         });
         await audit(tx, m, 'PAYROLL_APPROVED', runId);
         return this.executionResponse(updated, count);
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
+
+  async reopen(m: Membership, runId: string, d: PayrollReopenDto) {
+    const reason = d.reason.trim();
+    if (!reason) fail('REASON_REQUIRED', 'Provide a reopen reason.', 400);
+    return this.db.$transaction(
+      async (tx) => {
+        const run = await this.run(tx, m, runId);
+        if (!['CALCULATED', 'APPROVED'].includes(run.status))
+          fail(
+            'INVALID_STATE',
+            'Only calculated or approved payroll runs can be reopened before publication.',
+            409,
+          );
+        await tx.payrollEmployee.deleteMany({
+          where: { companyId: m.companyId, runId },
+        });
+        const updated = await tx.payrollRun.update({
+          where: { companyId_id: { companyId: m.companyId, id: runId } },
+          data: {
+            status: 'DRAFT',
+            approvedBy: null,
+            approvedAt: null,
+          },
+        });
+        await audit(tx, m, 'PAYROLL_REOPENED', runId, { reason });
+        return this.executionResponse(updated, 0);
       },
       { isolationLevel: 'Serializable' },
     );

@@ -94,6 +94,7 @@ describe('application HTTP contract', () => {
       doc.paths['/api/v1/payroll/runs/{runId}/claims/{claimId}/allocate'].post,
     ).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/calculate'].post).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/reopen'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/approve'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/publish'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/pay'].post).toBeDefined();

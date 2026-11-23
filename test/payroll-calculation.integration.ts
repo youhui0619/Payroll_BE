@@ -454,6 +454,25 @@ export async function verifyPayrollCalculation(
   assert.equal(register.meta.total, 1);
   assert.equal(register.data[0].employeeNo, 'CALCULATION');
   assert.equal(register.data[0].grossPay, expectedGross);
+  const reopened = await execution.reopen(actor, run.id, {
+    reason: 'Corrected reviewed payroll inputs before approval',
+  });
+  assert.equal(reopened.data.status, 'DRAFT');
+  assert.equal(await db.payrollEmployee.count({ where: { runId: run.id } }), 0);
+  const reopenAudit = await db.auditEvent.findFirst({
+    where: {
+      companyId: company.id,
+      action: 'PAYROLL_REOPENED',
+      resourceId: run.id,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  assert.deepEqual(reopenAudit?.metadata, {
+    reason: 'Corrected reviewed payroll inputs before approval',
+  });
+  const recalculated = await execution.calculate(actor, run.id, review);
+  assert.equal(recalculated.data.status, 'CALCULATED');
+  assert.equal(await db.payrollEmployee.count({ where: { runId: run.id } }), 1);
   const approved = await execution.approve(actor, run.id);
   assert.equal(approved.data.status, 'APPROVED');
   const published = await execution.publish(actor, run.id);
@@ -499,6 +518,10 @@ export async function verifyPayrollCalculation(
     paymentReference: 'PAYROLL-2026-01',
   });
   assert.equal(paid.data.status, 'PAID');
+  await assert.rejects(
+    () => execution.reopen(actor, run.id, { reason: 'Too late' }),
+    { status: 409 },
+  );
   await assert.rejects(
     () => service.preview(actor, run.id, employee.id, review),
     { status: 409 },

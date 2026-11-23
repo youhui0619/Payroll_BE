@@ -19,6 +19,7 @@ import {
   PayrollLifecycleResponseDto,
   PayrollPaymentDto,
 } from './payroll-execution.dto';
+import { PayrollReopenDto } from './payroll-reopen.dto';
 import { PayrollExecutionService } from './payroll-execution.service';
 
 @ApiBearerAuth()
@@ -41,6 +42,21 @@ export class PayrollExecutionController {
     @Body() d: CalculatePayrollDto,
   ) {
     return this.service.calculate(r.membership, id, d);
+  }
+
+  @Post(':id/reopen')
+  @ApiCreatedResponse({ type: PayrollLifecycleResponseDto })
+  @ApiOperation({
+    summary: 'Reopen a calculated or approved payroll run',
+    description:
+      'Returns a pre-publication run to DRAFT, removes its derived employee snapshots and records the required audit reason. Published and paid runs are immutable.',
+  })
+  reopen(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: PayrollReopenDto,
+  ) {
+    return this.service.reopen(r.membership, id, d);
   }
 
   @Post(':id/approve')
