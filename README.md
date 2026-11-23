@@ -310,7 +310,7 @@ Leave submission stores `daySnapshot` on the request: schema version, schedule I
 
 Submitting or deciding leave, and cancelling submitted leave, is rejected when its date range intersects a calculated/finalized payroll month. Draft cancellation remains available. A later correction workflow is still pending. These changes supply validated unpaid dates to salary preflight; persisted payroll-run calculation and statutory integration are not yet complete.
 
-Draft payroll input preview: `GET /payroll/runs/:id/employees/:employeeId/input-preview` (OWNER/FINANCE) resolves one employee's salary history, approved frozen unpaid dates and active manual inputs in a consistent read transaction. It returns component lines, effective definition references, gross/payable earnings, wage bases, salary traces and manual-entry reasons. `complete=false` and `limitations` are explicit: no statutory deductions or final net pay, overtime or recurring allowance collection yet. Allocated approved claims are included. This endpoint does not persist a calculation or change run status.
+Draft payroll input preview: `GET /payroll/runs/:id/employees/:employeeId/input-preview` (OWNER/FINANCE) resolves one employee's salary history, approved frozen unpaid dates, active manual inputs and explicitly allocated approved claims, commissions and overtime in a consistent read transaction. It returns component lines, effective definition references, gross/payable earnings, wage bases, salary traces and source details. `complete=false` and `limitations` are explicit: no statutory deductions or final net pay, and unallocated recurring allowances are not collected. This endpoint does not persist a calculation or change run status.
 
 Configure `BASIC` as an active earning affecting gross and net. When unpaid deductions exist, configure `UNPAID_LEAVE` as a deduction affecting gross/net and the same statutory bases as BASIC. Those two codes are generated automatically and cannot be entered manually; use separate adjustment definitions for corrections. Voided manual inputs are excluded, and missing/archived effective definitions fail validation. The effective definition and source references are preserved in each line for future payroll snapshots.
 
@@ -410,6 +410,17 @@ Only READY_FOR_PAYROLL records and DRAFT runs are eligible. CURRENT_PAYROLL perm
 `GET /api/v1/payroll/commissions/:recordId/allocation-history` returns paginated allocation/release events with run, actor, time and reason. Allocations feed both input and calculation previews through COMMISSION source lines and `commissionSources`. They retain the saved plan code/name, amount, earning code and reference, rather than recomputing from a plan that may have changed.
 
 FE comparison: `Payroll_FE/src/app/models/commission/commission-payroll-record.model.ts`, its mock data and the payroll commission overview distinguish PENDING_APPROVAL, READY_FOR_PAYROLL and PAID. Allocation keeps READY_FOR_PAYROLL; `payrollRunId` identifies its assigned run. Show release only for a draft run. The FE Payslip's commissionReferences/commissionItems can use source IDs and the corresponding records; amounts remain decimal strings in the API. The new lowercase commission_allocation_events table retains allocation history. Payroll payment settlement and separate payouts remain pending.
+
+### Payroll calculation, lifecycle and payslips
+
+The payroll lifecycle is now explicit:
+
+- `POST /api/v1/payroll/runs/:id/calculate` resolves every eligible employee and persists `payroll_employees` snapshots.
+- `POST /api/v1/payroll/runs/:id/approve` moves CALCULATED to APPROVED and applies maker-checker when enabled.
+- `POST /api/v1/payroll/runs/:id/publish` assigns stable payslip numbers and publishes the run.
+- `POST /api/v1/payroll/runs/:id/pay` records a payment reference, moves the run to PAID and settles PAYROLL claims, allocated commissions and approved overtime.
+
+Calculation runs in one serializable transaction; a failed employee blocks the status change. Snapshots retain the resolved source lines, statutory traces, PCB review, tax-period values, company and employee display data. `GET /api/v1/payroll/runs/:id/payslips` and `.../payslips/:employeeId` expose FE-shaped payslip data only after publication. OWNER/HR/FINANCE can read a run; an EMPLOYEE can read only their own row. Numeric amounts are returned for the current FE payslip model, while persisted calculation/source traces remain decimal strings. The PDF generator, bank files, correction/reopen flow and statutory submission exports remain outside this MVP slice.
 
 ### Overtime allocation to payroll
 

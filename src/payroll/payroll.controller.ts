@@ -45,7 +45,7 @@ export class PayrollController {
     summary:
       'Preview resolved salary, unpaid leave and manual inputs for one draft-run employee',
     description:
-      'Requires BASIC earning definition and, when applicable, UNPAID_LEAVE deduction definition with matching statutory bases. Includes allocated approved claims. Returns wage bases, source traces and non-PCB contribution previews using effective profile categories and active rulesets. Missing rules appear as issues. PCB, final net and overtime remain pending; no calculation is persisted.',
+      'Requires BASIC earning definition and, when applicable, UNPAID_LEAVE deduction definition with matching statutory bases. Includes allocated approved claims, commissions and overtime. Returns wage bases, source traces and non-PCB contribution previews using effective profile categories and active rulesets. Missing rules appear as issues; no calculation is persisted.',
   })
   inputPreview(
     @Req() r: TenantRequest,

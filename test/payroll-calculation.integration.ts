@@ -10,6 +10,7 @@ import { InputPreviewService } from '../src/payroll/input-preview.service';
 import { CalculationPreviewService } from '../src/payroll/calculation-preview.service';
 import { CommissionAllocationService } from '../src/payroll/commission-allocation.service';
 import { OvertimeAllocationService } from '../src/payroll/overtime-allocation.service';
+import { PayrollExecutionService } from '../src/payroll/payroll-execution.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -406,13 +407,48 @@ export async function verifyPayrollCalculation(
   );
   await db.payrollRun.update({
     where: { id: run.id },
-    data: { status: 'CALCULATED' },
+    data: { status: 'DRAFT' },
   });
+  const expectedGross = Number(
+    (await service.preview(actor, run.id, employee.id, review)).data.totals
+      .gross,
+  );
+  const execution = new PayrollExecutionService(database, service);
+  const calculated = await execution.calculate(actor, run.id, review);
+  assert.equal(calculated.data.status, 'CALCULATED');
+  assert.equal(await db.payrollEmployee.count({ where: { runId: run.id } }), 1);
+  const approved = await execution.approve(actor, run.id);
+  assert.equal(approved.data.status, 'APPROVED');
+  const published = await execution.publish(actor, run.id);
+  assert.equal(published.data.status, 'PUBLISHED');
+  const payslip = (await execution.payslip(actor, run.id, employee.id)).data;
+  assert.equal(payslip.status, 'Published');
+  assert.equal(payslip.employee.employeeNo, 'CALCULATION');
+  assert.equal(payslip.earnings.grossPay, expectedGross);
+  assert.equal(
+    (await execution.payslips(actor, run.id, { page: 1, pageSize: 20 })).meta
+      .total,
+    1,
+  );
+  const employeeActor = {
+    ...actor,
+    employeeId: employee.id,
+    roles: ['EMPLOYEE'],
+  } as Membership;
+  assert.equal(
+    (await execution.payslips(employeeActor, run.id, { page: 1, pageSize: 20 }))
+      .meta.total,
+    1,
+  );
+  const paid = await execution.pay(actor, run.id, {
+    paymentReference: 'PAYROLL-2026-01',
+  });
+  assert.equal(paid.data.status, 'PAID');
   await assert.rejects(
     () => service.preview(actor, run.id, employee.id, review),
     { status: 409 },
   );
   console.log(
-    'PASS resolved payroll calculation, source-example PCB, zakat credit, totals, tenant scope and read-only draft behavior',
+    'PASS persisted payroll calculation, approval, publication, payslip mapping, payment settlement and locked reads',
   );
 }

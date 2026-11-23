@@ -15,6 +15,9 @@ import { CalculationPreviewService } from './calculation-preview.service';
 import { CommissionAllocationController } from './commission-allocation.controller';
 import { CommissionAllocationService } from './commission-allocation.service';
 import { OvertimeAllocationModule } from './overtime-allocation.module';
+import { PayrollExecutionController } from './payroll-execution.controller';
+import { PayslipController } from './payslip.controller';
+import { PayrollExecutionService } from './payroll-execution.service';
 
 @Module({
   imports: [
@@ -31,6 +34,8 @@ import { OvertimeAllocationModule } from './overtime-allocation.module';
     PayrollRosterController,
     CalculationPreviewController,
     CommissionAllocationController,
+    PayrollExecutionController,
+    PayslipController,
   ],
   providers: [
     PayrollService,
@@ -38,6 +43,7 @@ import { OvertimeAllocationModule } from './overtime-allocation.module';
     PayrollRosterService,
     CalculationPreviewService,
     CommissionAllocationService,
+    PayrollExecutionService,
   ],
 })
 export class PayrollModule {}

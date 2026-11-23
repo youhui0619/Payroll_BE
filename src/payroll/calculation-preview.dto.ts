@@ -101,7 +101,7 @@ export class CalculationPreviewResponseDto {
   @ApiProperty({
     type: CalculationPreviewDataDto,
     description:
-      'No rows/status changes are saved; automatic overtime/recurring source collection remains pending.',
+      'No rows/status changes are saved; only approved records explicitly allocated to the draft run are included.',
   })
   data: CalculationPreviewDataDto;
 }

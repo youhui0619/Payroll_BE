@@ -814,6 +814,7 @@ model PayrollRun {
   createdBy                  String                      @db.Uuid
   approvedBy                 String?                     @db.Uuid
   approvedAt                 DateTime?                   @db.Timestamptz(3)
+  publishedAt                DateTime?                   @db.Timestamptz(3)
   paidAt                     DateTime?                   @db.Timestamptz(3)
   paymentReference           String?
   createdAt                  DateTime                    @default(now()) @db.Timestamptz(3)
@@ -857,6 +858,8 @@ model PayrollEmployee {
   deductions            Decimal    @db.Decimal(14, 2)
   net                   Decimal    @db.Decimal(14, 2)
   employerContributions Decimal    @db.Decimal(14, 2)
+  payslipNumber         String?
+  publishedAt           DateTime?  @db.Timestamptz(3)
   snapshot              Json
   run                   PayrollRun @relation(fields: [companyId, runId], references: [companyId, id], onDelete: Restrict)
   employee              Employee   @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)

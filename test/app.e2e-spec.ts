@@ -88,6 +88,11 @@ describe('application HTTP contract', () => {
     expect(
       doc.paths['/api/v1/payroll/runs/{runId}/claims/{claimId}/allocate'].post,
     ).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/calculate'].post).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/approve'].post).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/publish'].post).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/pay'].post).toBeDefined();
+    expect(doc.paths['/api/v1/payroll/runs/{id}/payslips'].get).toBeDefined();
   });
   it('restricts payroll roster access and validates department filters', async () => {
     const token = await app.get(JwtService).signAsync({
@@ -311,6 +316,57 @@ describe('application HTTP contract', () => {
         .send(body)
         .expect(400);
     }
+  });
+  it('protects payroll execution and validates payment review inputs', async () => {
+    const token = await app.get(JwtService).signAsync({
+      sub: 'user',
+      companyId: 'company',
+      membershipId: 'membership',
+      version: 0,
+    });
+    const base = '/api/v1/payroll/runs/00000000-0000-4000-8000-000000000001';
+    for (const role of ['HR', 'EMPLOYEE']) {
+      db.membership.findFirst.mockResolvedValue({
+        companyId: 'company',
+        userId: 'user',
+        roles: [role],
+      });
+      await request(app.getHttpServer())
+        .post(base + '/calculate')
+        .set('Authorization', 'Bearer ' + token)
+        .send({})
+        .expect(403);
+      await request(app.getHttpServer())
+        .post(base + '/approve')
+        .set('Authorization', 'Bearer ' + token)
+        .expect(403);
+    }
+    db.membership.findFirst.mockResolvedValue({
+      companyId: 'company',
+      userId: 'user',
+      roles: ['FINANCE'],
+    });
+    for (const body of [
+      {},
+      { taxRegime: 'REP', currentZakat: '0', zakatEvidence: 'reviewed' },
+      { taxRegime: 'STANDARD', currentZakat: '-1', zakatEvidence: 'reviewed' },
+      { taxRegime: 'STANDARD', currentZakat: '0', zakatEvidence: '' },
+    ])
+      await request(app.getHttpServer())
+        .post(base + '/calculate')
+        .set('Authorization', 'Bearer ' + token)
+        .send(body)
+        .expect(400);
+    for (const body of [
+      {},
+      { paymentReference: '' },
+      { paymentReference: 'ok', paymentDate: 'not-date' },
+    ])
+      await request(app.getHttpServer())
+        .post(base + '/pay')
+        .set('Authorization', 'Bearer ' + token)
+        .send(body)
+        .expect(400);
   });
   it('restricts claim allocation to payroll staff and validates allocation inputs', async () => {
     const token = await app.get(JwtService).signAsync({
