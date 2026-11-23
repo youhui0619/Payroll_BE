@@ -125,6 +125,30 @@ export class ClaimsService {
     );
   }
 
+  async deactivateType(m: Membership, id: string) {
+    return this.db.$transaction(
+      async (tx) => {
+        const current = await tx.claimType.findUnique({
+          where: { companyId_id: { companyId: m.companyId, id } },
+        });
+        if (!current) throw new NotFoundException();
+        const active = !current.active;
+        const data = await tx.claimType.update({
+          where: { companyId_id: { companyId: m.companyId, id } },
+          data: { active },
+        });
+        await audit(
+          tx,
+          m,
+          active ? 'CLAIM_TYPE_ACTIVATED' : 'CLAIM_TYPE_DEACTIVATED',
+          id,
+        );
+        return { data };
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  }
+
   private async event(
     tx: Prisma.TransactionClient,
     m: Membership,

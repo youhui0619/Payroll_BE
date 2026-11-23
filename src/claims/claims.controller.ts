@@ -57,6 +57,14 @@ export class ClaimsController {
   ) {
     return this.service.updateType(r.membership, id, d);
   }
+  @Post('types/:id/deactivate')
+  @Roles('OWNER', 'HR', 'FINANCE')
+  deactivateType(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.service.deactivateType(r.membership, id);
+  }
   @Get('me') own(@Req() r: TenantRequest, @Query() q: ClaimQueryDto) {
     return this.service.list(r.membership, q, 'own');
   }
