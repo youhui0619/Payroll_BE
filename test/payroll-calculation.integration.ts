@@ -528,6 +528,14 @@ export async function verifyPayrollCalculation(
   assert.equal(epfExport.filename, 'epf-2026-01-review.csv');
   assert.equal(epfExport.content.includes('payroll-statutory-review-v1'), true);
   assert.equal(epfExport.content.includes('CALCULATION'), true);
+  const registerExport = await execution.registerCsv(actor, run.id, {
+    page: 1,
+    pageSize: 20,
+    search: 'CALCULATION',
+  });
+  assert.equal(registerExport.filename, 'payroll-register-2026-01.csv');
+  assert.equal(registerExport.content.includes('Employee number'), true);
+  assert.equal(registerExport.content.includes('LINDUNG 24 Jam'), true);
   const exportAudit = await db.auditEvent.findFirst({
     where: {
       companyId: company.id,

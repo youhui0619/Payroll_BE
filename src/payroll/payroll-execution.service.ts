@@ -13,6 +13,7 @@ import { PayrollReopenDto } from './payroll-reopen.dto';
 import { PayrollRegisterQueryDto } from './payroll-register.dto';
 import { createNotificationInTransaction } from '../notifications/notifications.service';
 import { renderPayslipPdf } from './payslip-pdf';
+import { csv } from '../reports/reports.utils';
 
 const jsonValue = (value: unknown) =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -646,6 +647,77 @@ export class PayrollExecutionService {
         calculated: true,
       });
     });
+  }
+
+  async registerCsv(m: Membership, runId: string, q: PayrollRegisterQueryDto) {
+    const result = await this.register(m, runId, {
+      ...q,
+      page: 1,
+      pageSize: 5000,
+    });
+    if (result.meta.total > 5000)
+      fail('EXPORT_TOO_LARGE', 'Narrow the payroll register filters.', 400);
+    await audit(this.db, m, 'PAYROLL_REGISTER_EXPORTED', runId, {
+      schemaVersion: 'payroll-register-v1',
+      total: result.meta.total,
+      search: q.search ?? null,
+      departmentIds: q.departmentIds ?? [],
+    });
+    return {
+      filename: `payroll-register-${result.meta.year}-${String(result.meta.month).padStart(2, '0')}.csv`,
+      content: csv(
+        [
+          'Employee number',
+          'Employee',
+          'Department',
+          'Position',
+          'Status',
+          'Payslip number',
+          'Basic pay',
+          'Overtime',
+          'Deduction',
+          'Allowance',
+          'Bonus',
+          'Commission',
+          'Gross pay',
+          'EPF',
+          'EPF employer',
+          'SOCSO',
+          'SOCSO employer',
+          'LINDUNG 24 Jam',
+          'EIS',
+          'EIS employer',
+          'PCB',
+          'Advance',
+          'Net pay',
+        ],
+        result.data.map((row: any) => [
+          row.employeeNo,
+          row.employee,
+          row.department,
+          row.position,
+          row.status,
+          row.payslipNumber,
+          row.basicPay,
+          row.overtime,
+          row.deduction,
+          row.allowance,
+          row.bonus,
+          row.commission,
+          row.grossPay,
+          row.epf,
+          row.epfEmployer,
+          row.socso,
+          row.socsoEmployer,
+          row.lindungan24Jam,
+          row.eis,
+          row.eisEmployer,
+          row.pcb,
+          row.advance,
+          row.netPay,
+        ]),
+      ),
+    };
   }
 
   async payslips(m: Membership, runId: string, q: PageDto) {

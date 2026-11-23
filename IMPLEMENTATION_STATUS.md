@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-11-23. **MVP is in progress and is not ready for production payroll.**
+Updated: 2026-11-24. **MVP is in progress and is not ready for production payroll.**
 
 Current migration policy: the user ended the single-init requirement on 2026-11-23. Existing migration history is preserved; new schema changes use incremental migrations. Earlier dated entries describing consolidated init are historical.
 
@@ -117,6 +117,8 @@ Notifications update (2026-11-24): added the incremental `notifications` table, 
 
 Payroll reopen update (2026-11-24): added `POST /api/v1/payroll/runs/:id/reopen` for OWNER/FINANCE. CALCULATED and APPROVED runs return to DRAFT only after a required reason is stored in the audit metadata, and their derived employee snapshots are deleted so the run can be recalculated. PUBLISHED and PAID runs reject reopen attempts. The audit metadata column is an incremental migration; build, payroll tests, Swagger and disposable PostgreSQL verification passed. Application database untouched. Finalized-period corrections, statutory exports and PDF files remain pending.
 
-Payslip PDF update (2026-11-24): added the tenant-authorized `GET /api/v1/payroll/runs/:id/payslips/:employeeId/pdf` download. It renders the immutable published snapshot with earnings, employee deductions, employer contributions, LINDUNG 24 Jam and net pay, applies the configured filename template, audits the download and fails closed when password protection is enabled without an encryption adapter. PDF unit tests, build, lint, Swagger and disposable PostgreSQL verification passed; application database untouched. Finalized-period corrections, statutory exports and password-protected PDF encryption remain pending.
+Payslip PDF update (2026-11-24): added the tenant-authorized `GET /api/v1/payroll/runs/:id/payslips/:employeeId/pdf` download. It renders the immutable published snapshot with earnings, employee deductions, employer contributions, LINDUNG 24 Jam and net pay, applies the configured filename template, audits the download and fails closed when password protection is enabled without an encryption adapter. PDF unit tests, build, lint, Swagger and disposable PostgreSQL verification passed; application database untouched. Finalized-period corrections, official submission layouts and password-protected PDF encryption remain pending.
 
 Statutory review export update (2026-11-24): added tenant-scoped OWNER/FINANCE CSV exports for EPF, SOCSO, EIS, LINDUNG_24_JAM, PCB and HRD from published/paid payroll snapshots. Each file carries the `payroll-statutory-review-v1` schema marker, contribution bases, employee/employer amounts, remittance and source identifiers, and emits an audited export event. The disposable PostgreSQL fixture verifies a paid-run EPF export; application database untouched. Official authority/provider submission layouts remain pending until their exact formats are confirmed.
+
+Payroll register export update (2026-11-24): added `GET /api/v1/payroll/runs/:id/register.csv` with the FE payroll overview columns, employee search/department filters, a 5,000-row bound and tenant-scoped export audit. Payroll unit, build, lint, Swagger and disposable PostgreSQL verification passed; application database untouched.
