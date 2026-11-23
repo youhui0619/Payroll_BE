@@ -12,6 +12,7 @@ import {
 import { PayrollReopenDto } from './payroll-reopen.dto';
 import { PayrollRegisterQueryDto } from './payroll-register.dto';
 import { createNotificationInTransaction } from '../notifications/notifications.service';
+import { renderPayslipPdf } from './payslip-pdf';
 
 const jsonValue = (value: unknown) =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -313,6 +314,8 @@ export class PayrollExecutionService {
                   ? {
                       pageSize: settings.pageSize,
                       pageOrientation: settings.pageOrientation,
+                      pdfFilenameFormat: settings.pdfFilenameFormat,
+                      passwordProtectedPdf: settings.passwordProtectedPdf,
                       employeeDetails: settings.employeeDetails,
                       departmentAndPosition: settings.departmentAndPosition,
                       employmentType: settings.employmentType,
@@ -705,5 +708,54 @@ export class PayrollExecutionService {
       return { data: this.payslipData(row, run) };
     });
     return result;
+  }
+
+  async payslipPdf(m: Membership, runId: string, employeeId: string) {
+    this.canReadPayslip(m, employeeId);
+    return this.db.$transaction(async (tx) => {
+      const run = await this.run(tx, m, runId);
+      if (!['PUBLISHED', 'PAID'].includes(run.status))
+        fail(
+          'PAYSLIPS_NOT_PUBLISHED',
+          'Payslips are available after publication.',
+          409,
+        );
+      const row = await tx.payrollEmployee.findUnique({
+        where: {
+          companyId_runId_employeeId: {
+            companyId: m.companyId,
+            runId,
+            employeeId,
+          },
+        },
+        include: { employee: true },
+      });
+      if (!row) throw new NotFoundException();
+      const document = this.payslipData(row, run);
+      if (document.payslipSettings?.passwordProtectedPdf)
+        fail(
+          'PDF_PASSWORD_PROTECTION_UNSUPPORTED',
+          'Password-protected payslip PDF generation is not configured.',
+          409,
+        );
+      const settings = document.payslipSettings ?? {};
+      const employeeNo = row.employee.employeeNo;
+      const format =
+        settings.pdfFilenameFormat ?? '{EMPLOYEE_ID}-{YYYY}-{MM}-payslip';
+      const filename =
+        format
+          .replaceAll('{YYYY}', String(run.year))
+          .replaceAll('{MM}', String(run.month).padStart(2, '0'))
+          .replaceAll('{EMPLOYEE_ID}', employeeNo)
+          .replace(/[^a-zA-Z0-9._-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 150) || `${employeeNo}-${run.year}-${run.month}-payslip`;
+      const bytes = renderPayslipPdf(document);
+      await audit(tx, m, 'PAYSLIP_DOWNLOADED', runId, {
+        employeeId,
+        payslipNumber: row.payslipNumber,
+      });
+      return { filename: `${filename}.pdf`, bytes };
+    });
   }
 }

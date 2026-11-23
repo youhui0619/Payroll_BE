@@ -99,6 +99,9 @@ describe('application HTTP contract', () => {
     expect(doc.paths['/api/v1/payroll/runs/{id}/publish'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/pay'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/payslips'].get).toBeDefined();
+    expect(
+      doc.paths['/api/v1/payroll/runs/{id}/payslips/{employeeId}/pdf'].get,
+    ).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/register'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications/{id}/read'].patch).toBeDefined();

@@ -5,7 +5,9 @@ import {
   ParseUUIDPipe,
   Query,
   Req,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -58,5 +60,31 @@ export class PayslipController {
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
   ) {
     return this.service.payslip(r.membership, id, employeeId);
+  }
+
+  @Get(':id/payslips/:employeeId/pdf')
+  @ApiOperation({
+    summary: 'Download one published employee payslip as PDF',
+    description:
+      'Employees may download only their own published payslip; payroll staff may download the run. Password-protected PDF settings are rejected until an encryption adapter is configured.',
+  })
+  async pdf(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Res() res: Response,
+  ) {
+    const { filename, bytes } = await this.service.payslipPdf(
+      r.membership,
+      id,
+      employeeId,
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(bytes);
   }
 }

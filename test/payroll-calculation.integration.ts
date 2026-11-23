@@ -499,6 +499,10 @@ export async function verifyPayrollCalculation(
   assert.equal(payslip.employee.bankAccount, '******7890');
   assert.equal(payslip.footerMessage, 'Prepared by Payroll');
   assert.equal(payslip.earnings.grossPay, expectedGross);
+  const pdf = await execution.payslipPdf(actor, run.id, employee.id);
+  assert.equal(pdf.filename, 'CALCULATION-2026-01-payslip.pdf');
+  assert.equal(pdf.bytes.toString('ascii').startsWith('%PDF-1.4'), true);
+  assert.equal(pdf.bytes.toString('ascii').includes('LINDUNG 24 Jam'), true);
   assert.equal(
     (await execution.payslips(actor, run.id, { page: 1, pageSize: 20 })).meta
       .total,
