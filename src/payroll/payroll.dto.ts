@@ -19,6 +19,10 @@ const emptyStringAsNull = ({ value }: { value: unknown }) =>
   value === '' ? null : value;
 
 export type PayrollDay = number | 'LAST_DAY';
+export const PAYROLL_DAYS = [
+  ...Array.from({ length: 31 }, (_, index) => index + 1),
+  'LAST_DAY',
+];
 
 export class PayrollSettingsDto {
   @ApiPropertyOptional({ minimum: 1, maximum: 31 })
@@ -42,20 +46,17 @@ export class PayrollSettingsDto {
     ],
   })
   @IsOptional()
-  @ValidateIf((_, value) => value !== 'LAST_DAY')
-  @IsInt()
-  @Min(1)
-  @Max(31)
-  @ValidateIf((_, value) => value === 'LAST_DAY')
-  @IsIn(['LAST_DAY'])
+  @IsIn(PAYROLL_DAYS)
   payrollCutoffDay?: PayrollDay;
 
   @ApiProperty({ enum: ['MYR'] }) @IsIn(['MYR']) currency: string;
-  @ApiProperty({
-    description: 'Require an approver other than the payroll creator.',
+  @ApiPropertyOptional({
+    description:
+      'Require an approver other than the payroll creator. Defaults to true on creation; omission preserves an existing setting.',
   })
+  @ValidateIf((_, value) => value !== undefined)
   @IsBoolean()
-  makerChecker: boolean;
+  makerChecker?: boolean;
 
   @ApiPropertyOptional({
     enum: ['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'],
@@ -70,12 +71,7 @@ export class PayrollSettingsDto {
     ],
   })
   @IsOptional()
-  @ValidateIf((_, value) => value !== 'LAST_DAY')
-  @IsInt()
-  @Min(1)
-  @Max(31)
-  @ValidateIf((_, value) => value === 'LAST_DAY')
-  @IsIn(['LAST_DAY'])
+  @IsIn(PAYROLL_DAYS)
   scheduledPayDate?: PayrollDay;
   @ApiPropertyOptional({
     enum: ['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'],
@@ -105,16 +101,20 @@ export class PayrollSettingsDto {
   @IsOptional()
   @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(24)
   standardWorkingHoursPerDay?: number | null;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999.99)
   normalWorkingDayMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Length(1, 30)
+  @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   normalWorkingDayEarningCode?: string;
   @ApiPropertyOptional()
   @IsOptional()
@@ -124,11 +124,13 @@ export class PayrollSettingsDto {
   @IsOptional()
   @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999.99)
   restDayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Length(1, 30)
+  @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   restDayEarningCode?: string;
   @ApiPropertyOptional()
   @IsOptional()
@@ -138,11 +140,13 @@ export class PayrollSettingsDto {
   @IsOptional()
   @Transform(emptyStringAsNull)
   @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0.01)
+  @Max(999.99)
   publicHolidayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @Length(1, 30)
+  @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   publicHolidayEarningCode?: string;
   @ApiPropertyOptional({
     enum: [
@@ -189,6 +193,15 @@ export class PayrollSettingsDto {
   @IsOptional()
   @IsIn(['ONE_APPROVER', 'TWO_STEP'])
   approvalWorkflow?: string;
+}
+
+class PayrollSettingsDataDto extends PayrollSettingsDto {
+  @ApiProperty({ format: 'uuid' }) id: string;
+  @ApiProperty({ format: 'uuid' }) companyId: string;
+}
+export class PayrollSettingsResponseDto {
+  @ApiProperty({ type: PayrollSettingsDataDto, nullable: true })
+  data: PayrollSettingsDataDto | null;
 }
 
 export class PayrollProfileDto {

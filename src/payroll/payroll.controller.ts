@@ -6,6 +6,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -21,6 +22,7 @@ import {
   CreatePayrollDto,
   PayrollProfileDto,
   PayrollSettingsDto,
+  PayrollSettingsResponseDto,
   PayrollProfileHistoryDto,
   PayrollProfileResponseDto,
 } from './payroll.dto';
@@ -52,11 +54,23 @@ export class PayrollController {
   ) {
     return this.inputs.preview(r.membership, id, employeeId);
   }
-  @Get('payroll/settings') settings(@Req() r: TenantRequest) {
+  @Get('payroll/settings')
+  @ApiOkResponse({ type: PayrollSettingsResponseDto })
+  @ApiOperation({
+    summary:
+      'Read payroll configuration using FE-compatible day and rate types',
+  })
+  settings(@Req() r: TenantRequest) {
     return this.service.settings(r.membership);
   }
   @Patch('payroll/settings')
   @Roles('OWNER')
+  @ApiOkResponse({ type: PayrollSettingsResponseDto })
+  @ApiOperation({
+    summary: 'Save payroll configuration',
+    description:
+      'Days are integers 1–31 or LAST_DAY. Legacy cutoffDay/payDay inputs remain supported. Nullable overtime values and empty unconfigured earning codes may be saved; calculation readiness is checked separately.',
+  })
   saveSettings(@Req() r: TenantRequest, @Body() d: PayrollSettingsDto) {
     return this.service.saveSettings(r.membership, d);
   }
@@ -77,6 +91,19 @@ export class PayrollController {
     summary: 'Append an effective-month category and participation revision',
   })
   saveProfile(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: PayrollProfileDto,
+  ) {
+    return this.service.saveProfile(r.membership, id, d);
+  }
+  @Put('employees/:id/payroll-profile')
+  @Roles('OWNER', 'HR')
+  @ApiOkResponse({ type: PayrollProfileResponseDto })
+  @ApiOperation({
+    summary: 'Append a payroll profile revision (PUT compatibility route)',
+  })
+  saveProfilePut(
     @Req() r: TenantRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() d: PayrollProfileDto,

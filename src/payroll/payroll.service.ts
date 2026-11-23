@@ -1,5 +1,10 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
-import { Membership, Prisma, StatutoryScheme } from '@prisma/client';
+import {
+  Membership,
+  Prisma,
+  StatutoryScheme,
+  PayrollSettings,
+} from '@prisma/client';
 import { Database } from '../database.module';
 import { audit, dateOnly, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
@@ -12,6 +17,7 @@ import {
   PayrollProfileDto,
   PayrollDay,
   PayrollSettingsDto,
+  PAYROLL_DAYS,
 } from './payroll.dto';
 import { validateRules } from './calculator';
 import { calculateSalary } from './salary-calculator';
@@ -32,15 +38,44 @@ export function payrollPeriod(year: number, month: number) {
   return { start, next, end: new Date(next.getTime() - 86400000) };
 }
 
+function settingsResponse(row: PayrollSettings | null) {
+  if (!row) return null;
+  const day = (value: string, fallback: number): PayrollDay => {
+    const resolved = value === 'LAST_DAY' ? value : Number(value ?? fallback);
+    if (!PAYROLL_DAYS.includes(resolved))
+      fail(
+        'PAYROLL_SETTINGS_INVALID',
+        'Stored payroll days require correction.',
+        409,
+      );
+    return resolved;
+  };
+  return {
+    ...row,
+    payrollCutoffDay: day(row.payrollCutoffDay, row.cutoffDay),
+    scheduledPayDate: day(row.scheduledPayDate, row.payDay),
+    standardWorkingHoursPerDay:
+      row.standardWorkingHoursPerDay?.toNumber() ?? null,
+    normalWorkingDayMultiplier:
+      row.normalWorkingDayMultiplier?.toNumber() ?? null,
+    restDayOvertimeMultiplier:
+      row.restDayOvertimeMultiplier?.toNumber() ?? null,
+    publicHolidayOvertimeMultiplier:
+      row.publicHolidayOvertimeMultiplier?.toNumber() ?? null,
+  };
+}
+
 @Injectable()
 export class PayrollService {
   constructor(private db: Database) {}
 
   async settings(m: Membership) {
     return {
-      data: await this.db.payrollSettings.findUnique({
-        where: { companyId: m.companyId },
-      }),
+      data: settingsResponse(
+        await this.db.payrollSettings.findUnique({
+          where: { companyId: m.companyId },
+        }),
+      ),
     };
   }
 
@@ -51,6 +86,15 @@ export class PayrollService {
       fail(
         'PAYROLL_DAY_REQUIRED',
         'Provide payrollCutoffDay and scheduledPayDate.',
+        400,
+      );
+    if (
+      !PAYROLL_DAYS.includes(payrollCutoffDay) ||
+      !PAYROLL_DAYS.includes(scheduledPayDate)
+    )
+      fail(
+        'INVALID_PAYROLL_DAY',
+        'Payroll days must be integers from 1 to 31 or LAST_DAY.',
         400,
       );
     const legacyDay = (day: PayrollDay) => (day === 'LAST_DAY' ? 31 : day);
@@ -108,7 +152,7 @@ export class PayrollService {
         update: normalized,
       });
       await audit(tx, m, 'PAYROLL_SETTINGS_UPDATED', data.id);
-      return { data };
+      return { data: settingsResponse(data) };
     });
   }
 
