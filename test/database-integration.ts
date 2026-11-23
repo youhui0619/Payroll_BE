@@ -788,6 +788,46 @@ async function main() {
       1,
     );
     const files = new FilesService(db as Database, {} as never, {} as never);
+    const logoStorage = {
+      put: async () => undefined,
+      remove: async () => undefined,
+    };
+    const logoScanner = { scan: async () => 'CLEAN' };
+    const logoFiles = new FilesService(
+      db as Database,
+      logoStorage as never,
+      logoScanner as never,
+    );
+    const logoUpload = {
+      buffer: Buffer.from('%PDF-1.7 logo'),
+      size: 13,
+      mimetype: 'application/pdf',
+      originalname: 'company-logo.pdf',
+    };
+    const firstLogo = (
+      await logoFiles.upload(
+        owner,
+        { category: 'COMPANY_LOGO' },
+        logoUpload as never,
+      )
+    ).data;
+    const secondLogo = (
+      await logoFiles.upload(
+        owner,
+        { category: 'COMPANY_LOGO' },
+        logoUpload as never,
+      )
+    ).data;
+    assert.notEqual(firstLogo.id, secondLogo.id);
+    assert.equal(
+      (await db.storedFile.findUniqueOrThrow({ where: { id: firstLogo.id } }))
+        .archived,
+      true,
+    );
+    assert.equal(
+      (await db.company.findUniqueOrThrow({ where: { id: company.id } })).logo,
+      secondLogo.url,
+    );
     const limited = (
       await claims.createType(owner, {
         code: 'RECEIPT',

@@ -480,6 +480,8 @@ The source must be `PUBLISHED` or `PAID`, the target must be a later calendar mo
 ### Employee export
 
 `GET /api/v1/employees/export.csv` accepts the employee list filters (`search`, `active`, `departmentId`, `positionId`, `employmentStatus`, and `employmentType`) and returns a UTF-8 CSV bounded to 5,000 rows. OWNER, HR and FINANCE can export employee number, identity/contact, employment status/type, department, position, manager and location labels. Bank account, salary and statutory membership fields are intentionally excluded. Formula-like cells use the shared CSV safety encoder, and every export records `EMPLOYEES_EXPORTED` with the filter summary and row count.
+
+Company-logo uploads use `POST /api/v1/files` with multipart `category=COMPANY_LOGO` and no employee/request IDs. The file is scanned and stored privately before the transaction archives the previous active company logo, updates `companies.logo` to `/api/v1/files/public/{fileId}`, and writes an audit event. `GET /api/v1/company` exposes that URL as `logoUrl`; only clean logos are served publicly.
 Publication snapshots the configured payslip visibility and masking settings. Bank account details are opt-in and account numbers are masked to their final four digits when masking is enabled; footer text is returned only when configured. Hidden sections are returned as `null` so the FE can honor the saved layout without changing the immutable calculation totals. `employeeVisibility=ADMINS_ONLY` is enforced from that immutable snapshot for list, detail and PDF reads, and `notifyEmployees=false` suppresses publication notifications.
 
 ### Overtime allocation to payroll

@@ -285,6 +285,22 @@ export class FilesService {
               scanStatus,
             },
           });
+          if (companyLogo) {
+            await tx.storedFile.updateMany({
+              where: {
+                companyId: m.companyId,
+                category: 'COMPANY_LOGO',
+                archived: false,
+                id: { not: id },
+              },
+              data: { archived: true },
+            });
+            await tx.company.update({
+              where: { id: m.companyId },
+              data: { logo: this.publicUrl(id) },
+            });
+            await audit(tx, m, 'COMPANY_LOGO_UPDATED', id);
+          }
           await audit(tx, m, 'FILE_UPLOADED', id);
           return {
             data: {
