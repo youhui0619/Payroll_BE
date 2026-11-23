@@ -464,6 +464,23 @@ async function main() {
       }),
       0,
     );
+    const attendanceCalendar = await attendance.calendar(
+      owner,
+      {
+        year: open.date.getUTCFullYear(),
+        month: open.date.getUTCMonth() + 1,
+      },
+      true,
+    );
+    const calendarEmployee = attendanceCalendar.data.employees.find(
+      (row) => row.employeeId === employee.id,
+    );
+    assert.ok(calendarEmployee);
+    const calendarDay = calendarEmployee.days.find(
+      (row) => row.date === open.date.toISOString().slice(0, 10),
+    );
+    assert.equal(calendarDay?.attendance?.id, open.id);
+    assert.ok(calendarEmployee.summary.presentDays >= 1);
     console.log('PASS concurrent clocking and idempotency');
     const leave = new LeaveService(db as Database);
     const policy = (

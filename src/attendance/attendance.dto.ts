@@ -8,7 +8,11 @@ import {
   IsUUID,
   Length,
   Matches,
+  IsInt,
+  Max,
+  Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PageDto } from '../common/page.dto';
 
 export class ClockDto {
@@ -85,4 +89,28 @@ export class AttendanceAdjustmentQueryDto extends PageDto {
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;
+}
+
+export class AttendanceCalendarQueryDto {
+  @ApiProperty({ example: 2026, minimum: 2000, maximum: 2200 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(2000)
+  @Max(2200)
+  year: number;
+
+  @ApiProperty({ example: 11, minimum: 1, maximum: 12 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month: number;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'Filter the company calendar to one department.',
+  })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
 }

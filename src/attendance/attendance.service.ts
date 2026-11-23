@@ -9,6 +9,7 @@ import {
   selfEmployee,
 } from '../common/domain';
 import { DateRangeDto } from '../workforce/workforce.dto';
+import { AttendanceCalendarQueryDto } from './attendance.dto';
 
 @Injectable()
 export class AttendanceService {
@@ -147,6 +148,177 @@ export class AttendanceService {
         workedMinutes: row.durationMinutes,
       })),
       meta: { limit: 1000 },
+    };
+  }
+
+  async calendar(m: Membership, q: AttendanceCalendarQueryDto, all = false) {
+    const start = new Date(Date.UTC(q.year, q.month - 1, 1));
+    const end = new Date(Date.UTC(q.year, q.month, 0));
+    const next = new Date(Date.UTC(q.year, q.month, 1));
+    const employee = all ? null : await selfEmployee(this.db, m);
+    const employeeWhere = employee
+      ? { id: employee.id }
+      : {
+          ...(q.departmentId ? { departmentId: q.departmentId } : {}),
+          active: true,
+        };
+    const employees = await this.db.employee.findMany({
+      where: { companyId: m.companyId, ...employeeWhere },
+      select: {
+        id: true,
+        employeeNo: true,
+        name: true,
+        departmentId: true,
+        department: { select: { id: true, code: true, name: true } },
+      },
+      orderBy: [{ employeeNo: 'asc' }, { id: 'asc' }],
+      take: 501,
+    });
+    if (employees.length > 500)
+      fail(
+        'ATTENDANCE_CALENDAR_TOO_LARGE',
+        'Narrow the calendar to a department.',
+        400,
+      );
+    const employeeIds = employees.map((row) => row.id);
+    const [sessions, leaves, overtime, holidays] = await this.db.$transaction([
+      this.db.attendanceSession.findMany({
+        where: {
+          companyId: m.companyId,
+          employeeId: { in: employeeIds },
+          date: { gte: start, lte: end },
+        },
+        orderBy: { clockIn: 'asc' },
+      }),
+      this.db.leaveRequest.findMany({
+        where: {
+          companyId: m.companyId,
+          employeeId: { in: employeeIds },
+          status: 'APPROVED',
+          startDate: { lt: next },
+          endDate: { gte: start },
+        },
+        include: { policy: { select: { code: true, name: true } } },
+        orderBy: [{ startDate: 'asc' }, { id: 'asc' }],
+      }),
+      this.db.overtimeRequest.findMany({
+        where: {
+          companyId: m.companyId,
+          employeeId: { in: employeeIds },
+          status: 'APPROVED',
+          overtimeDate: { gte: start, lte: end },
+        },
+        orderBy: [{ overtimeDate: 'asc' }, { id: 'asc' }],
+      }),
+      this.db.publicHoliday.findMany({
+        where: {
+          companyId: m.companyId,
+          active: true,
+          startDate: { lte: end },
+          endDate: { gte: start },
+        },
+        orderBy: [{ startDate: 'asc' }, { id: 'asc' }],
+      }),
+    ]);
+    const dateKeys = Array.from({ length: end.getUTCDate() }, (_, index) => {
+      const date = new Date(Date.UTC(q.year, q.month - 1, index + 1));
+      return date.toISOString().slice(0, 10);
+    });
+    const dateOf = (date: Date) => date.toISOString().slice(0, 10);
+    const rows = employees.map((person) => {
+      const personSessions = sessions.filter(
+        (row) => row.employeeId === person.id,
+      );
+      const personLeaves = leaves.filter((row) => row.employeeId === person.id);
+      const personOvertime = overtime.filter(
+        (row) => row.employeeId === person.id,
+      );
+      const days = dateKeys.map((date) => {
+        const attendance = personSessions.find(
+          (row) => dateOf(row.date) === date,
+        );
+        const leave = personLeaves.find(
+          (row) => date >= dateOf(row.startDate) && date <= dateOf(row.endDate),
+        );
+        const overtimeRow = personOvertime.find(
+          (row) => dateOf(row.overtimeDate) === date,
+        );
+        const holiday = holidays.find(
+          (row) => date >= dateOf(row.startDate) && date <= dateOf(row.endDate),
+        );
+        return {
+          date,
+          attendance: attendance
+            ? {
+                id: attendance.id,
+                clockIn: attendance.clockIn.toISOString(),
+                clockOut: attendance.clockOut?.toISOString() ?? null,
+                durationMinutes: attendance.durationMinutes,
+                hoursWorkedMinutes: attendance.hoursWorkedMinutes,
+                overtimeMinutes: attendance.overtimeMinutes,
+                remark: attendance.remark,
+              }
+            : null,
+          leave: leave
+            ? {
+                id: leave.id,
+                reference: leave.reference,
+                policyCode: leave.policy.code,
+                policyName: leave.policy.name,
+                paid: leave.paid,
+                days: leave.days.toFixed(2),
+                halfDay: leave.halfDay,
+                status: leave.status,
+                reason: leave.reason,
+              }
+            : null,
+          overtime: overtimeRow
+            ? {
+                id: overtimeRow.id,
+                netMinutes: overtimeRow.netMinutes,
+                overtimeType: overtimeRow.overtimeType,
+                earningCode: overtimeRow.earningCode,
+                status: overtimeRow.status,
+              }
+            : null,
+          holiday: holiday
+            ? { id: holiday.id, name: holiday.name, scope: holiday.scope }
+            : null,
+        };
+      });
+      return {
+        employeeId: person.id,
+        employeeNo: person.employeeNo,
+        employee: person.name,
+        departmentId: person.departmentId,
+        department: person.department,
+        days,
+        summary: {
+          presentDays: days.filter((day) => !!day.attendance).length,
+          leaveDays: days.filter((day) => !!day.leave).length,
+          overtimeMinutes: days.reduce(
+            (sum, day) =>
+              sum +
+              (day.attendance?.overtimeMinutes ??
+                day.overtime?.netMinutes ??
+                0),
+            0,
+          ),
+          workedMinutes: days.reduce(
+            (sum, day) => sum + (day.attendance?.hoursWorkedMinutes ?? 0),
+            0,
+          ),
+        },
+      };
+    });
+    return {
+      data: {
+        year: q.year,
+        month: q.month,
+        startDate: dateKeys[0],
+        endDate: dateKeys.at(-1),
+        employees: rows,
+      },
     };
   }
 }

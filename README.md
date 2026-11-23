@@ -466,6 +466,10 @@ POST /api/v1/payroll/runs/{laterRunId}/adjustments
 ```
 
 The source must be `PUBLISHED` or `PAID`, the target must be a later calendar month and `DRAFT`, and the component must be active for the target month. The response retains `sourceRunId`, `targetRunId`, `inputId`, amount and reason. Reusing the same request key is safe only with identical values. `GET /api/v1/payroll/runs/{laterRunId}/adjustments` lists the trace; `POST .../adjustments/{id}/void` voids the linked target input with a required reason while the target remains draft. Once the target is calculated, the correction is locked with the rest of the run. The original finalized snapshot is never modified.
+
+### Attendance monthly calendar
+
+`GET /api/v1/attendance/calendar?year=2026&month=11` (OWNER/HR) returns the active company employees for the month. Add `departmentId` to narrow the response. Each employee row contains `employeeId`, `employeeNo`, display name/department, one day object per calendar date, and `summary` totals. A day can include `attendance` (server timestamps, duration, worked minutes, overtime and remark), an approved `leave`, approved `overtime`, and an active `holiday`. `GET /api/v1/attendance/me/calendar` uses the linked employee from the JWT and ignores company-wide filters. The response is bounded to 500 employees and is designed to drive the FE attendance grid and monthly detail dialog; dates are ISO calendar dates and times are ISO timestamps.
 Publication snapshots the configured payslip visibility and masking settings. Bank account details are opt-in and account numbers are masked to their final four digits when masking is enabled; footer text is returned only when configured. Hidden sections are returned as `null` so the FE can honor the saved layout without changing the immutable calculation totals. `employeeVisibility=ADMINS_ONLY` is enforced from that immutable snapshot for list, detail and PDF reads, and `notifyEmployees=false` suppresses publication notifications.
 
 ### Overtime allocation to payroll

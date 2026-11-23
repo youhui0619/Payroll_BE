@@ -15,6 +15,7 @@ import {
   AttendanceAdjustmentDto,
   AttendanceAdjustmentQueryDto,
   AttendanceCorrectionDto,
+  AttendanceCalendarQueryDto,
   ClockDto,
   ClockOutDto,
 } from './attendance.dto';
@@ -44,6 +45,18 @@ export class AttendanceController {
     @Query() q: DateRangeDto,
   ) {
     return this.service.history(r.membership, q);
+  }
+  @Get('me/calendar') calendarMe(
+    @Req() r: TenantRequest,
+    @Query() q: AttendanceCalendarQueryDto,
+  ) {
+    return this.service.calendar(r.membership, q);
+  }
+  @Get('calendar') @Roles('OWNER', 'HR') calendar(
+    @Req() r: TenantRequest,
+    @Query() q: AttendanceCalendarQueryDto,
+  ) {
+    return this.service.calendar(r.membership, q, true);
   }
   @Get() @Roles('OWNER', 'HR') all(
     @Req() r: TenantRequest,
