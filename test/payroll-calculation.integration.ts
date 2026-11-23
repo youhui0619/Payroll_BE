@@ -11,6 +11,7 @@ import { CalculationPreviewService } from '../src/payroll/calculation-preview.se
 import { CommissionAllocationService } from '../src/payroll/commission-allocation.service';
 import { OvertimeAllocationService } from '../src/payroll/overtime-allocation.service';
 import { PayrollExecutionService } from '../src/payroll/payroll-execution.service';
+import { NotificationsService } from '../src/notifications/notifications.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -68,6 +69,21 @@ export async function verifyPayrollCalculation(
       salaries: {
         create: { amount: '5500', effectiveFrom: new Date('2026-01-01') },
       },
+    },
+  });
+  const employeeUser = await db.user.create({
+    data: {
+      email: 'calculation-notifications@example.test',
+      fullName: 'Calculation fixture user',
+      passwordHash: 'integration-only',
+    },
+  });
+  await db.membership.create({
+    data: {
+      companyId: company.id,
+      userId: employeeUser.id,
+      employeeId: employee.id,
+      roles: ['EMPLOYEE'],
     },
   });
   await new ComponentDefinitionsService(database).save(actor, {
@@ -442,6 +458,22 @@ export async function verifyPayrollCalculation(
   assert.equal(approved.data.status, 'APPROVED');
   const published = await execution.publish(actor, run.id);
   assert.equal(published.data.status, 'PUBLISHED');
+  const employeeMember = {
+    companyId: company.id,
+    userId: employeeUser.id,
+    employeeId: employee.id,
+    roles: ['EMPLOYEE'],
+  } as Membership;
+  const notifications = new NotificationsService(database);
+  const notificationList = await notifications.list(employeeMember, {
+    page: 1,
+    pageSize: 20,
+    unreadOnly: true,
+  });
+  assert.equal(notificationList.meta.total, 1);
+  assert.equal(notificationList.meta.unreadCount, 1);
+  assert.equal(notificationList.data[0].kind, 'PAYSLIP_PUBLISHED');
+  await notifications.read(employeeMember, notificationList.data[0].id);
   const payslip = (await execution.payslip(actor, run.id, employee.id)).data;
   assert.equal(payslip.status, 'Published');
   assert.equal(payslip.employee.employeeNo, 'CALCULATION');

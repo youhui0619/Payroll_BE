@@ -10,6 +10,7 @@ import {
   PayrollPaymentDto,
 } from './payroll-execution.dto';
 import { PayrollRegisterQueryDto } from './payroll-register.dto';
+import { createNotificationInTransaction } from '../notifications/notifications.service';
 
 const jsonValue = (value: unknown) =>
   JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -243,6 +244,19 @@ export class PayrollExecutionService {
         const settings = await tx.payslipSettings.findUnique({
           where: { companyId: m.companyId },
         });
+        const memberships = await tx.membership.findMany({
+          where: {
+            companyId: m.companyId,
+            active: true,
+            employeeId: { in: rows.map((row) => row.employeeId) },
+          },
+          select: { employeeId: true, userId: true },
+        });
+        const userByEmployee = new Map(
+          memberships
+            .filter((membership) => membership.employeeId)
+            .map((membership) => [membership.employeeId!, membership.userId]),
+        );
         const format =
           settings?.payslipNumberFormat ?? 'PAY-{YYYY}-{MM}-{EMPLOYEE_ID}';
         const publishedAt = new Date();
@@ -289,6 +303,23 @@ export class PayrollExecutionService {
               }),
             },
           });
+          const userId = userByEmployee.get(row.employeeId);
+          if (userId)
+            await createNotificationInTransaction(tx, {
+              companyId: m.companyId,
+              userId,
+              kind: 'PAYSLIP_PUBLISHED',
+              title: 'Payslip published',
+              message: `Your ${run.year}-${String(run.month).padStart(2, '0')} payslip is ready to view.`,
+              dedupeKey: `PAYSLIP_PUBLISHED:${run.id}:${row.employeeId}`,
+              sourceType: 'PAYROLL_RUN',
+              sourceId: run.id,
+              payload: {
+                runId: run.id,
+                employeeId: row.employeeId,
+                payslipNumber: number,
+              },
+            });
         }
         const updated = await tx.payrollRun.update({
           where: { companyId_id: { companyId: m.companyId, id: runId } },

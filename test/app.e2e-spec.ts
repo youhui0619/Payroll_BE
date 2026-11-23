@@ -49,7 +49,12 @@ describe('application HTTP contract', () => {
     expect(JSON.stringify(response.body)).not.toContain('private');
   });
   it('protects newly registered business routes', async () => {
-    for (const path of ['/memberships', '/payroll/runs', '/dashboard']) {
+    for (const path of [
+      '/memberships',
+      '/payroll/runs',
+      '/dashboard',
+      '/notifications',
+    ]) {
       const response = await request(app.getHttpServer())
         .get('/api/v1' + path)
         .expect(401);
@@ -94,6 +99,8 @@ describe('application HTTP contract', () => {
     expect(doc.paths['/api/v1/payroll/runs/{id}/pay'].post).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/payslips'].get).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/register'].get).toBeDefined();
+    expect(doc.paths['/api/v1/notifications'].get).toBeDefined();
+    expect(doc.paths['/api/v1/notifications/{id}/read'].patch).toBeDefined();
   });
   it('restricts payroll roster access and validates department filters', async () => {
     const token = await app.get(JwtService).signAsync({

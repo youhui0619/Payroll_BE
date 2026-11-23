@@ -19,6 +19,7 @@ import { PayrollExecutionController } from './payroll-execution.controller';
 import { PayslipController } from './payslip.controller';
 import { PayrollExecutionService } from './payroll-execution.service';
 import { PayrollRegisterController } from './payroll-register.controller';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { PayrollRegisterController } from './payroll-register.controller';
     TaxFamilyModule,
     TaxExpensesModule,
     OvertimeAllocationModule,
+    NotificationsModule,
   ],
   controllers: [
     PayrollController,

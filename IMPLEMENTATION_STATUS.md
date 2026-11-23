@@ -19,7 +19,7 @@ Current migration policy: the user ended the single-init requirement on 2026-11-
 | Statutory | Versioned ruleset import/activation/retirement/preview, decimal TABLE/RATE/EXEMPT calculator with above-table branches, EPF A/C/E/F, EIS, SOCSO and LINDUNG catalog with provenance; standard PCB preview; company-paid EPF rounding in payroll assembly | HRD, statutory eligibility/basis handling, PCB input resolution/special regimes and full official conformance |
 | Payroll | Settings and FE inclusion/proration policy, category/participation history, earning/deduction definitions and period locks, wage-basis/totals assembly, unique monthly drafts, list/detail, historical preflight, calculated payroll register, approved commission/overtime allocation, persisted calculation, approval/publication/payment lifecycle, payslip visibility/masking and FE payslip reads | Automated eligibility, corrections/reopen, statutory exports, notification delivery and generated PDF payslip files |
 | Reports | Dashboard counts/upcoming holidays, bounded attendance and claim CSV | Payroll/statutory reports, report history, scheduled exports |
-| Other sidebar features | Backlog/module boundaries documented | Notifications, imports and remaining MVP settings |
+| Other sidebar features | In-app notifications with unread/read APIs and idempotent payslip-publication events | Imports and remaining MVP settings |
 
 ## Workflow invariants
 
@@ -112,3 +112,5 @@ Payslip visibility update (2026-11-24): publication snapshots the configured pay
 Preflight readiness update (2026-11-24): removed obsolete unconditional PCB/payroll-engine blockers now that calculation and lifecycle commands are implemented. Preflight applies the configured salary proration method and skips disabled statutory schemes while retaining LINDUNG 24 Jam checks. Its remaining issues are actual setup, source, eligibility or workflow blockers. Payroll unit and disposable PostgreSQL verification passed; application database untouched.
 
 Payroll register update (2026-11-24): added `GET /api/v1/payroll/runs/:id/register` for OWNER/HR/FINANCE. Calculated/approved/published/paid runs return FE overview columns, employee/department labels, statutory employee/employer amounts, LINDUNG 24 Jam, PCB, gross/net and status with pagination, employee search and department UUID filters. Draft runs return an empty register because only the roster is available before calculation. Swagger, lint/build and disposable PostgreSQL verification passed; application database untouched.
+
+Notifications update (2026-11-24): added the incremental `notifications` table, tenant/user-scoped paginated unread filtering, single-read and read-all commands, and idempotent `PAYSLIP_PUBLISHED` events emitted atomically during publication. Notification unit tests and the complete disposable PostgreSQL integration suite passed; application database untouched. Email delivery, imports and correction/reopen workflows remain pending.
