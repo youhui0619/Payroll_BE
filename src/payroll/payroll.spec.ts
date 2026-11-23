@@ -47,17 +47,19 @@ describe('payroll preparation', () => {
       where: { companyId_id: { companyId: 'company', id: 'foreign' } },
     });
   });
-  it('never reports payroll ready while engines are missing', async () => {
+  it('reports actionable blockers without obsolete engine-pending errors', async () => {
     const result = await new PayrollService(database()).preflight(
       member,
       'run',
     );
     expect(result.data.ready).toBe(false);
-    expect(result.data.issues.map((i) => i.code)).toEqual(
+    expect(result.data.issues.map((i) => i.code)).toContain(
+      'NO_ELIGIBLE_EMPLOYEES',
+    );
+    expect(result.data.issues.map((i) => i.code)).not.toEqual(
       expect.arrayContaining([
         'PCB_CALCULATOR_PENDING',
         'PAYROLL_CALCULATOR_PENDING',
-        'NO_ELIGIBLE_EMPLOYEES',
       ]),
     );
   });

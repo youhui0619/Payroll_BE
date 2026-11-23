@@ -188,7 +188,7 @@ Swagger at `/docs` is the route reference. All business routes use `/api/v1`.
 - Claims follow draft → reporting-manager approval → Finance approval. Bank-transfer claims can be marked paid once. Payroll claims cannot be paid through the standalone payment endpoint.
 - File uploads accept PDF, PNG and JPEG, up to 5 MiB. Uploads and downloads enforce employee/claim access and file signatures. Content is private and downloaded through the API.
 - Dashboard and attendance/claims CSV exports are available. Export filters are bounded and formula-like CSV cells are escaped.
-- Payroll settings, statutory categories, draft payroll runs and preflight checks are available. Preflight returns setup issues and explicitly reports unfinished calculation engines.
+- Payroll settings, statutory categories, draft payroll runs and preflight checks are available. Preflight uses the configured salary proration/statutory switches and returns actionable setup issues; the calculate command performs the final full-input validation.
 
 ### Payroll processing and payslips
 

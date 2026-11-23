@@ -402,6 +402,9 @@ export class PayrollService {
               ),
               year: run.year,
               month: run.month,
+              prorationMethod: (settings?.salaryProrationMethod ??
+                'CALENDAR_DAYS') as
+                'CALENDAR_DAYS' | 'FIXED_26_DAYS' | 'WORKING_DAYS',
               joinedDate: employee.joinedDate.toISOString().slice(0, 10),
               salaries: employee.salaries.map((s) => ({
                 id: s.id,
@@ -430,6 +433,17 @@ export class PayrollService {
           for (const scheme of Object.values(StatutoryScheme)) {
             // PCB uses a separate engine; never substitute a flat contribution rate.
             if (scheme === 'PCB') continue;
+            const enabled =
+              scheme === 'EPF'
+                ? (settings?.includeEpf ?? true)
+                : scheme === 'SOCSO'
+                  ? (settings?.includeSocso ?? true)
+                  : scheme === 'EIS'
+                    ? (settings?.includeEis ?? true)
+                    : scheme === 'HRD'
+                      ? (settings?.includeHrdCorpLevy ?? false)
+                      : true;
+            if (!enabled) continue;
             const matching = rules.filter(
               (rule) =>
                 rule.scheme === scheme &&
@@ -497,14 +511,6 @@ export class PayrollService {
             'PENDING_LEAVE',
             `${pendingLeave} leave applications need a decision.`,
           );
-        add(
-          'PCB_CALCULATOR_PENDING',
-          'PCB preview exists, but relief eligibility, payroll input resolution, special regimes and full official conformance remain pending.',
-        );
-        add(
-          'PAYROLL_CALCULATOR_PENDING',
-          'Salary proration core exists; automatic source resolution, run calculation and immutable snapshots remain pending.',
-        );
         return {
           data: {
             runId: id,

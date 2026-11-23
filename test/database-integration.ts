@@ -1017,9 +1017,6 @@ async function main() {
         (issue) => issue.code === 'SALARY_COVERAGE_MISSING',
       ),
     );
-    assert.ok(
-      preflight.issues.some((issue) => issue.code === 'PCB_CALCULATOR_PENDING'),
-    );
     await assert.rejects(() =>
       payroll.saveProfile(owner, foreign.id, {
         effectiveFrom: '2026-10-01',

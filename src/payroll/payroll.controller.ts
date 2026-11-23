@@ -142,7 +142,7 @@ export class PayrollController {
   @Get('payroll/runs/:id/preflight')
   @ApiOperation({
     summary:
-      'Report setup gaps; calculation remains unavailable until statutory and payroll engines are implemented.',
+      'Report setup gaps using the same salary proration and statutory switches used by calculation.',
   })
   preflight(@Req() r: TenantRequest, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.preflight(r.membership, id);
