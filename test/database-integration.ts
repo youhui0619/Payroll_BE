@@ -14,6 +14,7 @@ import { RulesService } from '../src/payroll/rules.service';
 import { ComponentDefinitionsService } from '../src/payroll/component-definitions.service';
 import { PayrollInputsService } from '../src/payroll/payroll-inputs.service';
 import { EmployeesService } from '../src/employees/employees.service';
+import { ReportsService } from '../src/reports/reports.service';
 import { resolveUnpaidDays } from '../src/payroll/leave-inputs';
 import { InputPreviewService } from '../src/payroll/input-preview.service';
 import { PayrollRosterService } from '../src/payroll/payroll-roster.service';
@@ -172,6 +173,14 @@ async function main() {
     console.log(
       'PASS employee import preview, row errors, idempotent commit and audit',
     );
+    const reports = new ReportsService(db as Database);
+    const balanceExport = await reports.leaveBalances(owner, { year: 2026 });
+    assert.equal(balanceExport.includes('Employee number'), true);
+    const leaveApplicationExport = await reports.leaveApplications(owner, {
+      from: '2026-01-01',
+      to: '2026-12-31',
+    });
+    assert.equal(leaveApplicationExport.includes('Status'), true);
     const rules = new RulesService(db as Database);
     const imported = await rules.importCatalog(owner, 'EIS_2024_10');
     const lindungRule = await rules.importCatalog(

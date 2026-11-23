@@ -210,6 +210,10 @@ Employees can replace their draft using `PATCH /leave/applications/:id` with the
 
 `POST /api/v1/employees/import/commit` repeats the same batch after review. It creates employees and optional opening salary rows in one serializable transaction, records an `import_batches` row and audit event, and returns the original result on a repeated company/entity/idempotency key. It never updates an existing employee. Spreadsheet/file parsing and provider-specific column mappings can be layered over this stable JSON contract later.
 
+### Reports and exports
+
+In addition to attendance and claims CSVs, the API provides `GET /api/v1/reports/leave-balances.csv?year=YYYY`, `GET /api/v1/reports/leave-applications.csv?from=YYYY-MM-DD&to=YYYY-MM-DD`, and `GET /api/v1/reports/payslip-history.csv?year=YYYY&month=M`. These OWNER/HR/FINANCE exports are tenant scoped, bounded, formula-safe and audited. Payroll register and statutory review exports are documented in the payroll section; official authority submission layouts remain separate from the review CSV contract.
+
 The revised init migration includes `leave_events`. These changes do not migrate an already-applied older init.
 
 ### Claims and receipts

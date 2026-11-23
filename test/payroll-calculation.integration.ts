@@ -13,6 +13,7 @@ import { OvertimeAllocationService } from '../src/payroll/overtime-allocation.se
 import { PayrollExecutionService } from '../src/payroll/payroll-execution.service';
 import { NotificationsService } from '../src/notifications/notifications.service';
 import { StatutoryExportService } from '../src/payroll/statutory-export.service';
+import { ReportsService } from '../src/reports/reports.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -561,6 +562,11 @@ export async function verifyPayrollCalculation(
   assert.equal(registerExport.filename, 'payroll-register-2026-01.csv');
   assert.equal(registerExport.content.includes('Employee number'), true);
   assert.equal(registerExport.content.includes('LINDUNG 24 Jam'), true);
+  const payslipHistory = await new ReportsService(database).payslipHistory(
+    actor,
+    { year: 2026, month: 1 },
+  );
+  assert.equal(payslipHistory.includes('CALCULATION'), true);
   const exportAudit = await db.auditEvent.findFirst({
     where: {
       companyId: company.id,

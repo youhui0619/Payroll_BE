@@ -111,6 +111,11 @@ describe('application HTTP contract', () => {
     ).toBeDefined();
     expect(doc.paths['/api/v1/employees/import/preview'].post).toBeDefined();
     expect(doc.paths['/api/v1/employees/import/commit'].post).toBeDefined();
+    expect(doc.paths['/api/v1/reports/leave-balances.csv'].get).toBeDefined();
+    expect(
+      doc.paths['/api/v1/reports/leave-applications.csv'].get,
+    ).toBeDefined();
+    expect(doc.paths['/api/v1/reports/payslip-history.csv'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications/{id}/read'].patch).toBeDefined();
   });
