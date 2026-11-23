@@ -1,4 +1,5 @@
 import { strict as assert } from 'node:assert';
+import { randomUUID } from 'node:crypto';
 import { Membership, PrismaClient } from '@prisma/client';
 import { Database } from '../src/database.module';
 import { PayrollService } from '../src/payroll/payroll.service';
@@ -14,6 +15,7 @@ import { PayrollExecutionService } from '../src/payroll/payroll-execution.servic
 import { NotificationsService } from '../src/notifications/notifications.service';
 import { StatutoryExportService } from '../src/payroll/statutory-export.service';
 import { ReportsService } from '../src/reports/reports.service';
+import { PayrollAdjustmentsService } from '../src/payroll/payroll-adjustments.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -586,6 +588,66 @@ export async function verifyPayrollCalculation(
   await assert.rejects(
     () => service.preview(actor, run.id, employee.id, review),
     { status: 409 },
+  );
+  const correctionRun = (await payroll.create(actor, { year: 2026, month: 3 }))
+    .data;
+  const adjustments = new PayrollAdjustmentsService(database);
+  const correctionKey = randomUUID();
+  const correction = (
+    await adjustments.create(actor, correctionRun.id, {
+      sourceRunId: run.id,
+      employeeId: employee.id,
+      idempotencyKey: correctionKey,
+      componentCode: 'COMM',
+      amount: '125.00',
+      reason: 'Correct January commission underpayment',
+    })
+  ).data;
+  assert.equal(correction.sourceRunId, run.id);
+  assert.equal(correction.targetRunId, correctionRun.id);
+  assert.equal(correction.amount, '125.00');
+  assert.equal(
+    (
+      await adjustments.create(actor, correctionRun.id, {
+        sourceRunId: run.id,
+        employeeId: employee.id,
+        idempotencyKey: correctionKey,
+        componentCode: 'COMM',
+        amount: '125.00',
+        reason: 'Correct January commission underpayment',
+      })
+    ).data.id,
+    correction.id,
+  );
+  assert.equal(
+    (await adjustments.list(actor, correctionRun.id, { page: 1, pageSize: 20 }))
+      .meta.total,
+    1,
+  );
+  const voided = (
+    await adjustments.void(actor, correctionRun.id, correction.id, {
+      reason: 'Correction entered in error',
+    })
+  ).data;
+  assert.equal(voided.voidReason, 'Correction entered in error');
+  assert.equal(
+    (await db.payrollRun.findUniqueOrThrow({ where: { id: run.id } })).status,
+    'PAID',
+  );
+  await assert.rejects(
+    () =>
+      adjustments.create(actor, run.id, {
+        sourceRunId: run.id,
+        employeeId: employee.id,
+        idempotencyKey: randomUUID(),
+        componentCode: 'COMM',
+        amount: '1.00',
+        reason: 'Same-period correction',
+      }),
+    { status: 409 },
+  );
+  console.log(
+    'PASS finalized payroll corrections, later-period trace, idempotency and draft-only voiding',
   );
   console.log(
     'PASS persisted payroll calculation, approval, publication, payslip mapping, payment settlement and locked reads',

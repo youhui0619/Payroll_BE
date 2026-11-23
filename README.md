@@ -445,6 +445,27 @@ The payroll lifecycle is now explicit:
 In-app notifications are available at `GET /api/v1/notifications` with `unreadOnly=true`, `PATCH /api/v1/notifications/:id/read`, and `POST /api/v1/notifications/read-all`. Results are scoped to the authenticated user and company. Payslip publication emits one idempotent `PAYSLIP_PUBLISHED` notification to the linked employee; leave and claim decisions emit settings-aware `LEAVE_DECISION` and `CLAIM_DECISION` events. Invitation/approval-queue events and email delivery remain behind future adapters.
 
 Calculation runs in one serializable transaction; a failed employee blocks the status change. Snapshots retain the resolved source lines, statutory traces, PCB review, tax-period values, company and employee display data. `GET /api/v1/payroll/runs/:id/payslips` and `.../payslips/:employeeId` expose FE-shaped payslip data only after publication. OWNER/HR/FINANCE can read a run; an EMPLOYEE can read only their own row. Numeric amounts are returned for the current FE payslip model, while persisted calculation/source traces remain decimal strings. Reopen is a pre-publication correction primitive; finalized-period corrections still require a later-period adjustment workflow. `GET .../payslips/:employeeId/pdf` returns a tenant-authorized PDF attachment and audits the download; configured password-protected PDFs fail closed until an encryption adapter is installed. Bank files and statutory submission exports remain outside this MVP slice.
+
+### Finalized payroll corrections
+
+Published and paid payroll runs cannot be edited. To correct an employee's finalized line, create the correction on a later draft run:
+
+```http
+POST /api/v1/payroll/runs/{laterRunId}/adjustments
+```
+
+```json
+{
+  "sourceRunId": "<published-or-paid-run>",
+  "employeeId": "<employee>",
+  "idempotencyKey": "<uuid>",
+  "componentCode": "COMM",
+  "amount": "125.00",
+  "reason": "Correct January commission underpayment"
+}
+```
+
+The source must be `PUBLISHED` or `PAID`, the target must be a later calendar month and `DRAFT`, and the component must be active for the target month. The response retains `sourceRunId`, `targetRunId`, `inputId`, amount and reason. Reusing the same request key is safe only with identical values. `GET /api/v1/payroll/runs/{laterRunId}/adjustments` lists the trace; `POST .../adjustments/{id}/void` voids the linked target input with a required reason while the target remains draft. Once the target is calculated, the correction is locked with the rest of the run. The original finalized snapshot is never modified.
 Publication snapshots the configured payslip visibility and masking settings. Bank account details are opt-in and account numbers are masked to their final four digits when masking is enabled; footer text is returned only when configured. Hidden sections are returned as `null` so the FE can honor the saved layout without changing the immutable calculation totals. `employeeVisibility=ADMINS_ONLY` is enforced from that immutable snapshot for list, detail and PDF reads, and `notifyEmployees=false` suppresses publication notifications.
 
 ### Overtime allocation to payroll
