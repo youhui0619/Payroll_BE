@@ -115,6 +115,7 @@ export class PositionDto {
   description?: string;
 
   @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringToNull)
   @IsOptional()
   @IsString()
   @Length(1, 120)
