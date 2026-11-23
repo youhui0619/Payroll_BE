@@ -135,14 +135,14 @@ Amounts are decimal strings. Each new effective date must follow the latest exis
 
 ## Employee accounts and self-service
 
-The employee-account link is included in the consolidated init migration. After recreating your development database, apply init and regenerate the client (stop the backend first on Windows):
+The employee-account link is represented by the current migration chain. After recreating your development database, apply all migrations and regenerate the client (stop the backend first on Windows):
 
 ```powershell
 npx prisma migrate deploy
 npm run db:generate
 ```
 
-Then run `npm run db:seed` to create the initial owner/company again. This consolidated init is for a fresh database; it does not upgrade a database that already applied an older init. Employee records can still exist without a login.
+Then run `npm run db:seed` to create the initial owner/company again. Existing databases should use `npx prisma migrate deploy` and must not be reset for normal updates. Employee records can still exist without a login.
 
 As OWNER or HR, call `POST /api/v1/employees/:id/account` with:
 
@@ -399,7 +399,7 @@ The result contains `input` (resolved source records), `pcb` (amount, tax/relief
 
 FE payroll overview/detail mapping: `totals.gross` → grossPay, `totals.net` → netPay, and `pcb.amount` → pcb. Resolve EPF/SOCSO/EIS/LINDUNG rows from `totals.statutory` by scheme, using employeeDeduction/employerCost/remittance; keep LINDUNG separate. Do not map `totals.deductions` into the mock's non-statutory deduction column because it includes statutory deductions. Earnings categories must come from reviewed component lines, not guessed from mock amounts. Traces and tax review are backend extensions to the current FE Payslip model.
 
-The response deliberately remains `previewOnly: true, complete: false`. It calculates the currently resolved inputs using the existing calendar-month salary engine; it does not implement all company calculation settings, automatically collect overtime/commissions/recurring allowances, save payroll, approve it, publish payslips or settle payments. The preview is not a replacement for final payroll processing.
+The response deliberately remains `previewOnly: true, complete: false`. It calculates the currently resolved inputs using the existing calendar-month salary engine; it does not implement all company calculation settings, automatically collect unallocated overtime/commissions/recurring allowances, save payroll, approve it, publish payslips or settle payments. The preview is not a replacement for final payroll processing.
 
 ### Commission allocation to payroll
 
@@ -410,3 +410,11 @@ Only READY_FOR_PAYROLL records and DRAFT runs are eligible. CURRENT_PAYROLL perm
 `GET /api/v1/payroll/commissions/:recordId/allocation-history` returns paginated allocation/release events with run, actor, time and reason. Allocations feed both input and calculation previews through COMMISSION source lines and `commissionSources`. They retain the saved plan code/name, amount, earning code and reference, rather than recomputing from a plan that may have changed.
 
 FE comparison: `Payroll_FE/src/app/models/commission/commission-payroll-record.model.ts`, its mock data and the payroll commission overview distinguish PENDING_APPROVAL, READY_FOR_PAYROLL and PAID. Allocation keeps READY_FOR_PAYROLL; `payrollRunId` identifies its assigned run. Show release only for a draft run. The FE Payslip's commissionReferences/commissionItems can use source IDs and the corresponding records; amounts remain decimal strings in the API. The new lowercase commission_allocation_events table retains allocation history. Payroll payment settlement and separate payouts remain pending.
+
+### Overtime allocation to payroll
+
+OWNER/FINANCE can allocate or release an approved overtime request using `POST /api/v1/payroll/runs/:runId/overtime/:requestId/allocate` or `/release`, with `{ "reason": "Reviewed overtime" }`. Only draft runs, approved requests, active employees and overtime dates in the run month are accepted. Allocation is single-run and idempotent; release is blocked after the run is calculated. `GET /api/v1/payroll/overtime/:requestId/allocation-history` returns retained allocation/release events.
+
+Allocated overtime is included in `GET .../input-preview` and the calculation preview as an `OVERTIME` source line. The saved earning code and multiplier on the request are used; BASIC and UNPAID_LEAVE are reserved. The amount is rounded to cents after `netMinutes / 60 × hourlyRate × multiplier`. Employee overtime uses the FE-compatible `HOURLY_RATE`, `DAILY_RATE_CONVERTED`, or `MONTHLY_SALARY_CONVERTED` basis. Converted rates use the employee salary effective on the overtime date, the payroll proration method (calendar days, fixed 26 days, or weekdays for WORKING_DAYS), and `standardWorkingHoursPerDay`. Missing employee or company overtime enablement, salary, hours, or earning definitions returns a setup error rather than zero.
+
+FE comparison: `Payroll_FE/src/app/models/overtime/overtime.model.ts` expects numeric multipliers, ISO dates, `Pending`/`Approved`/`Rejected`/`Paid` display statuses, supporting-document names and employee/department labels. The overtime request API now serializes those display types; internal workflow statuses remain explicit in query filters. `overtime_allocation_events` is a new lowercase incremental table. Payroll payment settlement still changes approved allocated records to `PAID` and remains pending.

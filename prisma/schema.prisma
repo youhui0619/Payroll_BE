@@ -68,6 +68,7 @@ model Company {
   payrollRuns                 PayrollRun[]
   payrollComponentDefinitions PayrollComponentDefinition[]
   overtimeRequests            OvertimeRequest[]
+  overtimeAllocationEvents    OvertimeAllocationEvent[]
   commissionSettings          CommissionIncentiveSetting[]
   commissionRecords           CommissionPayrollRecord[]
   notificationSettings        NotificationSettings?
@@ -801,6 +802,7 @@ enum PayrollStatus {
 
 model PayrollRun {
   commissionAllocationEvents CommissionAllocationEvent[]
+  overtimeAllocationEvents   OvertimeAllocationEvent[]
   claims                     Claim[]
   overtimeRequests           OvertimeRequest[]
   commissionRecords          CommissionPayrollRecord[]
@@ -899,6 +901,7 @@ model PayslipSettings {
 }
 
 model OvertimeRequest {
+  allocationEvents     OvertimeAllocationEvent[]
   id                   String        @id @default(uuid()) @db.Uuid
   companyId            String        @db.Uuid
   employeeId           String        @db.Uuid
@@ -931,6 +934,23 @@ model OvertimeRequest {
   @@index([companyId, employeeId, overtimeDate])
   @@index([companyId, status])
   @@map("overtime_requests")
+}
+
+model OvertimeAllocationEvent {
+  id         String          @id @default(uuid()) @db.Uuid
+  companyId  String          @db.Uuid
+  requestId  String          @db.Uuid
+  runId      String          @db.Uuid
+  actorId    String          @db.Uuid
+  action     String
+  reason     String
+  createdAt  DateTime        @default(now()) @db.Timestamptz(3)
+  company    Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  request    OvertimeRequest @relation(fields: [companyId, requestId], references: [companyId, id], onDelete: Restrict)
+  run        PayrollRun      @relation(fields: [companyId, runId], references: [companyId, id], onDelete: Restrict)
+
+  @@index([companyId, requestId, createdAt])
+  @@map("overtime_allocation_events")
 }
 
 model CommissionIncentiveSetting {

@@ -407,6 +407,55 @@ describe('application HTTP contract', () => {
         .send(body)
         .expect(400);
   });
+  it('protects overtime allocations and validates review reasons', async () => {
+    const token = await app.get(JwtService).signAsync({
+      sub: 'user',
+      companyId: 'company',
+      membershipId: 'membership',
+      version: 0,
+    });
+    const base =
+      '/api/v1/payroll/runs/00000000-0000-4000-8000-000000000001/overtime/00000000-0000-4000-8000-000000000002';
+    await request(app.getHttpServer())
+      .post(base + '/allocate')
+      .send({ reason: 'test' })
+      .expect(401);
+    for (const role of ['HR', 'EMPLOYEE']) {
+      db.membership.findFirst.mockResolvedValue({
+        companyId: 'company',
+        userId: 'user',
+        roles: [role],
+      });
+      for (const action of ['allocate', 'release'])
+        await request(app.getHttpServer())
+          .post(base + '/' + action)
+          .set('Authorization', 'Bearer ' + token)
+          .send({ reason: 'test' })
+          .expect(403);
+      await request(app.getHttpServer())
+        .get(
+          '/api/v1/payroll/overtime/00000000-0000-4000-8000-000000000002/allocation-history',
+        )
+        .set('Authorization', 'Bearer ' + token)
+        .expect(403);
+    }
+    db.membership.findFirst.mockResolvedValue({
+      companyId: 'company',
+      userId: 'user',
+      roles: ['FINANCE'],
+    });
+    for (const body of [
+      {},
+      { reason: '' },
+      { reason: 'test', amount: '1' },
+      { reason: 'test', companyId: 'other' },
+    ])
+      await request(app.getHttpServer())
+        .post(base + '/allocate')
+        .set('Authorization', 'Bearer ' + token)
+        .send(body)
+        .expect(400);
+  });
   it('protects previous-employer tax declarations and validates money', async () => {
     const token = await app.get(JwtService).signAsync({
       sub: 'user',

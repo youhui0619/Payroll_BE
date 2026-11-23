@@ -4,7 +4,10 @@ import {
   PayrollInput,
   Prisma,
 } from '@prisma/client';
-import { assemblePayrollInputs } from './input-assembly';
+import {
+  assemblePayrollInputs,
+  calculateOvertimeAmount,
+} from './input-assembly';
 const definition = (code: string, kind = 'EARNING') =>
   ({
     id: code,
@@ -49,6 +52,7 @@ const base = {
     definition('BASIC'),
     definition('UNPAID_LEAVE', 'DEDUCTION'),
     definition('BONUS'),
+    definition('OT'),
   ],
   manualInputs: [manual],
 };
@@ -85,6 +89,61 @@ describe('payroll input assembly', () => {
     expect(() =>
       assemblePayrollInputs({ ...base, commissions: [commission, commission] }),
     ).toThrow();
+  });
+  it('calculates approved overtime from the employee hourly basis and saved multiplier', () => {
+    const result = assemblePayrollInputs({
+      ...base,
+      overtime: [
+        {
+          id: 'overtime',
+          companyId: 'company',
+          employeeId: 'employee',
+          status: 'APPROVED',
+          overtimeDate: new Date('2026-01-03'),
+          netMinutes: 150,
+          hourlyRateMultiplier: new Prisma.Decimal('1.5'),
+          earningCode: 'OT',
+        },
+      ],
+      employeeOvertime: {
+        includeOvertime: true,
+        overtimeCalculationBasis: 'HOURLY_RATE',
+        overtimeHourlyRate: new Prisma.Decimal('20'),
+      },
+      overtimeSettings: {
+        includeOvertime: true,
+        standardWorkingHoursPerDay: new Prisma.Decimal('8'),
+        salaryProrationMethod: 'FIXED_26_DAYS',
+      },
+    });
+    expect(result.gross).toBe('3275.00');
+    expect(result.overtimeSources).toEqual([
+      expect.objectContaining({
+        id: 'overtime',
+        amount: '75.00',
+        minutes: 150,
+      }),
+    ]);
+    expect(result.lines.at(-1).source).toEqual({
+      type: 'OVERTIME',
+      id: 'overtime',
+    });
+  });
+  it('converts monthly salary to an hourly overtime rate with currency rounding', () => {
+    expect(
+      calculateOvertimeAmount({
+        year: 2026,
+        month: 1,
+        overtimeDate: new Date('2026-01-03'),
+        netMinutes: 60,
+        multiplier: '1.5',
+        basis: 'MONTHLY_SALARY_CONVERTED',
+        hourlyRate: null,
+        standardWorkingHoursPerDay: '8',
+        salaryProrationMethod: 'FIXED_26_DAYS',
+        salaries: [{ amount: '3100.00', effectiveFrom: '2026-01-01' }],
+      }),
+    ).toBe('22.36');
   });
   it.each([
     { companyId: 'foreign' },

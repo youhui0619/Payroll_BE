@@ -3,7 +3,14 @@ import { StatutoryScheme } from '@prisma/client';
 
 class SourceDto {
   @ApiProperty({
-    enum: ['SALARY', 'UNPAID_LEAVE', 'MANUAL', 'CLAIM', 'COMMISSION'],
+    enum: [
+      'SALARY',
+      'UNPAID_LEAVE',
+      'MANUAL',
+      'CLAIM',
+      'COMMISSION',
+      'OVERTIME',
+    ],
   })
   type: string;
   @ApiProperty() id: string;
@@ -60,6 +67,24 @@ export class InputPreviewDataDto {
       'Allocated ready commission records; amounts and plan labels come from saved records, not current plan settings.',
   })
   commissionSources: Record<string, unknown>[];
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid' },
+        date: { type: 'string', format: 'date' },
+        earningCode: { type: 'string' },
+        minutes: { type: 'integer' },
+        amount: { type: 'string' },
+        multiplier: { type: 'string' },
+        calculationBasis: { type: 'string' },
+      },
+    },
+    description:
+      'Allocated approved overtime requests calculated from the saved employee basis and payroll working-hour policy.',
+  })
+  overtimeSources: Record<string, unknown>[];
   @ApiProperty() year: number;
   @ApiProperty() month: number;
   @ApiProperty({

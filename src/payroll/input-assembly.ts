@@ -9,6 +9,106 @@ import { fail } from '../common/domain';
 import { componentFromDefinition, payrollBases } from './payroll-calculator';
 import { calculateSalary } from './salary-calculator';
 
+type OvertimeInput = {
+  id: string;
+  companyId: string;
+  employeeId: string;
+  status: string;
+  overtimeDate: Date;
+  netMinutes: number;
+  hourlyRateMultiplier: Prisma.Decimal;
+  earningCode: string;
+};
+
+type OvertimeSettings = {
+  includeOvertime: boolean;
+  standardWorkingHoursPerDay: Prisma.Decimal | null;
+  salaryProrationMethod: string;
+};
+
+export function calculateOvertimeAmount(input: {
+  year: number;
+  month: number;
+  overtimeDate: Date;
+  netMinutes: number;
+  multiplier: Prisma.Decimal | string;
+  basis: string | null;
+  hourlyRate: Prisma.Decimal | string | null;
+  standardWorkingHoursPerDay: Prisma.Decimal | string | null;
+  salaryProrationMethod: string;
+  salaries: readonly {
+    amount: string;
+    effectiveFrom: string;
+    effectiveTo?: string | null;
+  }[];
+}) {
+  if (!Number.isInteger(input.netMinutes) || input.netMinutes <= 0)
+    fail('INVALID_OVERTIME_DURATION', 'Overtime minutes must be positive.');
+  const salary = input.salaries
+    .filter((row) => {
+      const from = new Date(row.effectiveFrom + 'T00:00:00.000Z');
+      const to = row.effectiveTo
+        ? new Date(row.effectiveTo + 'T00:00:00.000Z')
+        : null;
+      return from <= input.overtimeDate && (!to || input.overtimeDate < to);
+    })
+    .sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
+  if (!salary)
+    fail(
+      'OVERTIME_SALARY_REQUIRED',
+      'A salary effective on the overtime date is required.',
+    );
+  const D = Prisma.Decimal;
+  let hourly: Prisma.Decimal;
+  if (input.basis === 'HOURLY_RATE') {
+    if (!input.hourlyRate || new D(input.hourlyRate).lte(0))
+      fail(
+        'OVERTIME_RATE_REQUIRED',
+        'Configure a positive hourly overtime rate.',
+      );
+    hourly = new D(input.hourlyRate);
+  } else {
+    if (
+      !input.standardWorkingHoursPerDay ||
+      new D(input.standardWorkingHoursPerDay).lte(0)
+    )
+      fail(
+        'OVERTIME_HOURS_REQUIRED',
+        'Configure standard working hours before converting salary to an overtime rate.',
+      );
+    const denominator =
+      input.salaryProrationMethod === 'FIXED_26_DAYS'
+        ? 26
+        : input.salaryProrationMethod === 'WORKING_DAYS'
+          ? Array.from(
+              {
+                length: new Date(
+                  Date.UTC(input.year, input.month, 0),
+                ).getUTCDate(),
+              },
+              (_, day) =>
+                new Date(
+                  Date.UTC(input.year, input.month - 1, day + 1),
+                ).getUTCDay(),
+            ).filter((day) => day !== 0 && day !== 6).length
+          : new Date(Date.UTC(input.year, input.month, 0)).getUTCDate();
+    if (denominator <= 0)
+      fail(
+        'OVERTIME_PRORATION_INVALID',
+        'Salary proration has no working days.',
+      );
+    hourly = new D(salary.amount)
+      .div(denominator)
+      .div(new D(input.standardWorkingHoursPerDay));
+  }
+  return hourly
+    .mul(input.netMinutes)
+    .div(60)
+    .mul(input.multiplier)
+    .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP)
+    .toFixed(2);
+}
+
 export function assemblePayrollInputs(input: {
   companyId: string;
   runId: string;
@@ -18,6 +118,13 @@ export function assemblePayrollInputs(input: {
   manualInputs: readonly PayrollInput[];
   claims?: readonly Claim[];
   commissions?: readonly CommissionPayrollRecord[];
+  overtime?: readonly OvertimeInput[];
+  employeeOvertime?: {
+    includeOvertime: boolean;
+    overtimeCalculationBasis: string | null;
+    overtimeHourlyRate: Prisma.Decimal | null;
+  };
+  overtimeSettings?: OvertimeSettings | null;
 }) {
   const month = new Date(
     Date.UTC(input.salary.year, input.salary.month - 1, 1),
@@ -230,11 +337,81 @@ export function assemblePayrollInputs(input: {
       referenceId: record.referenceId,
     });
   }
+  const overtimeSources: {
+    id: string;
+    date: string;
+    earningCode: string;
+    minutes: number;
+    amount: string;
+    multiplier: string;
+    calculationBasis: string;
+  }[] = [];
+  for (const request of input.overtime ?? []) {
+    if (
+      request.companyId !== input.companyId ||
+      request.employeeId !== input.employeeId ||
+      request.status !== 'APPROVED'
+    )
+      fail(
+        'INVALID_PAYROLL_OVERTIME',
+        'Only approved overtime allocated to this employee can be included.',
+      );
+    if (input.overtimeSettings && !input.overtimeSettings.includeOvertime)
+      fail(
+        'OVERTIME_DISABLED',
+        'Overtime is disabled in payroll settings.',
+        409,
+      );
+    if (!input.employeeOvertime?.includeOvertime)
+      fail('OVERTIME_DISABLED', 'Overtime is disabled for this employee.', 409);
+    const amount = calculateOvertimeAmount({
+      year: input.salary.year,
+      month: input.salary.month,
+      overtimeDate: request.overtimeDate,
+      netMinutes: request.netMinutes,
+      multiplier: request.hourlyRateMultiplier,
+      basis: input.employeeOvertime.overtimeCalculationBasis,
+      hourlyRate: input.employeeOvertime.overtimeHourlyRate,
+      standardWorkingHoursPerDay:
+        input.overtimeSettings?.standardWorkingHoursPerDay ?? null,
+      salaryProrationMethod:
+        input.overtimeSettings?.salaryProrationMethod ?? 'FIXED_26_DAYS',
+      salaries: input.salary.salaries,
+    });
+    const definition = resolve(request.earningCode);
+    if (
+      definition.kind !== 'EARNING' ||
+      !definition.affectsGross ||
+      !definition.affectsNet
+    )
+      fail(
+        'INVALID_OVERTIME_COMPONENT',
+        'Overtime must use an earning component affecting gross and net.',
+      );
+    components.push(
+      componentFromDefinition(definition, amount, {
+        type: 'OVERTIME',
+        id: request.id,
+      }),
+    );
+    overtimeSources.push({
+      id: request.id,
+      date: request.overtimeDate.toISOString().slice(0, 10),
+      earningCode: request.earningCode,
+      minutes: request.netMinutes,
+      amount,
+      multiplier: request.hourlyRateMultiplier.toFixed(2),
+      calculationBasis:
+        input.employeeOvertime.overtimeCalculationBasis ??
+        'MONTHLY_SALARY_CONVERTED',
+    });
+  }
   return {
     ...payrollBases(components),
     salaryTrace: salary.trace,
     manualSources,
     claimSources,
     commissionSources,
+    overtimeSources,
   };
 }

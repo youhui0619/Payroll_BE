@@ -92,6 +92,22 @@ export class InputPreviewService {
     });
     if (commissions.length > 100)
       fail('PAYROLL_INPUT_LIMIT', 'Too many allocated commission records.');
+    const overtime = await tx.overtimeRequest.findMany({
+      where: {
+        companyId: m.companyId,
+        employeeId,
+        payrollRunId: runId,
+        status: 'APPROVED',
+        overtimeDate: { gte: start, lt: next },
+      },
+      orderBy: { id: 'asc' },
+      take: 101,
+    });
+    if (overtime.length > 100)
+      fail('PAYROLL_INPUT_LIMIT', 'Too many allocated overtime requests.');
+    const overtimeSettings = await tx.payrollSettings.findUnique({
+      where: { companyId: m.companyId },
+    });
     const result = assemblePayrollInputs({
       claims,
       commissions,
@@ -100,6 +116,13 @@ export class InputPreviewService {
       employeeId,
       definitions,
       manualInputs,
+      overtime,
+      employeeOvertime: {
+        includeOvertime: employee.includeOvertime,
+        overtimeCalculationBasis: employee.overtimeCalculationBasis,
+        overtimeHourlyRate: employee.overtimeHourlyRate,
+      },
+      overtimeSettings,
       salary: {
         year: run.year,
         month: run.month,
@@ -225,7 +248,7 @@ export class InputPreviewService {
         complete: false,
         limitations: [
           'Contribution preview excludes PCB. Final net pay is not calculated; profile eligibility still requires reviewed declarations.',
-          'Unallocated claims/commissions, overtime and recurring allowances are not included.',
+          'Unallocated claims, commissions and overtime, plus recurring allowances, are not included.',
         ],
       },
     };

@@ -14,6 +14,7 @@ import { CalculationPreviewController } from './calculation-preview.controller';
 import { CalculationPreviewService } from './calculation-preview.service';
 import { CommissionAllocationController } from './commission-allocation.controller';
 import { CommissionAllocationService } from './commission-allocation.service';
+import { OvertimeAllocationModule } from './overtime-allocation.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CommissionAllocationService } from './commission-allocation.service';
     TaxOpeningsModule,
     TaxFamilyModule,
     TaxExpensesModule,
+    OvertimeAllocationModule,
   ],
   controllers: [
     PayrollController,

@@ -79,7 +79,7 @@ describe('OvertimeService', () => {
       expect.objectContaining({
         requestDate: '2026-10-05',
         overtimeDate: '2026-10-03',
-        hourlyRateMultiplier: '1.50',
+        hourlyRateMultiplier: 1.5,
         employeeName: 'Alex',
         departmentName: 'Operations',
       }),

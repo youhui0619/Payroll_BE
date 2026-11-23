@@ -9,6 +9,7 @@ import { TaxExpensesService } from '../src/payroll/tax-expenses.service';
 import { InputPreviewService } from '../src/payroll/input-preview.service';
 import { CalculationPreviewService } from '../src/payroll/calculation-preview.service';
 import { CommissionAllocationService } from '../src/payroll/commission-allocation.service';
+import { OvertimeAllocationService } from '../src/payroll/overtime-allocation.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -313,6 +314,78 @@ export async function verifyPayrollCalculation(
   const allocated = await db.commissionPayrollRecord.findUniqueOrThrow({
     where: { id: record.id },
   });
+  await new ComponentDefinitionsService(database).save(actor, {
+    code: 'OT',
+    name: 'Overtime',
+    kind: 'EARNING',
+    active: true,
+    affectsGross: true,
+    affectsNet: true,
+    effectiveFrom: '2026-01-01',
+    statutoryBases: ['EPF', 'PCB'],
+    pcbTreatment: 'ADDITIONAL',
+    reason: 'Reviewed overtime definition',
+  });
+  await db.employee.update({
+    where: { id: employee.id },
+    data: {
+      includeOvertime: true,
+      overtimeCalculationBasis: 'HOURLY_RATE',
+      overtimeHourlyRate: '20',
+    },
+  });
+  const overtime = await db.overtimeRequest.create({
+    data: {
+      companyId: company.id,
+      employeeId: employee.id,
+      requestDate: new Date('2026-01-05'),
+      overtimeDate: new Date('2026-01-03'),
+      overtimeType: 'NORMAL_WORKING_DAY',
+      startTime: '18:00',
+      endTime: '21:00',
+      totalMinutes: 180,
+      breakDurationMinutes: 30,
+      netMinutes: 150,
+      hourlyRateMultiplier: '1.5',
+      earningCode: 'OT',
+      description: 'Reviewed overtime fixture',
+      status: 'APPROVED',
+      decidedBy: owner.userId,
+      decidedAt: new Date('2026-01-06'),
+    },
+  });
+  const overtimeAllocation = new OvertimeAllocationService(database);
+  await overtimeAllocation.change(actor, run.id, overtime.id, reason, true);
+  await overtimeAllocation.change(actor, run.id, overtime.id, reason, true);
+  assert.equal(
+    (
+      await overtimeAllocation.history(actor, overtime.id, {
+        page: 1,
+        pageSize: 20,
+      })
+    ).meta.total,
+    1,
+  );
+  const withOvertime = (
+    await service.preview(actor, run.id, employee.id, review)
+  ).data;
+  assert.equal(withOvertime.totals.gross, '5775.00');
+  assert.equal(withOvertime.input.overtimeSources[0].amount, '75.00');
+  await overtimeAllocation.change(
+    actor,
+    run.id,
+    overtime.id,
+    { reason: 'Remove for final fixture' },
+    false,
+  );
+  assert.equal(
+    (await service.preview(actor, run.id, employee.id, review)).data.totals
+      .gross,
+    '5700.00',
+  );
+  console.log(
+    'PASS approved overtime allocation, idempotency, hourly calculation, source trace and release',
+  );
   await db.payrollRun.update({
     where: { id: allocated.payrollRunId! },
     data: { status: 'CALCULATED' },

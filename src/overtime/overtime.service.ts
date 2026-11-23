@@ -42,6 +42,15 @@ type OvertimeInput = {
 const decimal = (value: Prisma.Decimal | null | undefined, places = 2) =>
   value === null || value === undefined ? null : value.toFixed(places);
 
+const feStatus = (status: string) =>
+  status === 'APPROVED'
+    ? 'Approved'
+    : status === 'REJECTED'
+      ? 'Rejected'
+      : status === 'PAID'
+        ? 'Paid'
+        : 'Pending';
+
 function scanAccepted(status: string) {
   return (
     status === 'CLEAN' ||
@@ -214,9 +223,11 @@ export class OvertimeService {
   private serialize(row: any) {
     return {
       ...row,
+      status: feStatus(row.status),
       requestDate: dateString(row.requestDate),
       overtimeDate: dateString(row.overtimeDate),
-      hourlyRateMultiplier: decimal(row.hourlyRateMultiplier),
+      hourlyRateMultiplier: Number(decimal(row.hourlyRateMultiplier)),
+      submittedAt: row.submittedAt?.toISOString() ?? null,
       employeeName: row.employee?.name ?? null,
       departmentName: row.department?.name ?? null,
       supportingDocuments:
