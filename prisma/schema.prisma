@@ -78,6 +78,8 @@ model Company {
   regionalSettings            RegionalSettings?
   importBatches               ImportBatch[]
   accountTokens               AccountToken[]
+  attendanceAdjustments       AttendanceAdjustment[]
+  attendanceAdjustmentEvents  AttendanceAdjustmentEvent[]
 
   @@map("companies")
 }
@@ -165,6 +167,7 @@ model Employee {
   schedule               WorkSchedule?                   @relation(fields: [companyId, scheduleId], references: [companyId, id], onDelete: Restrict)
   employeeWorkSchedule   EmployeeWorkSchedule?
   attendance             AttendanceSession[]
+  attendanceAdjustments  AttendanceAdjustment[]
   leaveRequests          LeaveRequest[]
   leaveLedger            LeaveLedger[]
   claims                 Claim[]
@@ -423,12 +426,55 @@ model AttendanceSession {
   clockInKey         String
   clockOutKey        String?
   employee           Employee  @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  adjustments        AttendanceAdjustment[]
 
   @@unique([companyId, employeeId, clockInKey])
   @@unique([companyId, employeeId, clockOutKey])
+  @@unique([companyId, id])
   @@index([companyId, employeeId, date])
   @@index([companyId, employeeId, clockIn])
   @@map("attendance_sessions")
+}
+
+model AttendanceAdjustment {
+  id                  String                    @id @default(uuid()) @db.Uuid
+  companyId           String                    @db.Uuid
+  employeeId          String                    @db.Uuid
+  attendanceSessionId String?                   @db.Uuid
+  idempotencyKey      String                    @db.Uuid
+  date                DateTime                  @db.Date
+  requestedClockIn    DateTime?                 @db.Timestamptz(3)
+  requestedClockOut   DateTime?                 @db.Timestamptz(3)
+  reason              String
+  status              RequestStatus             @default(PENDING_MANAGER)
+  createdAt           DateTime                  @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                  @updatedAt @db.Timestamptz(3)
+  company             Company                   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  employee            Employee                  @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  attendanceSession   AttendanceSession?        @relation(fields: [companyId, attendanceSessionId], references: [companyId, id], onDelete: Restrict)
+  events              AttendanceAdjustmentEvent[]
+
+  @@unique([companyId, id])
+  @@unique([companyId, idempotencyKey])
+  @@index([companyId, employeeId, status, date])
+  @@index([companyId, status, date])
+  @@map("attendance_adjustments")
+}
+
+model AttendanceAdjustmentEvent {
+  id           String              @id @default(uuid()) @db.Uuid
+  companyId    String              @db.Uuid
+  adjustmentId String              @db.Uuid
+  actorId      String              @db.Uuid
+  fromStatus   RequestStatus?
+  toStatus     RequestStatus
+  comment      String?
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  adjustment   AttendanceAdjustment @relation(fields: [companyId, adjustmentId], references: [companyId, id], onDelete: Restrict)
+  company      Company             @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, adjustmentId, createdAt])
+  @@map("attendance_adjustment_events")
 }
 
 enum RequestStatus {

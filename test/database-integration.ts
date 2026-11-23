@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import { strict as assert } from 'node:assert';
 import { resolve } from 'node:path';
 import { AttendanceService } from '../src/attendance/attendance.service';
+import { AttendanceAdjustmentsService } from '../src/attendance/attendance-adjustments.service';
 import { LeaveService } from '../src/leave/leave.service';
 import { ClaimsService } from '../src/claims/claims.service';
 import { Database } from '../src/database.module';
@@ -101,6 +102,20 @@ async function main() {
         companyId: company.id,
         userId: user.id,
         employeeId: employee.id,
+        roles: ['EMPLOYEE'],
+      },
+    });
+    const managerUser = await db.user.create({
+      data: {
+        email: randomUUID() + '@manager.example.test',
+        passwordHash: 'not-login-enabled',
+      },
+    });
+    const managerMember = await db.membership.create({
+      data: {
+        companyId: company.id,
+        userId: managerUser.id,
+        employeeId: manager.id,
         roles: ['EMPLOYEE'],
       },
     });
@@ -276,6 +291,59 @@ async function main() {
       2,
     );
     console.log('PASS employee lifecycle transitions, locks and audit');
+    const attendanceAdjustments = new AttendanceAdjustmentsService(
+      db as Database,
+    );
+    const adjustment = await attendanceAdjustments.create(member, {
+      idempotencyKey: randomUUID(),
+      date: '2026-11-25',
+      requestedClockIn: '2026-11-25T09:00:00.000Z',
+      requestedClockOut: '2026-11-25T17:00:00.000Z',
+      reason: 'Forgot to clock in and out',
+    });
+    assert.equal(adjustment.data.status, 'PENDING_MANAGER');
+    const managerDecision = await attendanceAdjustments.decide(
+      managerMember,
+      adjustment.data.id,
+      { decision: 'APPROVE' },
+    );
+    assert.equal(managerDecision.data.status, 'PENDING_HR');
+    const hrDecision = await attendanceAdjustments.decide(
+      owner,
+      adjustment.data.id,
+      { decision: 'APPROVE' },
+    );
+    assert.equal(hrDecision.data.status, 'APPROVED');
+    assert.equal(
+      await db.attendanceSession.count({
+        where: {
+          companyId: company.id,
+          employeeId: employee.id,
+          date: new Date('2026-11-25T00:00:00.000Z'),
+        },
+      }),
+      1,
+    );
+    const replayAdjustment = await attendanceAdjustments.create(member, {
+      idempotencyKey: adjustment.data.idempotencyKey,
+      date: '2026-11-25',
+      requestedClockIn: '2026-11-25T09:00:00.000Z',
+      requestedClockOut: '2026-11-25T17:00:00.000Z',
+      reason: 'retry',
+    });
+    assert.equal(replayAdjustment.idempotent, true);
+    const directCorrection = await attendanceAdjustments.correct(owner, {
+      idempotencyKey: randomUUID(),
+      employeeId: employee.id,
+      date: '2026-11-25',
+      requestedClockIn: '2026-11-25T08:30:00.000Z',
+      requestedClockOut: '2026-11-25T17:30:00.000Z',
+      reason: 'HR corrected the submitted attendance after review',
+    });
+    assert.equal(directCorrection.data.status, 'APPROVED');
+    console.log(
+      'PASS attendance adjustment manager/HR workflow, idempotency and direct correction',
+    );
     const reports = new ReportsService(db as Database);
     const balanceExport = await reports.leaveBalances(owner, { year: 2026 });
     assert.equal(balanceExport.includes('Employee number'), true);

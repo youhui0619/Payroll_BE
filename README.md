@@ -161,6 +161,8 @@ Owners can issue a one-time administrative reset token with `POST /api/v1/member
 
 OWNER/HR can use the explicit employee lifecycle commands `POST /api/v1/employees/:id/activate`, `/confirm`, `/resign`, `/terminate`, and `/archive`. Each accepts an optional `effectiveDate`; resign, terminate and archive also require a reason. Commands are tenant-scoped, reject invalid transitions and dates before joining, block calculated/finalized payroll periods, and record the actor, previous state, new state and effective date in the audit log. Historical employee rows are retained; archive is a soft state change.
 
+Attendance self-service includes `POST /api/v1/attendance/adjustments` and `GET /api/v1/attendance/me/adjustments`. The request accepts a date, one or both corrected clock times, an idempotency key and a reason. Manager/HR queues use `GET /api/v1/attendance/adjustments` and `/adjustments/pending`; decisions use `POST /api/v1/attendance/adjustments/:id/decision`. OWNER/HR can make a direct reasoned correction with `POST /api/v1/attendance/adjustments/correct`. Approval creates or updates the attendance session and recalculates duration, worked minutes and overtime. Adjustments are rejected for calculated/finalized payroll periods and retain a complete decision event history.
+
 ## Later schema changes
 
 Keep `prisma/schema.prisma` and new migration files in sync. Preserve the existing init and all later migrations, including their check constraints and partial indexes. Do not consolidate migration history or rewrite applied SQL. The user ended the single-init workflow on 2026-11-23.

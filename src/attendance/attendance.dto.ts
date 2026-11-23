@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { RequestStatus } from '@prisma/client';
+import {
+  IsDateString,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Length,
+  Matches,
+} from 'class-validator';
+import { PageDto } from '../common/page.dto';
 
 export class ClockDto {
   @ApiProperty({
@@ -14,4 +24,65 @@ export class ClockOutDto extends ClockDto {
   @IsString()
   @Length(1, 1000)
   remark?: string;
+}
+
+export class AttendanceAdjustmentDto {
+  @ApiProperty({ description: 'Reuse the same UUID when retrying a request.' })
+  @IsUUID()
+  idempotencyKey: string;
+
+  @ApiProperty({ example: '2026-11-24' })
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  date: string;
+
+  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @IsOptional()
+  @IsUUID()
+  attendanceSessionId?: string;
+
+  @ApiPropertyOptional({ format: 'date-time', nullable: true })
+  @IsOptional()
+  @IsDateString()
+  requestedClockIn?: string;
+
+  @ApiPropertyOptional({ format: 'date-time', nullable: true })
+  @IsOptional()
+  @IsDateString()
+  requestedClockOut?: string;
+
+  @ApiProperty({ minLength: 1, maxLength: 1000 })
+  @IsString()
+  @Length(1, 1000)
+  reason: string;
+}
+
+export class AttendanceCorrectionDto extends AttendanceAdjustmentDto {
+  @ApiProperty({ format: 'uuid' })
+  @IsUUID()
+  employeeId: string;
+}
+
+export class AttendanceAdjustmentQueryDto extends PageDto {
+  @ApiPropertyOptional({ enum: RequestStatus })
+  @IsOptional()
+  @IsEnum(RequestStatus)
+  status?: RequestStatus;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  employeeId?: string;
+
+  @ApiPropertyOptional({ example: '2026-11-01' })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  from?: string;
+
+  @ApiPropertyOptional({ example: '2026-11-30' })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  to?: string;
 }
