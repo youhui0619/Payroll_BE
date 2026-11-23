@@ -732,6 +732,16 @@ async function main() {
       })
     ).data;
     await claims.submit(member, claim.id);
+    assert.equal(
+      await db.notification.count({
+        where: {
+          companyId: company.id,
+          userId: managerUser.id,
+          kind: 'CLAIM_APPROVAL_REQUIRED',
+        },
+      }),
+      1,
+    );
     await claims.decide(owner, claim.id, { decision: 'APPROVE' });
     await claims.decide(owner, claim.id, { decision: 'APPROVE' });
     const payments = await Promise.allSettled([

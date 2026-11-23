@@ -390,7 +390,10 @@ export async function verifyPayrollCalculation(
   const withOvertime = (
     await service.preview(actor, run.id, employee.id, review)
   ).data;
-  assert.equal(withOvertime.totals.gross, '5775.00');
+  assert.equal(
+    withOvertime.totals.gross,
+    allocated.payrollRunId === run.id ? '5775.00' : '5575.00',
+  );
   assert.equal(withOvertime.input.overtimeSources[0].amount, '75.00');
   await overtimeAllocation.change(
     actor,

@@ -18,7 +18,10 @@ import {
   selfEmployee,
 } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
-import { notifyEmployeeInTransaction } from '../notifications/notifications.service';
+import {
+  notifyApproversInTransaction,
+  notifyEmployeeInTransaction,
+} from '../notifications/notifications.service';
 import {
   ACTIVE_STATUS_VALUES,
   makeStatusCounts,
@@ -1029,6 +1032,32 @@ export class LeaveService {
         });
         if (status === 'APPROVED' && row.paid) await this.consume(tx, row);
         await this.event(tx, m, id, 'LEAVE_SUBMITTED', status);
+        if (status === 'PENDING_MANAGER' && row.managerId)
+          await notifyApproversInTransaction(tx, {
+            companyId: m.companyId,
+            employeeId: row.managerId,
+            kind: 'LEAVE_APPROVAL_REQUIRED',
+            title: 'Leave approval required',
+            message: 'A leave application is waiting for your review.',
+            dedupeKey: `LEAVE_APPROVAL_REQUIRED:${id}:MANAGER`,
+            sourceType: 'LEAVE_REQUEST',
+            sourceId: id,
+            payload: { status, requestId: id },
+            settingKey: 'leaveApplications',
+          });
+        else if (status === 'PENDING_HR')
+          await notifyApproversInTransaction(tx, {
+            companyId: m.companyId,
+            roles: ['OWNER', 'HR'],
+            kind: 'LEAVE_APPROVAL_REQUIRED',
+            title: 'Leave approval required',
+            message: 'A leave application is waiting for HR review.',
+            dedupeKey: `LEAVE_APPROVAL_REQUIRED:${id}:HR`,
+            sourceType: 'LEAVE_REQUEST',
+            sourceId: id,
+            payload: { status, requestId: id },
+            settingKey: 'leaveApplications',
+          });
         return { data };
       },
       { isolationLevel: 'Serializable' },
@@ -1072,6 +1101,19 @@ export class LeaveService {
           },
         });
         await this.event(tx, m, id, 'LEAVE_' + d.decision, status, d.comment);
+        if (status === 'PENDING_HR')
+          await notifyApproversInTransaction(tx, {
+            companyId: m.companyId,
+            roles: ['OWNER', 'HR'],
+            kind: 'LEAVE_APPROVAL_REQUIRED',
+            title: 'Leave approval required',
+            message: 'A leave application is waiting for HR review.',
+            dedupeKey: `LEAVE_APPROVAL_REQUIRED:${id}:HR`,
+            sourceType: 'LEAVE_REQUEST',
+            sourceId: id,
+            payload: { status, requestId: id },
+            settingKey: 'leaveApplications',
+          });
         return { data };
       },
       { isolationLevel: 'Serializable' },

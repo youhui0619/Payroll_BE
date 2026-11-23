@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Membership, Prisma } from '@prisma/client';
+import { Membership, Prisma, Role } from '@prisma/client';
 import { Database } from '../database.module';
 import { paginated } from '../common/page.dto';
 import {
@@ -82,6 +82,49 @@ export async function notifyEmployeeInTransaction(
     ...notification,
     userId: membership.userId,
   });
+}
+
+export async function notifyApproversInTransaction(
+  tx: Prisma.TransactionClient,
+  input: Omit<NotificationCreate, 'userId'> & {
+    employeeId?: string;
+    roles?: Role[];
+    settingKey?: 'leaveApplications' | 'claims';
+  },
+) {
+  if (!tx.membership?.findMany) return;
+  if (input.settingKey && tx.notificationSettings?.findUnique) {
+    const settings = await tx.notificationSettings.findUnique({
+      where: { companyId: input.companyId },
+      select: { [input.settingKey]: true },
+    });
+    if (settings && settings[input.settingKey] === false) return;
+  }
+  const memberships = await tx.membership.findMany({
+    where: {
+      companyId: input.companyId,
+      active: true,
+      ...(input.employeeId
+        ? { employeeId: input.employeeId }
+        : { roles: { hasSome: input.roles ?? [] } }),
+    },
+    select: { userId: true },
+  });
+  const {
+    employeeId: _employeeId,
+    roles: _roles,
+    settingKey: _settingKey,
+    ...notification
+  } = input;
+  void _employeeId;
+  void _roles;
+  void _settingKey;
+  for (const membership of memberships) {
+    await createNotificationInTransaction(tx, {
+      ...notification,
+      userId: membership.userId,
+    });
+  }
 }
 
 @Injectable()

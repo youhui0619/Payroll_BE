@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { Membership, Prisma, RequestStatus } from '@prisma/client';
 import { Database } from '../database.module';
-import { notifyEmployeeInTransaction } from '../notifications/notifications.service';
+import {
+  notifyApproversInTransaction,
+  notifyEmployeeInTransaction,
+} from '../notifications/notifications.service';
 import { PageDto, paginated } from '../common/page.dto';
 import {
   ACTIVE_STATUS_VALUES,
@@ -455,6 +458,18 @@ export class ClaimsService {
           },
         });
         await this.event(tx, m, id, 'CLAIM_SUBMITTED', 'PENDING_MANAGER');
+        await notifyApproversInTransaction(tx, {
+          companyId: m.companyId,
+          employeeId: data.managerId ?? undefined,
+          kind: 'CLAIM_APPROVAL_REQUIRED',
+          title: 'Claim approval required',
+          message: 'An expense claim is waiting for your review.',
+          dedupeKey: `CLAIM_APPROVAL_REQUIRED:${id}:MANAGER`,
+          sourceType: 'CLAIM',
+          sourceId: id,
+          payload: { status: 'PENDING_MANAGER', claimId: id },
+          settingKey: 'claims',
+        });
         return { data };
       },
       { isolationLevel: 'Serializable' },
@@ -489,6 +504,19 @@ export class ClaimsService {
           data: { status, decisionComment: d.comment, decidedBy: m.userId },
         });
         await this.event(tx, m, id, 'CLAIM_' + d.decision, status, d.comment);
+        if (status === 'PENDING_FINANCE')
+          await notifyApproversInTransaction(tx, {
+            companyId: m.companyId,
+            roles: ['OWNER', 'FINANCE'],
+            kind: 'CLAIM_APPROVAL_REQUIRED',
+            title: 'Claim approval required',
+            message: 'An expense claim is waiting for Finance review.',
+            dedupeKey: `CLAIM_APPROVAL_REQUIRED:${id}:FINANCE`,
+            sourceType: 'CLAIM',
+            sourceId: id,
+            payload: { status, claimId: id },
+            settingKey: 'claims',
+          });
         return { data };
       },
       { isolationLevel: 'Serializable' },
