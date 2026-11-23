@@ -137,7 +137,10 @@ export class PayrollExecutionService {
                 department: employee.department?.name ?? null,
                 epfMembershipNumber: employee.epfEmployeeNo,
                 gender: employee.gender,
+                employmentType: employee.employmentType,
                 paymentMethod: employee.paymentMethod,
+                bank: employee.bank,
+                bankAccount: employee.bankAccount,
               },
               input: calculation.input,
               pcb: calculation.pcb,
@@ -255,7 +258,35 @@ export class PayrollExecutionService {
                 employeeId: row.employeeId,
               },
             },
-            data: { payslipNumber: number, publishedAt },
+            data: {
+              payslipNumber: number,
+              publishedAt,
+              snapshot: jsonValue({
+                ...(row.snapshot as Record<string, unknown>),
+                payslipSettings: settings
+                  ? {
+                      pageSize: settings.pageSize,
+                      pageOrientation: settings.pageOrientation,
+                      employeeDetails: settings.employeeDetails,
+                      departmentAndPosition: settings.departmentAndPosition,
+                      employmentType: settings.employmentType,
+                      payPeriodAndPaymentDate: settings.payPeriodAndPaymentDate,
+                      salaryAndEarnings: settings.salaryAndEarnings,
+                      itemizedDeductions: settings.itemizedDeductions,
+                      employerContributions: settings.employerContributions,
+                      yearToDateTotals: settings.yearToDateTotals,
+                      leaveBalance: settings.leaveBalance,
+                      employeeExpensesList: settings.employeeExpensesList,
+                      dailyAttendanceRecord: settings.dailyAttendanceRecord,
+                      leaveList: settings.leaveList,
+                      bankAccountDetails: settings.bankAccountDetails,
+                      maskBankAccountNumber: settings.maskBankAccountNumber,
+                      displayFooterMessage: settings.displayFooterMessage,
+                      footerText: settings.footerText,
+                    }
+                  : null,
+              }),
+            },
           });
         }
         const updated = await tx.payrollRun.update({
@@ -340,6 +371,9 @@ export class PayrollExecutionService {
 
   private payslipData(row: any, run: any) {
     const snapshot = row.snapshot as any;
+    const settings = snapshot.payslipSettings ?? {};
+    const visible = (key: string, fallback = true) =>
+      typeof settings[key] === 'boolean' ? settings[key] : fallback;
     const lines = snapshot.totals.lines ?? [];
     const statutory = snapshot.totals.statutory ?? [];
     const lineAmount = (code: string, kind?: string) =>
@@ -373,51 +407,79 @@ export class PayrollExecutionService {
       snapshot.input.claimSources?.map((source: any) => source.id) ?? [];
     const commissionReferences =
       snapshot.input.commissionSources?.map((source: any) => source.id) ?? [];
+    const employee = { ...(snapshot.employee ?? {}) };
+    if (!visible('departmentAndPosition')) {
+      employee.department = null;
+      employee.position = null;
+    }
+    if (!visible('employmentType')) employee.employmentType = null;
+    if (!visible('bankAccountDetails', false)) {
+      employee.bank = null;
+      employee.bankAccount = null;
+    } else if (employee.bankAccount && visible('maskBankAccountNumber', true)) {
+      const account = String(employee.bankAccount);
+      employee.bankAccount =
+        account.length > 4
+          ? '*'.repeat(account.length - 4) + account.slice(-4)
+          : account;
+    }
+    const earnings = {
+      basicPay: lineAmount('BASIC', 'EARNING'),
+      unpaidLeave,
+      overtime: sourceAmount('OVERTIME'),
+      allowance: sourceAmount('CLAIM'),
+      bonus: lineAmount('BONUS', 'EARNING'),
+      commissions: sourceAmount('COMMISSION'),
+      commissionItems: snapshot.input.commissionSources ?? [],
+      grossPay: amount(snapshot.totals.gross),
+    };
+    const deductions = {
+      epf: contribution('EPF', 'employeeDeduction'),
+      socso: contribution('SOCSO', 'employeeDeduction'),
+      lindungan24Jam: contribution('LINDUNG_24_JAM', 'employeeDeduction'),
+      eis: contribution('EIS', 'employeeDeduction'),
+      pcb: contribution('PCB', 'employeeDeduction'),
+      advance,
+      other: Math.max(0, other),
+      total: amount(snapshot.totals.deductions),
+    };
     return {
       employeeId: row.employeeId,
-      period: `${run.year}-${String(run.month).padStart(2, '0')}`,
+      period: visible('payPeriodAndPaymentDate')
+        ? `${run.year}-${String(run.month).padStart(2, '0')}`
+        : null,
       status: run.status === 'PAID' ? 'Paid' : 'Published',
       payslipNumber: row.payslipNumber,
       leaveReferences,
       claimReferences,
       commissionReferences,
       company: snapshot.company,
-      employee: snapshot.employee,
-      leaveBalances: {
-        annual: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
-        medical: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
-      },
-      earnings: {
-        basicPay: lineAmount('BASIC', 'EARNING'),
-        unpaidLeave,
-        overtime: sourceAmount('OVERTIME'),
-        allowance: sourceAmount('CLAIM'),
-        bonus: lineAmount('BONUS', 'EARNING'),
-        commissions: sourceAmount('COMMISSION'),
-        commissionItems: snapshot.input.commissionSources ?? [],
-        grossPay: amount(snapshot.totals.gross),
-      },
-      deductions: {
-        epf: contribution('EPF', 'employeeDeduction'),
-        socso: contribution('SOCSO', 'employeeDeduction'),
-        lindungan24Jam: contribution('LINDUNG_24_JAM', 'employeeDeduction'),
-        eis: contribution('EIS', 'employeeDeduction'),
-        pcb: contribution('PCB', 'employeeDeduction'),
-        advance,
-        other,
-        total: amount(snapshot.totals.deductions),
-      },
-      employerContributions: {
-        epf: contribution('EPF', 'employerCost'),
-        socso: contribution('SOCSO', 'employerCost'),
-        eis: contribution('EIS', 'employerCost'),
-      },
+      employee: visible('employeeDetails') ? employee : { id: employee.id },
+      leaveBalances: visible('leaveBalance')
+        ? {
+            annual: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
+            medical: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
+          }
+        : null,
+      earnings: visible('salaryAndEarnings') ? earnings : null,
+      deductions: visible('itemizedDeductions') ? deductions : null,
+      employerContributions: visible('employerContributions')
+        ? {
+            epf: contribution('EPF', 'employerCost'),
+            socso: contribution('SOCSO', 'employerCost'),
+            eis: contribution('EIS', 'employerCost'),
+          }
+        : null,
       contributionBases: {
         epf: amount(snapshot.totals.bases?.EPF),
         perkeso: amount(snapshot.totals.bases?.SOCSO),
       },
       netPay: amount(snapshot.totals.net),
       paymentMethod: snapshot.employee?.paymentMethod ?? null,
+      payslipSettings: settings,
+      footerMessage: visible('displayFooterMessage', false)
+        ? (settings.footerText ?? '')
+        : null,
     };
   }
 

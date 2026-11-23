@@ -409,6 +409,19 @@ export async function verifyPayrollCalculation(
     where: { id: run.id },
     data: { status: 'DRAFT' },
   });
+  await db.employee.update({
+    where: { id: employee.id },
+    data: { bank: 'MAYBANK', bankAccount: '1234567890' },
+  });
+  await db.payslipSettings.create({
+    data: {
+      companyId: company.id,
+      bankAccountDetails: true,
+      maskBankAccountNumber: true,
+      displayFooterMessage: true,
+      footerText: 'Prepared by Payroll',
+    },
+  });
   const expectedGross = Number(
     (await service.preview(actor, run.id, employee.id, review)).data.totals
       .gross,
@@ -424,6 +437,8 @@ export async function verifyPayrollCalculation(
   const payslip = (await execution.payslip(actor, run.id, employee.id)).data;
   assert.equal(payslip.status, 'Published');
   assert.equal(payslip.employee.employeeNo, 'CALCULATION');
+  assert.equal(payslip.employee.bankAccount, '******7890');
+  assert.equal(payslip.footerMessage, 'Prepared by Payroll');
   assert.equal(payslip.earnings.grossPay, expectedGross);
   assert.equal(
     (await execution.payslips(actor, run.id, { page: 1, pageSize: 20 })).meta
