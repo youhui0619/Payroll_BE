@@ -17,13 +17,18 @@ import {
   UpdateMemberDto,
 } from './memberships.dto';
 import { MembershipsService } from './memberships.service';
+import { AccountTokensService } from './account-tokens.service';
+import { IssuePasswordResetDto } from './account-tokens.dto';
 
 @ApiBearerAuth()
 @ApiTags('memberships')
 @Roles('OWNER')
 @Controller('memberships')
 export class MembershipsController {
-  constructor(private service: MembershipsService) {}
+  constructor(
+    private service: MembershipsService,
+    private accountTokens: AccountTokensService,
+  ) {}
   @Get() list(@Req() r: TenantRequest, @Query() q: MembershipQueryDto) {
     return this.service.list(r.membership, q);
   }
@@ -42,5 +47,17 @@ export class MembershipsController {
     @Body() d: UpdateMemberDto,
   ) {
     return this.service.update(r.membership, id, d);
+  }
+
+  @Post(':id/password-reset') issuePasswordReset(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() d: IssuePasswordResetDto,
+  ) {
+    return this.accountTokens.issuePasswordReset(
+      r.membership,
+      id,
+      d.expiresInHours ?? 1,
+    );
   }
 }

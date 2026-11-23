@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from './auth.guard';
+import { AccountTokensService } from './account-tokens.service';
 
 export { Public, Roles } from './auth.decorators';
 export type { TenantRequest } from './auth.decorators';
@@ -32,7 +33,11 @@ export { AuthGuard } from './auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [LoginLimitGuard, { provide: APP_GUARD, useClass: AuthGuard }],
-  exports: [JwtModule],
+  providers: [
+    AccountTokensService,
+    LoginLimitGuard,
+    { provide: APP_GUARD, useClass: AuthGuard },
+  ],
+  exports: [JwtModule, AccountTokensService],
 })
 export class AuthModule {}

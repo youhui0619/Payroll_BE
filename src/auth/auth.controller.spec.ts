@@ -12,7 +12,7 @@ describe('AuthController', () => {
     },
   };
   const jwt = { signAsync: jest.fn() };
-  const controller = new AuthController(db as any, jwt as any);
+  const controller = new AuthController(db as any, jwt as any, {} as any);
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -51,7 +51,7 @@ describe('AuthController', () => {
       data: {
         accessToken: 'signed-token',
         tokenType: 'Bearer',
-        expiresIn: 3600,
+        expiresIn: Number(process.env.JWT_TTL_SECONDS ?? 3600),
         user: {
           id: 'user',
           name: 'Owner User',

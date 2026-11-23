@@ -24,6 +24,8 @@ import {
 } from './employees.dto';
 import { EmployeeImportDto } from './employee-import.dto';
 import { EmployeesService } from './employees.service';
+import { AccountTokensService } from '../auth/account-tokens.service';
+import { InviteEmployeeAccountDto } from '../auth/account-tokens.dto';
 
 @ApiBearerAuth()
 @ApiTags('employees')
@@ -33,6 +35,7 @@ export class EmployeesController {
   constructor(
     private service: EmployeesService,
     private accounts: EmployeeAccountsService,
+    private accountTokens: AccountTokensService,
   ) {}
   @Get('me') @Roles('OWNER', 'HR', 'FINANCE', 'EMPLOYEE') me(
     @Req() req: TenantRequest,
@@ -45,6 +48,13 @@ export class EmployeesController {
     @Body() dto: CreateEmployeeAccountDto,
   ) {
     return this.accounts.create(req.membership.companyId, id, dto);
+  }
+  @Post(':id/account/invite') inviteAccount(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: InviteEmployeeAccountDto,
+  ) {
+    return this.accountTokens.invite(req.membership, id, dto);
   }
   @Get() list(@Req() req: TenantRequest, @Query() q: EmployeeQueryDto) {
     return this.service.list(req.membership.companyId, q);

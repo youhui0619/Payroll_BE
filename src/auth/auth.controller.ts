@@ -15,12 +15,15 @@ import { Database } from '../database.module';
 import { hashPassword, verifyPassword } from './password';
 import { Public, TenantRequest } from './auth.decorators';
 import { LoginDto, PasswordDto } from './auth.dto';
+import { ActivateAccountDto, ResetPasswordDto } from './account-tokens.dto';
+import { AccountTokensService } from './account-tokens.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private db: Database,
     private jwt: JwtService,
+    private accountTokens: AccountTokensService,
   ) {}
   @Public()
   @UseGuards(LoginLimitGuard)
@@ -90,6 +93,21 @@ export class AuthController {
         user: userSummary,
       },
     };
+  }
+  @Public()
+  @UseGuards(LoginLimitGuard)
+  @Post('activate')
+  @HttpCode(200)
+  activate(@Body() dto: ActivateAccountDto) {
+    return this.accountTokens.activate(dto);
+  }
+
+  @Public()
+  @UseGuards(LoginLimitGuard)
+  @Post('reset-password')
+  @HttpCode(200)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.accountTokens.resetPassword(dto);
   }
   @ApiBearerAuth()
   @Get('me')

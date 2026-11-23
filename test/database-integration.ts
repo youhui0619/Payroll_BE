@@ -14,6 +14,8 @@ import { RulesService } from '../src/payroll/rules.service';
 import { ComponentDefinitionsService } from '../src/payroll/component-definitions.service';
 import { PayrollInputsService } from '../src/payroll/payroll-inputs.service';
 import { EmployeesService } from '../src/employees/employees.service';
+import { AccountTokensService } from '../src/auth/account-tokens.service';
+import { verifyPassword } from '../src/auth/password';
 import { ReportsService } from '../src/reports/reports.service';
 import { resolveUnpaidDays } from '../src/payroll/leave-inputs';
 import { InputPreviewService } from '../src/payroll/input-preview.service';
@@ -172,6 +174,70 @@ async function main() {
     assert.equal(importAudit?.resourceId, importBatch.id);
     console.log(
       'PASS employee import preview, row errors, idempotent commit and audit',
+    );
+    const importedEmployee = await db.employee.findFirstOrThrow({
+      where: { companyId: company.id, employeeNo: 'IMPORT-001' },
+    });
+    const accountTokens = new AccountTokensService(db as Database);
+    const invitation = await accountTokens.invite(owner, importedEmployee.id, {
+      email: 'imported.account@example.test',
+      expiresInHours: 2,
+    });
+    assert.equal(invitation.data.tokenType, 'ACCOUNT_INVITATION');
+    const activated = await accountTokens.activate({
+      token: invitation.data.token,
+      password: 'password123',
+    });
+    assert.equal(activated.data.employeeId, importedEmployee.id);
+    await assert.rejects(() =>
+      accountTokens.activate({
+        token: invitation.data.token,
+        password: 'password123',
+      }),
+    );
+    const reset = await accountTokens.issuePasswordReset(
+      owner,
+      activated.data.membershipId,
+    );
+    await accountTokens.resetPassword({
+      token: reset.data.token,
+      password: 'password456',
+    });
+    const activatedUser = await db.user.findUniqueOrThrow({
+      where: { email: 'imported.account@example.test' },
+    });
+    assert.equal(
+      await verifyPassword('password456', activatedUser.passwordHash),
+      true,
+    );
+    assert.equal(
+      await db.accountToken.count({
+        where: {
+          companyId: company.id,
+          kind: 'INVITE',
+          consumedAt: { not: null },
+        },
+      }),
+      1,
+    );
+    assert.equal(
+      await db.auditEvent.count({
+        where: {
+          companyId: company.id,
+          action: {
+            in: [
+              'ACCOUNT_INVITATION_CREATED',
+              'ACCOUNT_ACTIVATED',
+              'PASSWORD_RESET_ISSUED',
+              'PASSWORD_RESET_COMPLETED',
+            ],
+          },
+        },
+      }),
+      4,
+    );
+    console.log(
+      'PASS account invitation, activation, one-time reset and audit',
     );
     const reports = new ReportsService(db as Database);
     const balanceExport = await reports.leaveBalances(owner, { year: 2026 });
@@ -1652,6 +1718,12 @@ async function main() {
   }
 }
 main().catch((error) => {
+  if (error instanceof Error && 'code' in error)
+    console.error(
+      'Integration error detail:',
+      (error as Error & { code?: string }).code,
+      error.message,
+    );
   if (error instanceof Error && error.name === 'AssertionError')
     console.error(
       error.stack

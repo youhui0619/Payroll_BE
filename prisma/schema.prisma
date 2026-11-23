@@ -26,6 +26,7 @@ model User {
   createdAt        DateTime     @default(now()) @db.Timestamptz(3)
   memberships      Membership[]
   notifications    Notification[]
+  accountTokens    AccountToken[]
 
   @@map("users")
 }
@@ -76,6 +77,7 @@ model Company {
   notifications               Notification[]
   regionalSettings            RegionalSettings?
   importBatches               ImportBatch[]
+  accountTokens               AccountToken[]
 
   @@map("companies")
 }
@@ -114,6 +116,27 @@ model ImportBatch {
   @@unique([companyId, entityType, idempotencyKey])
   @@index([companyId, entityType, createdAt])
   @@map("import_batches")
+}
+
+model AccountToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  companyId  String    @db.Uuid
+  userId     String?   @db.Uuid
+  employeeId String?   @db.Uuid
+  kind       String
+  email      String?
+  tokenHash  String    @unique
+  expiresAt  DateTime  @db.Timestamptz(3)
+  consumedAt DateTime? @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  user       User?     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, kind, expiresAt])
+  @@index([companyId, userId, kind])
+  @@index([companyId, employeeId, kind])
+  @@map("account_tokens")
 }
 
 model Employee {

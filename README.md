@@ -153,9 +153,11 @@ As OWNER or HR, call `POST /api/v1/employees/:id/account` with:
 }
 ```
 
-Use a unique password in practice and share it privately. The API stores a password hash and returns only account identifiers, email and roles. The role is always EMPLOYEE; callers cannot supply roles. Existing login emails and already-linked employees return 409. Linking an existing user or sending an email invitation is not yet supported.
+Use a unique password in practice and share it privately. The API stores a password hash and returns only account identifiers, email and roles. The role is always EMPLOYEE; callers cannot supply roles. Existing login emails and already-linked employees return 409. For a first-login flow without an email adapter, OWNER/HR can instead call `POST /api/v1/employees/:id/account/invite` with an optional email and expiry. The response contains a one-time activation token for the configured delivery adapter or development handoff; only its hash is stored. The invited user submits that token and a password to public `POST /api/v1/auth/activate`. Expired, revoked or consumed tokens cannot be reused.
 
 The employee can log in through `/api/v1/auth/login`, change their password, and call `GET /api/v1/employees/me`. This returns their linked active profile only (identity, contact email, joining date, department and position IDs). An unlinked/inactive employee profile returns 404. The employee role cannot list staff, read other profiles, provision accounts, or read the administrative salary-history endpoints. `/api/v1/auth/me` now includes `employeeId` (null for unlinked memberships).
+
+Owners can issue a one-time administrative reset token with `POST /api/v1/memberships/:id/password-reset`; the account completes it through public `POST /api/v1/auth/reset-password`. Issuing or completing a reset invalidates earlier reset tokens and existing JWTs. Tokens are hashed at rest, expire, are single-use, and are never written to logs. Email delivery is intentionally behind a future adapter; the current response is the handoff boundary for FE/development.
 
 ## Later schema changes
 
