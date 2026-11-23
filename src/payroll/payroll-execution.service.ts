@@ -317,6 +317,8 @@ export class PayrollExecutionService {
                       pageOrientation: settings.pageOrientation,
                       pdfFilenameFormat: settings.pdfFilenameFormat,
                       passwordProtectedPdf: settings.passwordProtectedPdf,
+                      employeeVisibility: settings.employeeVisibility,
+                      notifyEmployees: settings.notifyEmployees,
                       employeeDetails: settings.employeeDetails,
                       departmentAndPosition: settings.departmentAndPosition,
                       employmentType: settings.employmentType,
@@ -339,7 +341,7 @@ export class PayrollExecutionService {
             },
           });
           const userId = userByEmployee.get(row.employeeId);
-          if (userId)
+          if (settings?.notifyEmployees !== false && userId)
             await createNotificationInTransaction(tx, {
               companyId: m.companyId,
               userId,
@@ -427,10 +429,11 @@ export class PayrollExecutionService {
     );
   }
 
-  private canReadPayslip(m: Membership, employeeId: string) {
+  private canReadPayslip(m: Membership, employeeId: string, snapshot?: any) {
     if (
       privileged(m, ['OWNER', 'HR', 'FINANCE']) ||
-      m.employeeId === employeeId
+      (m.employeeId === employeeId &&
+        snapshot?.payslipSettings?.employeeVisibility !== 'ADMINS_ONLY')
     )
       return;
     throw new NotFoundException();
@@ -748,9 +751,19 @@ export class PayrollExecutionService {
         }),
         tx.payrollEmployee.count({ where }),
       ]);
+      const visibleRows = rows.filter((row) => {
+        try {
+          this.canReadPayslip(m, row.employeeId, row.snapshot);
+          return true;
+        } catch {
+          return false;
+        }
+      });
       return paginated(
-        rows.map((row) => this.payslipData(row, run)),
-        total,
+        visibleRows.map((row) => this.payslipData(row, run)),
+        privileged(m, ['OWNER', 'HR', 'FINANCE']) || visibleRows.length
+          ? total
+          : 0,
         q,
       );
     });
@@ -777,6 +790,7 @@ export class PayrollExecutionService {
         include: { employee: true },
       });
       if (!row) throw new NotFoundException();
+      this.canReadPayslip(m, employeeId, row.snapshot);
       return { data: this.payslipData(row, run) };
     });
     return result;
@@ -803,6 +817,7 @@ export class PayrollExecutionService {
         include: { employee: true },
       });
       if (!row) throw new NotFoundException();
+      this.canReadPayslip(m, employeeId, row.snapshot);
       const document = this.payslipData(row, run);
       if (document.payslipSettings?.passwordProtectedPdf)
         fail(

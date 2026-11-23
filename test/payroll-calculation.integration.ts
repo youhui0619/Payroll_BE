@@ -504,6 +504,27 @@ export async function verifyPayrollCalculation(
   assert.equal(pdf.filename, 'CALCULATION-2026-01-payslip.pdf');
   assert.equal(pdf.bytes.toString('ascii').startsWith('%PDF-1.4'), true);
   assert.equal(pdf.bytes.toString('ascii').includes('LINDUNG 24 Jam'), true);
+  const publishedRow = await db.payrollEmployee.findUniqueOrThrow({
+    where: {
+      companyId_runId_employeeId: {
+        companyId: company.id,
+        runId: run.id,
+        employeeId: employee.id,
+      },
+    },
+  });
+  await db.payrollEmployee.update({
+    where: { id: publishedRow.id },
+    data: {
+      snapshot: {
+        ...(publishedRow.snapshot as object),
+        payslipSettings: {
+          ...((publishedRow.snapshot as any).payslipSettings ?? {}),
+          employeeVisibility: 'ADMINS_ONLY',
+        },
+      },
+    },
+  });
   assert.equal(
     (await execution.payslips(actor, run.id, { page: 1, pageSize: 20 })).meta
       .total,
@@ -514,10 +535,14 @@ export async function verifyPayrollCalculation(
     employeeId: employee.id,
     roles: ['EMPLOYEE'],
   } as Membership;
+  await assert.rejects(
+    () => execution.payslip(employeeActor, run.id, employee.id),
+    { status: 404 },
+  );
   assert.equal(
     (await execution.payslips(employeeActor, run.id, { page: 1, pageSize: 20 }))
       .meta.total,
-    1,
+    0,
   );
   const paid = await execution.pay(actor, run.id, {
     paymentReference: 'PAYROLL-2026-01',
