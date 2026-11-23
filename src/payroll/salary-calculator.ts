@@ -37,6 +37,7 @@ export function calculateSalary(input: {
   month: number;
   joinedDate: string;
   lastEmploymentDate?: string;
+  prorationMethod?: 'CALENDAR_DAYS' | 'FIXED_26_DAYS' | 'WORKING_DAYS';
   salaries: readonly SalarySegment[];
   unpaidDays?: readonly UnpaidDay[];
 }) {
@@ -77,7 +78,30 @@ export function calculateSalary(input: {
       'EMPLOYEE_NOT_ELIGIBLE',
       'Employment does not overlap this salary month.',
     );
-  const divisor = (next - start) / DAY;
+  const method = input.prorationMethod ?? 'CALENDAR_DAYS';
+  if (!['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'].includes(method))
+    fail(
+      'INVALID_SALARY_PRORATION',
+      'Unsupported salary proration method.',
+      400,
+    );
+  const calendarDays = (next - start) / DAY;
+  const workingDays = Array.from({ length: calendarDays }, (_, index) => {
+    const weekday = new Date(start + index * DAY).getUTCDay();
+    return weekday !== 0 && weekday !== 6;
+  }).filter(Boolean).length;
+  const divisor =
+    method === 'FIXED_26_DAYS'
+      ? 26
+      : method === 'WORKING_DAYS'
+        ? workingDays
+        : calendarDays;
+  if (divisor <= 0)
+    fail(
+      'INVALID_SALARY_PRORATION',
+      'Salary proration has no basis days.',
+      400,
+    );
   const ids = new Set<string>();
   const salaries = input.salaries.map((s) => {
     if (!s.id || ids.has(s.id))
@@ -141,7 +165,8 @@ export function calculateSalary(input: {
     unpaid.set(day, row);
   }
   let fullNumerator = new Prisma.Decimal(0),
-    payableNumerator = new Prisma.Decimal(0);
+    unpaidNumerator = new Prisma.Decimal(0),
+    basisDays = new Prisma.Decimal(0);
   const segments = new Map<
     string,
     {
@@ -164,9 +189,16 @@ export function calculateSalary(input: {
       );
     const salary = matches[0];
     const unpaidDays = unpaid.get(day)?.days ?? new Prisma.Decimal(0);
-    const payable = salary.amount.mul(new Prisma.Decimal(1).minus(unpaidDays));
-    fullNumerator = fullNumerator.plus(salary.amount);
-    payableNumerator = payableNumerator.plus(payable);
+    const weekday = new Date(day).getUTCDay();
+    const unit =
+      method === 'WORKING_DAYS' && (weekday === 0 || weekday === 6)
+        ? new Prisma.Decimal(0)
+        : new Prisma.Decimal(1);
+    basisDays = basisDays.plus(unit);
+    fullNumerator = fullNumerator.plus(salary.amount.mul(unit));
+    unpaidNumerator = unpaidNumerator.plus(
+      salary.amount.mul(unpaidDays).mul(unit),
+    );
     const row = segments.get(salary.id) ?? {
       salaryId: salary.id,
       monthlyAmount: salary.amount.toFixed(2),
@@ -180,31 +212,46 @@ export function calculateSalary(input: {
     row.to = iso(day);
     row.employedDays++;
     row.unpaidDays = row.unpaidDays.plus(unpaidDays);
-    row.numerator = row.numerator.plus(salary.amount);
-    row.payableNumerator = row.payableNumerator.plus(payable);
+    row.numerator = row.numerator.plus(salary.amount.mul(unit));
+    row.payableNumerator = row.payableNumerator.plus(
+      salary.amount.mul(new Prisma.Decimal(1).minus(unpaidDays)).mul(unit),
+    );
     segments.set(salary.id, row);
   }
+  // A fixed-26 basis applies the daily rate to partial employment, but a
+  // fully employed month remains the contracted monthly salary. Using the
+  // larger of the configured divisor and worked basis days handles both while
+  // retaining weighted mid-month salary changes.
+  const employedDenominator =
+    method === 'FIXED_26_DAYS'
+      ? Prisma.Decimal.max(new Prisma.Decimal(divisor), basisDays)
+      : new Prisma.Decimal(divisor);
   const employedSalary = fullNumerator
+    .div(employedDenominator)
+    .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
+  const unpaidDeduction = unpaidNumerator
     .div(divisor)
     .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
-  const payableSalary = payableNumerator
-    .div(divisor)
+  const payableSalary = employedSalary
+    .minus(unpaidDeduction)
     .toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
   return {
     employedSalary: employedSalary.toFixed(2),
-    unpaidDeduction: employedSalary.minus(payableSalary).toFixed(2),
+    unpaidDeduction: unpaidDeduction.toFixed(2),
     payableSalary: payableSalary.toFixed(2),
     trace: {
-      method: 'CALENDAR_DAYS',
+      method,
       version: '1',
       sourceUrl: SOURCE,
       reference: 'Employment Act 1955 section 18A',
       periodFrom: iso(start),
       periodTo: iso(next - DAY),
       divisor,
+      basisDays: basisDays.toString(),
+      basisDaysInMonth: workingDays,
       employedDays: (to - from) / DAY,
       rounding:
-        'Aggregate numerators before division; HALF_UP to cents. Unpaid deduction is rounded employed salary minus rounded payable salary.',
+        'Aggregate weighted numerators before division; HALF_UP to cents. Fixed-26 full months retain the monthly salary and use the configured daily rate for partial employment/unpaid deductions.',
       segments: [...segments.values()].map((s) => ({
         ...s,
         unpaidDays: s.unpaidDays.toString(),

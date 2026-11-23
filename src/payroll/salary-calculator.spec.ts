@@ -10,6 +10,44 @@ describe('calendar salary proration', () => {
   it('pays a full monthly rate including weekends and holidays', () => {
     expect(calculateSalary(base).payableSalary).toBe('3100.00');
   });
+
+  it('uses a fixed 26-day basis for partial employment while keeping a full month monthly', () => {
+    expect(
+      calculateSalary({ ...base, prorationMethod: 'FIXED_26_DAYS' })
+        .payableSalary,
+    ).toBe('3100.00');
+    expect(
+      calculateSalary({
+        ...base,
+        joinedDate: '2026-01-16',
+        prorationMethod: 'FIXED_26_DAYS',
+      }).payableSalary,
+    ).toBe('1907.69');
+    expect(
+      calculateSalary({
+        ...base,
+        prorationMethod: 'FIXED_26_DAYS',
+        unpaidDays: [{ date: '2026-01-02', days: '1', sourceId: 'leave' }],
+      }).unpaidDeduction,
+    ).toBe('119.23');
+  });
+
+  it('uses weekdays for working-day proration and ignores weekends', () => {
+    expect(
+      calculateSalary({
+        ...base,
+        joinedDate: '2026-01-16',
+        prorationMethod: 'WORKING_DAYS',
+      }).payableSalary,
+    ).toBe('1550.00');
+    expect(
+      calculateSalary({
+        ...base,
+        prorationMethod: 'WORKING_DAYS',
+        unpaidDays: [{ date: '2026-01-03', days: '1', sourceId: 'weekend' }],
+      }).unpaidDeduction,
+    ).toBe('0.00');
+  });
   it('includes joining and final employment dates', () => {
     const result = calculateSalary({
       ...base,

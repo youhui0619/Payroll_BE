@@ -148,6 +148,8 @@ export class InputPreviewService {
       salary: {
         year: run.year,
         month: run.month,
+        prorationMethod: payrollPolicy.salaryProrationMethod as
+          'CALENDAR_DAYS' | 'FIXED_26_DAYS' | 'WORKING_DAYS',
         joinedDate: employee.joinedDate.toISOString().slice(0, 10),
         salaries: employee.salaries.map((s) => ({
           id: s.id,
