@@ -20,6 +20,8 @@ import { PayslipController } from './payslip.controller';
 import { PayrollExecutionService } from './payroll-execution.service';
 import { PayrollRegisterController } from './payroll-register.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { StatutoryExportController } from './statutory-export.controller';
+import { StatutoryExportService } from './statutory-export.service';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     PayrollExecutionController,
     PayslipController,
     PayrollRegisterController,
+    StatutoryExportController,
   ],
   providers: [
     PayrollService,
@@ -48,6 +51,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     CalculationPreviewService,
     CommissionAllocationService,
     PayrollExecutionService,
+    StatutoryExportService,
   ],
 })
 export class PayrollModule {}

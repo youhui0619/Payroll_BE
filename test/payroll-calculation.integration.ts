@@ -12,6 +12,7 @@ import { CommissionAllocationService } from '../src/payroll/commission-allocatio
 import { OvertimeAllocationService } from '../src/payroll/overtime-allocation.service';
 import { PayrollExecutionService } from '../src/payroll/payroll-execution.service';
 import { NotificationsService } from '../src/notifications/notifications.service';
+import { StatutoryExportService } from '../src/payroll/statutory-export.service';
 
 export async function verifyPayrollCalculation(
   db: PrismaClient,
@@ -522,6 +523,23 @@ export async function verifyPayrollCalculation(
     paymentReference: 'PAYROLL-2026-01',
   });
   assert.equal(paid.data.status, 'PAID');
+  const statutoryExports = new StatutoryExportService(database);
+  const epfExport = await statutoryExports.export(actor, run.id, 'EPF');
+  assert.equal(epfExport.filename, 'epf-2026-01-review.csv');
+  assert.equal(epfExport.content.includes('payroll-statutory-review-v1'), true);
+  assert.equal(epfExport.content.includes('CALCULATION'), true);
+  const exportAudit = await db.auditEvent.findFirst({
+    where: {
+      companyId: company.id,
+      action: 'STATUTORY_EXPORTED',
+      resourceId: run.id,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  assert.deepEqual(exportAudit?.metadata, {
+    scheme: 'EPF',
+    schemaVersion: 'payroll-statutory-review-v1',
+  });
   await assert.rejects(
     () => execution.reopen(actor, run.id, { reason: 'Too late' }),
     { status: 409 },

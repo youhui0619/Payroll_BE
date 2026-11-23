@@ -103,6 +103,9 @@ describe('application HTTP contract', () => {
       doc.paths['/api/v1/payroll/runs/{id}/payslips/{employeeId}/pdf'].get,
     ).toBeDefined();
     expect(doc.paths['/api/v1/payroll/runs/{id}/register'].get).toBeDefined();
+    expect(
+      doc.paths['/api/v1/payroll/runs/{id}/statutory-exports/{scheme}'].get,
+    ).toBeDefined();
     expect(doc.paths['/api/v1/notifications'].get).toBeDefined();
     expect(doc.paths['/api/v1/notifications/{id}/read'].patch).toBeDefined();
   });

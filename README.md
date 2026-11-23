@@ -194,7 +194,7 @@ Swagger at `/docs` is the route reference. All business routes use `/api/v1`.
 
 Contribution-table/rate/exemption validation and preview exist, including a LINDUNG_24_JAM scheme. No official contribution data is seeded. Source URL/hash are supplied by the importer; the server does not independently verify the downloaded source.
 
-The API now persists payroll calculations, applies the saved earning/statutory inclusion switches, enforces the DRAFT → CALCULATED → APPROVED → PUBLISHED → PAID lifecycle, publishes tenant-safe FE-shaped payslips, and settles payroll-linked claims, commissions and overtime. Pre-publication reopen, in-app notifications and secure one-page PDF payslip downloads are available. Finalized-period corrections, statutory submission exports and password-protected PDF encryption remain outside this slice. See [implementation status](IMPLEMENTATION_STATUS.md) and the [MVP backlog](../BACKEND_TASKS.md).
+The API now persists payroll calculations, applies the saved earning/statutory inclusion switches, enforces the DRAFT → CALCULATED → APPROVED → PUBLISHED → PAID lifecycle, publishes tenant-safe FE-shaped payslips, and settles payroll-linked claims, commissions and overtime. Pre-publication reopen, in-app notifications, secure one-page PDF payslip downloads and versioned statutory review CSVs are available. Finalized-period corrections, official statutory submission layouts and password-protected PDF encryption remain outside this slice. See [implementation status](IMPLEMENTATION_STATUS.md) and the [MVP backlog](../BACKEND_TASKS.md).
 
 ### Leave balances and history
 
@@ -421,6 +421,7 @@ The payroll lifecycle is now explicit:
 - `POST /api/v1/payroll/runs/:id/pay` records a payment reference, moves the run to PAID and settles PAYROLL claims, allocated commissions and approved overtime.
 - `POST /api/v1/payroll/runs/:id/reopen` returns a CALCULATED or APPROVED run to DRAFT, deletes its derived employee snapshots and records a required audit reason. PUBLISHED and PAID runs remain immutable.
 - `GET /api/v1/payroll/runs/:id/register` returns the calculated payroll overview grid for OWNER/HR/FINANCE, with employee search and department UUID filters. It is available from CALCULATED through PAID; draft runs continue to use the roster endpoint because no amounts exist yet.
+- `GET /api/v1/payroll/runs/:id/statutory-exports/:scheme` returns a finalized-run review CSV for `EPF`, `SOCSO`, `EIS`, `LINDUNG_24_JAM`, `PCB` or `HRD`. It is tenant scoped, OWNER/FINANCE only and audited. The `payroll-statutory-review-v1` schema is intentionally not an official e-filing layout until the required provider/authority format is confirmed.
 
 In-app notifications are available at `GET /api/v1/notifications` with `unreadOnly=true`, `PATCH /api/v1/notifications/:id/read`, and `POST /api/v1/notifications/read-all`. Results are scoped to the authenticated user and company. Payslip publication emits one idempotent `PAYSLIP_PUBLISHED` notification to the linked employee; email delivery remains outside the API and can be added behind an adapter later.
 
