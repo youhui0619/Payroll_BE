@@ -444,3 +444,21 @@ export class SalaryDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveFrom: string;
 }
+
+export class EmployeeLifecycleDto {
+  @ApiPropertyOptional({
+    example: '2026-11-24',
+    description: 'Effective date; defaults to today when omitted.',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  effectiveDate?: string;
+
+  @ApiPropertyOptional({ maxLength: 1000 })
+  @IsOptional()
+  @IsString()
+  @Length(1, 1000)
+  reason?: string;
+}

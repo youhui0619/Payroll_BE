@@ -159,6 +159,8 @@ The employee can log in through `/api/v1/auth/login`, change their password, and
 
 Owners can issue a one-time administrative reset token with `POST /api/v1/memberships/:id/password-reset`; the account completes it through public `POST /api/v1/auth/reset-password`. Issuing or completing a reset invalidates earlier reset tokens and existing JWTs. Tokens are hashed at rest, expire, are single-use, and are never written to logs. Email delivery is intentionally behind a future adapter; the current response is the handoff boundary for FE/development.
 
+OWNER/HR can use the explicit employee lifecycle commands `POST /api/v1/employees/:id/activate`, `/confirm`, `/resign`, `/terminate`, and `/archive`. Each accepts an optional `effectiveDate`; resign, terminate and archive also require a reason. Commands are tenant-scoped, reject invalid transitions and dates before joining, block calculated/finalized payroll periods, and record the actor, previous state, new state and effective date in the audit log. Historical employee rows are retained; archive is a soft state change.
+
 ## Later schema changes
 
 Keep `prisma/schema.prisma` and new migration files in sync. Preserve the existing init and all later migrations, including their check constraints and partial indexes. Do not consolidate migration history or rewrite applied SQL. The user ended the single-init workflow on 2026-11-23.

@@ -6,13 +6,14 @@ import {
 } from '@nestjs/common';
 import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
-import { audit, fail } from '../common/domain';
+import { audit, dateOnly, fail } from '../common/domain';
 import { PageDto, paginated } from '../common/page.dto';
 import {
   CreateEmployeeDto,
   EmployeeQueryDto,
   UpdateEmployeeDto,
   SalaryDto,
+  EmployeeLifecycleDto,
 } from './employees.dto';
 import { EmployeeImportDto, EmployeeImportRowDto } from './employee-import.dto';
 import { EMPLOYMENT_STATUS_VALUES } from './employment-statuses';
@@ -678,6 +679,117 @@ export class EmployeesService {
       }
       return { data };
     });
+  }
+
+  async lifecycle(
+    m: Membership,
+    id: string,
+    action: 'ACTIVATE' | 'CONFIRM' | 'RESIGN' | 'TERMINATE' | 'ARCHIVE',
+    dto: EmployeeLifecycleDto,
+  ) {
+    const effectiveDate = dateOnly(
+      dto.effectiveDate ?? new Date().toISOString().slice(0, 10),
+    );
+    return this.db.$transaction(
+      async (tx) => {
+        const employee = await tx.employee.findUnique({
+          where: { companyId_id: { companyId: m.companyId, id } },
+        });
+        if (!employee) throw new NotFoundException('Employee not found.');
+        if (effectiveDate < employee.joinedDate)
+          fail(
+            'LIFECYCLE_DATE_BEFORE_JOINING',
+            'The lifecycle effective date cannot precede the joining date.',
+            422,
+          );
+        if (
+          (action === 'RESIGN' ||
+            action === 'TERMINATE' ||
+            action === 'ARCHIVE') &&
+          !dto.reason?.trim()
+        )
+          fail(
+            'LIFECYCLE_REASON_REQUIRED',
+            'A reason is required for this employee lifecycle command.',
+            400,
+          );
+        if (
+          action === 'ACTIVATE' &&
+          ['RESIGNED', 'TERMINATED', 'RETIRED'].includes(
+            employee.employmentStatus ?? '',
+          )
+        )
+          fail(
+            'INVALID_LIFECYCLE_TRANSITION',
+            'A resigned, terminated or retired employee cannot be activated directly.',
+            409,
+          );
+        if (action === 'CONFIRM' && !employee.active)
+          fail(
+            'INVALID_LIFECYCLE_TRANSITION',
+            'Only an active employee can be confirmed.',
+            409,
+          );
+        if ((action === 'RESIGN' || action === 'TERMINATE') && !employee.active)
+          fail(
+            'INVALID_LIFECYCLE_TRANSITION',
+            'Only an active employee can be resigned or terminated.',
+            409,
+          );
+        const locked = await tx.payrollRun.count({
+          where: {
+            companyId: m.companyId,
+            status: { not: 'DRAFT' },
+            OR: [
+              { year: { gt: effectiveDate.getUTCFullYear() } },
+              {
+                year: effectiveDate.getUTCFullYear(),
+                month: { gte: effectiveDate.getUTCMonth() + 1 },
+              },
+            ],
+          },
+        });
+        if (locked)
+          fail(
+            'EMPLOYEE_LIFECYCLE_LOCKED',
+            'The employee status cannot change for a period with calculated or finalized payroll.',
+            409,
+          );
+        const statusByAction = {
+          ACTIVATE: 'ACTIVE',
+          CONFIRM: 'ACTIVE',
+          RESIGN: 'RESIGNED',
+          TERMINATE: 'TERMINATED',
+          ARCHIVE: employee.employmentStatus ?? 'ACTIVE',
+        } as const;
+        const active = action === 'ACTIVATE' || action === 'CONFIRM';
+        const data = await tx.employee.update({
+          where: { companyId_id: { companyId: m.companyId, id } },
+          data: {
+            active,
+            employmentStatus: statusByAction[action],
+            ...(action === 'CONFIRM'
+              ? { confirmationDate: effectiveDate }
+              : {}),
+            ...(action === 'ACTIVATE'
+              ? { resignationDate: null }
+              : action === 'RESIGN' || action === 'TERMINATE'
+                ? { resignationDate: effectiveDate }
+                : {}),
+          },
+        });
+        await audit(tx, m, `EMPLOYEE_${action}`, id, {
+          effectiveDate: effectiveDate.toISOString().slice(0, 10),
+          reason: dto.reason?.trim() ?? null,
+          previousStatus: employee.employmentStatus,
+          previousActive: employee.active,
+          status: data.employmentStatus,
+          active: data.active,
+        });
+        return { data };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
   async salaries(companyId: string, id: string, q: PageDto) {
     await this.get(companyId, id);

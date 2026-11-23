@@ -239,6 +239,43 @@ async function main() {
     console.log(
       'PASS account invitation, activation, one-time reset and audit',
     );
+    const lifecycleEmployee = await db.employee.create({
+      data: {
+        companyId: company.id,
+        employeeNo: 'LIFE-001',
+        name: 'Lifecycle Employee',
+        joinedDate: new Date('2026-01-01T00:00:00.000Z'),
+        employmentStatus: 'PROBATION',
+      },
+    });
+    await employeesService.lifecycle(owner, lifecycleEmployee.id, 'CONFIRM', {
+      effectiveDate: '2026-02-01',
+    });
+    await employeesService.lifecycle(owner, lifecycleEmployee.id, 'RESIGN', {
+      effectiveDate: '2026-03-01',
+      reason: 'Resigned voluntarily',
+    });
+    const lifecycleRow = await db.employee.findUniqueOrThrow({
+      where: {
+        companyId_id: { companyId: company.id, id: lifecycleEmployee.id },
+      },
+    });
+    assert.equal(lifecycleRow.active, false);
+    assert.equal(lifecycleRow.employmentStatus, 'RESIGNED');
+    await assert.rejects(() =>
+      employeesService.lifecycle(owner, lifecycleEmployee.id, 'ACTIVATE', {}),
+    );
+    assert.equal(
+      await db.auditEvent.count({
+        where: {
+          companyId: company.id,
+          resourceId: lifecycleEmployee.id,
+          action: { in: ['EMPLOYEE_CONFIRM', 'EMPLOYEE_RESIGN'] },
+        },
+      }),
+      2,
+    );
+    console.log('PASS employee lifecycle transitions, locks and audit');
     const reports = new ReportsService(db as Database);
     const balanceExport = await reports.leaveBalances(owner, { year: 2026 });
     assert.equal(balanceExport.includes('Employee number'), true);

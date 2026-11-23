@@ -21,6 +21,7 @@ import {
   EmployeeQueryDto,
   UpdateEmployeeDto,
   SalaryDto,
+  EmployeeLifecycleDto,
 } from './employees.dto';
 import { EmployeeImportDto } from './employee-import.dto';
 import { EmployeesService } from './employees.service';
@@ -89,6 +90,41 @@ export class EmployeesController {
     @Body() dto: UpdateEmployeeDto,
   ) {
     return this.service.update(req.membership.companyId, id, dto);
+  }
+  @Post(':id/activate') activate(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EmployeeLifecycleDto,
+  ) {
+    return this.service.lifecycle(req.membership, id, 'ACTIVATE', dto);
+  }
+  @Post(':id/confirm') confirm(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EmployeeLifecycleDto,
+  ) {
+    return this.service.lifecycle(req.membership, id, 'CONFIRM', dto);
+  }
+  @Post(':id/resign') resign(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EmployeeLifecycleDto,
+  ) {
+    return this.service.lifecycle(req.membership, id, 'RESIGN', dto);
+  }
+  @Post(':id/terminate') terminate(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EmployeeLifecycleDto,
+  ) {
+    return this.service.lifecycle(req.membership, id, 'TERMINATE', dto);
+  }
+  @Post(':id/archive') archive(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EmployeeLifecycleDto,
+  ) {
+    return this.service.lifecycle(req.membership, id, 'ARCHIVE', dto);
   }
   @Get(':id/salaries') @Roles('OWNER', 'HR', 'FINANCE') salaries(
     @Req() req: TenantRequest,
