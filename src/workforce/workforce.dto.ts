@@ -23,24 +23,6 @@ import { EMPLOYMENT_TYPE_VALUES } from './employment-types';
 import type { EmploymentType } from './employment-types';
 import { WorkingScheduleDto } from './working-schedule.dto';
 export const STATES = [
-  'MY-01',
-  'MY-02',
-  'MY-03',
-  'MY-04',
-  'MY-05',
-  'MY-06',
-  'MY-07',
-  'MY-08',
-  'MY-09',
-  'MY-10',
-  'MY-11',
-  'MY-12',
-  'MY-13',
-  'MY-14',
-  'MY-15',
-  'MY-16',
-];
-export const LOCATION_STATES = [
   'JOHOR',
   'KEDAH',
   'KELANTAN',
@@ -58,6 +40,7 @@ export const LOCATION_STATES = [
   'SELANGOR',
   'TERENGGANU',
 ] as const;
+export const LOCATION_STATES = STATES;
 export const REGIONS = [
   'Johor',
   'Kedah',
@@ -240,6 +223,9 @@ export class HolidayDto {
   description?: string;
   @ApiPropertyOptional({ enum: ['NATIONAL', 'STATE'] })
   @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim().toUpperCase() : value,
+  )
   @IsIn(['NATIONAL', 'STATE'])
   scope?: 'NATIONAL' | 'STATE';
   @ApiProperty()
@@ -270,10 +256,19 @@ export class HolidayDto {
   @IsIn(HOLIDAY_REGIONS, { each: true })
   regions?: string[];
 
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'] })
+  @ApiPropertyOptional({ default: true })
   @IsOptional()
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
+    default: true,
+    deprecated: true,
+    description: 'Legacy alias for isActive.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }
 export class UpdateHolidayDto extends PartialType(HolidayDto) {}
 

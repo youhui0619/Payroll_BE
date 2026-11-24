@@ -384,9 +384,13 @@ export class WorkforceService {
   async createHoliday(m: Membership, dto: HolidayDto) {
     if (dto.endDate < dto.startDate)
       fail('INVALID_DATES', 'End date precedes start date.');
-    const regions = dto.regions ?? dto.states ?? [];
-    const status = dto.status ?? 'ACTIVE';
-    const scope = dto.scope ?? 'NATIONAL';
+    const requestedRegions = dto.regions ?? dto.states ?? [];
+    const scope =
+      dto.scope === 'NATIONAL' || requestedRegions.length === 0
+        ? 'NATIONAL'
+        : 'STATE';
+    const regions = scope === 'NATIONAL' ? [] : requestedRegions;
+    const isActive = dto.isActive ?? dto.active ?? true;
     return this.db.$transaction(
       async (tx) => {
         await tx.$executeRaw`
@@ -432,8 +436,8 @@ export class WorkforceService {
             endDate: dateOnly(dto.endDate),
             states: regions,
             regions,
-            active: status === 'ACTIVE',
-            status,
+            active: isActive,
+            status: isActive ? 'ACTIVE' : 'INACTIVE',
           },
         });
         await audit(tx, m, 'HOLIDAY_CREATED', data.id);
@@ -451,11 +455,18 @@ export class WorkforceService {
     const endDate = dto.endDate ?? dateString(existing.endDate);
     if (endDate < startDate)
       fail('INVALID_DATES', 'End date precedes start date.');
-    const regions =
+    const requestedRegions =
       dto.regions ??
       dto.states ??
       (existing.regions?.length ? existing.regions : existing.states);
-    const status = dto.status ?? (existing.status as 'ACTIVE' | 'INACTIVE');
+    const requestedScope =
+      dto.scope ?? (existing.scope as 'NATIONAL' | 'STATE');
+    const scope =
+      requestedScope === 'NATIONAL' || requestedRegions.length === 0
+        ? 'NATIONAL'
+        : 'STATE';
+    const regions = scope === 'NATIONAL' ? [] : requestedRegions;
+    const isActive = dto.isActive ?? dto.active ?? existing.active;
     return this.db.$transaction(
       async (tx) => {
         const overlaps = await tx.publicHoliday.findMany({
@@ -468,7 +479,7 @@ export class WorkforceService {
           },
         });
         if (
-          status === 'ACTIVE' &&
+          isActive &&
           overlaps.some(
             (h) =>
               !(h.regions?.length ? h.regions : h.states).length ||
@@ -488,25 +499,32 @@ export class WorkforceService {
           endDate: to,
           states: ignoredStates,
           regions: ignoredRegions,
-          scope,
-          status: ignoredStatus,
+          scope: ignoredScope,
+          isActive: ignoredIsActive,
+          active: ignoredActive,
           ...rest
         } = dto;
         void ignoredStates;
         void ignoredRegions;
-        void ignoredStatus;
+        void ignoredScope;
+        void ignoredIsActive;
+        void ignoredActive;
         const data = await tx.publicHoliday.update({
           where: { id },
           data: {
             ...rest,
             ...(from !== undefined ? { startDate: dateOnly(from) } : {}),
             ...(to !== undefined ? { endDate: dateOnly(to) } : {}),
-            ...(scope !== undefined ? { scope } : {}),
-            ...(dto.regions !== undefined || dto.states !== undefined
-              ? { states: regions, regions }
+            ...(dto.scope !== undefined ||
+            dto.regions !== undefined ||
+            dto.states !== undefined
+              ? { scope, states: regions, regions }
               : {}),
-            ...(dto.status !== undefined
-              ? { status, active: status === 'ACTIVE' }
+            ...(dto.isActive !== undefined || dto.active !== undefined
+              ? {
+                  active: isActive,
+                  status: isActive ? 'ACTIVE' : 'INACTIVE',
+                }
               : {}),
           },
         });

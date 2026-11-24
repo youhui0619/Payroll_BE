@@ -152,7 +152,7 @@ describe('WorkforceService', () => {
       endDate: '2027-01-01',
       scope: 'NATIONAL',
       regions: [],
-      status: 'ACTIVE',
+      isActive: true,
     } as any);
 
     expect(result).toEqual({
@@ -162,6 +162,40 @@ describe('WorkforceService', () => {
       data: expect.objectContaining({
         companyId: 'company',
         code: 8,
+      }),
+    });
+  });
+
+  it('normalizes a FE national holiday payload and persists isActive', async () => {
+    const db = database();
+    db.publicHoliday.findMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    db.publicHoliday.create.mockResolvedValue({
+      id: 'holiday',
+      code: 1,
+      scope: 'NATIONAL',
+      active: true,
+      status: 'ACTIVE',
+    });
+
+    await new WorkforceService(db).createHoliday(membership, {
+      name: 'Malaysia Day',
+      description: 'Malaysia Day',
+      scope: 'State',
+      regions: [],
+      startDate: '2026-09-16',
+      endDate: '2026-09-16',
+      active: true,
+    } as any);
+
+    expect(db.publicHoliday.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        scope: 'NATIONAL',
+        states: [],
+        regions: [],
+        active: true,
+        status: 'ACTIVE',
       }),
     });
   });
