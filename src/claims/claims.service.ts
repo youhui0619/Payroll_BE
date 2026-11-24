@@ -18,6 +18,7 @@ import {
 import {
   audit,
   dateOnly,
+  dateString,
   DecisionDto,
   decisionComment,
   fail,
@@ -36,12 +37,63 @@ import {
 export class ClaimsService {
   constructor(private db: Database) {}
 
+  private statusLabel(status: string) {
+    return status === 'APPROVED'
+      ? 'Approved'
+      : status === 'REJECTED'
+        ? 'Rejected'
+        : status === 'PAID'
+          ? 'Paid'
+          : 'Pending';
+  }
+
+  private serializeType(row: any) {
+    return {
+      ...row,
+      maxAmount:
+        row.maxAmount === null || row.maxAmount === undefined
+          ? null
+          : Number(row.maxAmount),
+      effectiveFrom: row.effectiveFrom ? dateString(row.effectiveFrom) : null,
+      effectiveTo: row.effectiveTo ? dateString(row.effectiveTo) : null,
+    };
+  }
+
+  private serializeClaim(row: any) {
+    const workflowStatus = String(row.status);
+    const status = this.statusLabel(workflowStatus);
+    return {
+      ...row,
+      date: row.date ? dateString(row.date) : row.date,
+      claimDate: row.date ? dateString(row.date) : null,
+      amount:
+        row.amount === null || row.amount === undefined
+          ? 0
+          : Number(row.amount),
+      employeeName: row.employee?.name ?? null,
+      departmentId: row.employee?.department?.id ?? null,
+      departmentName: row.employee?.department?.name ?? null,
+      claimType: row.type?.code ?? row.typeId ?? null,
+      supportingDocuments:
+        row.files?.map((file: any) => file.originalName) ?? [],
+      workflowStatus,
+      status,
+      submittedAt: row.submittedAt?.toISOString() ?? null,
+      approval: {
+        approver: row.decidedBy ?? '-',
+        status,
+        comments: row.decisionComment ?? '',
+        approvedDate: row.decidedAt ? dateString(row.decidedAt) : null,
+      },
+    };
+  }
+
   async type(m: Membership, id: string) {
     const data = await this.db.claimType.findUnique({
       where: { companyId_id: { companyId: m.companyId, id } },
     });
     if (!data) throw new NotFoundException();
-    return { data };
+    return { data: this.serializeType(data) };
   }
 
   async types(m: Membership, q: PageDto) {
@@ -72,11 +124,19 @@ export class ClaimsService {
         }),
       ),
     );
-    return paginated(data, total, q, {
-      summary: {
-        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
+    return paginated(
+      data.map((row) => this.serializeType(row)),
+      total,
+      q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            ACTIVE_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
       },
-    });
+    );
   }
 
   async createType(m: Membership, d: ClaimTypeDto) {
@@ -202,6 +262,15 @@ export class ClaimsService {
     const data = await this.db.claim.findUnique({
       where: { companyId_id: { companyId: m.companyId, id } },
       include: {
+        employee: {
+          select: {
+            id: true,
+            employeeNo: true,
+            name: true,
+            department: { select: { id: true, name: true } },
+          },
+        },
+        type: { select: { id: true, code: true, name: true } },
         events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         files: {
           where: { archived: false },
@@ -225,7 +294,7 @@ export class ClaimsService {
       )
     )
       throw new NotFoundException();
-    return { data: { ...data, amount: data.amount.toFixed(2) } };
+    return { data: this.serializeClaim(data) };
   }
 
   async edit(m: Membership, id: string, d: ClaimDto) {
@@ -364,6 +433,21 @@ export class ClaimsService {
         orderBy: { createdAt: 'desc' },
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
+        include: {
+          employee: {
+            select: {
+              id: true,
+              employeeNo: true,
+              name: true,
+              department: { select: { id: true, name: true } },
+            },
+          },
+          type: { select: { id: true, code: true, name: true } },
+          files: {
+            where: { archived: false },
+            select: { originalName: true },
+          },
+        },
       }),
       this.db.claim.count({ where }),
     ]);
@@ -375,7 +459,7 @@ export class ClaimsService {
       ),
     );
     return paginated(
-      data.map((r) => ({ ...r, amount: r.amount.toFixed(2) })),
+      data.map((row) => this.serializeClaim(row)),
       total,
       q,
       {

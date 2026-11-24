@@ -158,6 +158,20 @@ export class OvertimeService {
     const settings = await tx.payrollSettings.findUnique({
       where: { companyId: m.companyId },
     });
+    const minimumOvertimeDuration =
+      {
+        NONE: 0,
+        '15_MINUTES': 15,
+        '30_MINUTES': 30,
+        '60_MINUTES': 60,
+      }[settings?.minimumOvertimeDuration ?? 'NONE'] ?? 0;
+    const netMinutes = totalMinutes - breakDurationMinutes;
+    if (netMinutes < minimumOvertimeDuration)
+      fail(
+        'OVERTIME_BELOW_MINIMUM',
+        `Net overtime must be at least ${minimumOvertimeDuration} minutes.`,
+        400,
+      );
     const defaults = {
       NORMAL_WORKING_DAY: {
         multiplier: new Prisma.Decimal('1.5'),
@@ -213,7 +227,7 @@ export class OvertimeService {
       endTime,
       totalMinutes,
       breakDurationMinutes,
-      netMinutes: totalMinutes - breakDurationMinutes,
+      netMinutes,
       hourlyRateMultiplier: selected.multiplier,
       earningCode: selected.earningCode,
       description: description.trim(),

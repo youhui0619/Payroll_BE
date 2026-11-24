@@ -30,7 +30,12 @@ export class OrganizationService {
     return { data: this.companyView(data) };
   }
   async updateCompany(companyId: string, dto: CompanyDto) {
-    const { financialStartingMonth, financialYearStartMonth, ...rest } = dto;
+    const {
+      financialStartingMonth,
+      financialYearStartMonth,
+      llpNumber,
+      ...rest
+    } = dto;
     const month =
       financialStartingMonth ??
       (financialYearStartMonth !== undefined
@@ -45,6 +50,7 @@ export class OrganizationService {
       where: { id: companyId },
       data: {
         ...rest,
+        ...(llpNumber !== undefined ? { llpNo: llpNumber } : {}),
         ...(month
           ? {
               financialYearStartMonth: FINANCIAL_MONTHS.indexOf(month) + 1,
@@ -55,8 +61,10 @@ export class OrganizationService {
     });
     return { data: this.companyView(data) };
   }
-  private companyView<T extends { logo: string | null }>(data: T) {
-    return { ...data, logoUrl: data.logo };
+  private companyView<T extends { logo: string | null; llpNo: string | null }>(
+    data: T,
+  ) {
+    return { ...data, logoUrl: data.logo, llpNumber: data.llpNo };
   }
   async departments(companyId: string, q: DepartmentQueryDto) {
     const baseFilters = [

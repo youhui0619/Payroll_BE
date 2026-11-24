@@ -70,8 +70,8 @@ export class ClaimDto {
   amount: string;
 
   @ApiProperty() @IsString() @Length(1, 2000) description: string;
-  @ApiProperty({ enum: ['PAYROLL', 'BANK_TRANSFER'] })
-  @IsIn(['PAYROLL', 'BANK_TRANSFER'])
+  @ApiProperty({ enum: ['PAYROLL', 'BANK_TRANSFER', 'CASH'] })
+  @IsIn(['PAYROLL', 'BANK_TRANSFER', 'CASH'])
   paymentMethod: string;
 }
 

@@ -205,6 +205,22 @@ export class CompanyDto {
   @Length(1, 80)
   registrationNo?: string;
 
+  @ApiPropertyOptional({
+    description: 'Limited liability partnership registration number.',
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 80)
+  llpNo?: string;
+
+  @ApiPropertyOptional({
+    description: 'FE-compatible alias for llpNo.',
+  })
+  @IsOptional()
+  @IsString()
+  @Length(1, 80)
+  llpNumber?: string;
+
   @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
 
   @ApiPropertyOptional()

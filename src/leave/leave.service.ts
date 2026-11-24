@@ -3,7 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Membership, Prisma, RequestStatus } from '@prisma/client';
+import {
+  LeaveApproval,
+  Membership,
+  Prisma,
+  RequestStatus,
+} from '@prisma/client';
 import { Database } from '../database.module';
 import {
   audit,
@@ -66,6 +71,50 @@ export function workingDays(
 @Injectable()
 export class LeaveService {
   constructor(private db: Database) {}
+
+  private statusLabel(status: string) {
+    return status === 'DRAFT'
+      ? 'Draft'
+      : status === 'APPROVED'
+        ? 'Approved'
+        : status === 'REJECTED'
+          ? 'Rejected'
+          : status === 'CANCELLED'
+            ? 'Cancelled'
+            : status === 'PAID'
+              ? 'Paid'
+              : 'Pending';
+  }
+
+  private serializeRequest(row: any) {
+    const startDate = row.startDate ? dateString(row.startDate) : null;
+    const endDate = row.endDate ? dateString(row.endDate) : null;
+    const workflowStatus = String(row.status);
+    const status = this.statusLabel(workflowStatus);
+    return {
+      ...row,
+      requestDate: row.requestDate ? dateString(row.requestDate) : null,
+      startDate,
+      endDate,
+      dateRange: startDate && endDate ? `${startDate} ~ ${endDate}` : '',
+      daysTaken:
+        row.days === null || row.days === undefined
+          ? '0.00'
+          : new Prisma.Decimal(row.days).toFixed(2),
+      leaveType: row.policy?.name ?? row.policy?.code ?? null,
+      code: row.policy?.code ?? row.policyId ?? null,
+      supportingDocuments:
+        row.files?.map((file: any) => file.originalName) ?? [],
+      workflowStatus,
+      status,
+      approval: {
+        approver: row.decidedBy ?? row.managerId ?? '-',
+        status,
+        comments: row.decisionComment ?? '',
+        approvedDate: row.decidedAt ? dateString(row.decidedAt) : null,
+      },
+    };
+  }
   private async unlocked(
     tx: Prisma.TransactionClient,
     row: { companyId: string; startDate: Date; endDate: Date },
@@ -150,7 +199,15 @@ export class LeaveService {
   async detail(m: Membership, id: string) {
     const data = await this.db.leaveRequest.findUnique({
       where: { companyId_id: { companyId: m.companyId, id } },
-      include: { events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] } },
+      include: {
+        employee: { select: { id: true, employeeNo: true, name: true } },
+        policy: true,
+        events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        files: {
+          where: { archived: false },
+          select: { originalName: true },
+        },
+      },
     });
     if (
       !data ||
@@ -161,7 +218,7 @@ export class LeaveService {
       )
     )
       throw new NotFoundException();
-    return { data };
+    return { data: this.serializeRequest(data) };
   }
   async edit(m: Membership, id: string, d: LeaveDto) {
     return this.db.$transaction(
@@ -273,10 +330,25 @@ export class LeaveService {
       maximumCarryForward,
       active,
       status,
+      leaveType,
+      approvalOverflow,
+      minimumAdvanceNotice,
+      approval,
+      noticeDays,
+      paid,
       ...rest
     } = d;
     return {
       ...rest,
+      ...(paid !== undefined || leaveType !== undefined
+        ? { paid: leaveType ? leaveType === 'PAID' : paid }
+        : {}),
+      ...(approval !== undefined || approvalOverflow !== undefined
+        ? { approval: approval ?? approvalOverflow }
+        : {}),
+      ...(noticeDays !== undefined || minimumAdvanceNotice !== undefined
+        ? { noticeDays: minimumAdvanceNotice ?? noticeDays }
+        : {}),
       ...(status !== undefined
         ? { active: status === 'ACTIVE' }
         : active !== undefined
@@ -364,6 +436,9 @@ export class LeaveService {
     if (d.effectiveTo && d.effectiveTo < d.effectiveFrom)
       fail('INVALID_DATES', 'Policy end precedes start.');
     return this.db.$transaction(async (tx) => {
+      const paid = d.leaveType ? d.leaveType === 'PAID' : d.paid;
+      const approval = d.approval ?? d.approvalOverflow;
+      const noticeDays = d.minimumAdvanceNotice ?? d.noticeDays;
       const data = await tx.leavePolicy.create({
         data: {
           companyId: m.companyId,
@@ -373,7 +448,7 @@ export class LeaveService {
           ...(d.description !== undefined
             ? { description: d.description }
             : {}),
-          paid: d.paid,
+          paid,
           ...(d.entitlementUnit !== undefined
             ? { entitlementUnit: d.entitlementUnit }
             : {}),
@@ -408,8 +483,8 @@ export class LeaveService {
             ? { allowEmployeeSpecificSettings: d.allowEmployeeSpecificSettings }
             : {}),
           allowHalfDay: d.allowHalfDay,
-          noticeDays: d.noticeDays,
-          approval: d.approval,
+          noticeDays,
+          approval,
           effectiveFrom: dateOnly(d.effectiveFrom),
           effectiveTo: d.effectiveTo ? dateOnly(d.effectiveTo) : null,
           ...(d.defaultEntitlement !== undefined
@@ -435,8 +510,21 @@ export class LeaveService {
     });
   }
 
-  private policyView<T extends { active: boolean }>(data: T) {
-    return { ...data, status: data.active ? 'ACTIVE' : 'INACTIVE' };
+  private policyView<
+    T extends {
+      active: boolean;
+      paid: boolean;
+      noticeDays: number;
+      approval: LeaveApproval;
+    },
+  >(data: T) {
+    return {
+      ...data,
+      status: data.active ? 'ACTIVE' : 'INACTIVE',
+      leaveType: data.paid ? 'PAID' : 'UNPAID',
+      minimumAdvanceNotice: data.noticeDays,
+      approvalOverflow: data.approval,
+    };
   }
   async grant(m: Membership, d: GrantDto) {
     return this.db.$transaction(
@@ -882,6 +970,13 @@ export class LeaveService {
         orderBy: { createdAt: 'desc' },
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
+        include: {
+          policy: true,
+          files: {
+            where: { archived: false },
+            select: { originalName: true },
+          },
+        },
       }),
       this.db.leaveRequest.count({ where }),
     ]);
@@ -890,14 +985,19 @@ export class LeaveService {
         this.db.leaveRequest.count({ where: { ...where, status } }),
       ),
     );
-    return paginated(data, total, q, {
-      summary: {
-        statusCounts: makeStatusCounts(
-          REQUEST_STATUS_VALUES,
-          statusCountValues,
-        ),
+    return paginated(
+      data.map((row) => this.serializeRequest(row)),
+      total,
+      q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            REQUEST_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
       },
-    });
+    );
   }
   async available(
     tx: Prisma.TransactionClient,
@@ -1182,6 +1282,13 @@ export class LeaveService {
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
         orderBy: { createdAt: 'asc' },
+        include: {
+          policy: true,
+          files: {
+            where: { archived: false },
+            select: { originalName: true },
+          },
+        },
       }),
       this.db.leaveRequest.count({ where }),
     ]);
@@ -1190,13 +1297,18 @@ export class LeaveService {
         this.db.leaveRequest.count({ where: { ...where, status } }),
       ),
     );
-    return paginated(data, total, q, {
-      summary: {
-        statusCounts: makeStatusCounts(
-          REQUEST_STATUS_VALUES,
-          statusCountValues,
-        ),
+    return paginated(
+      data.map((row) => this.serializeRequest(row)),
+      total,
+      q,
+      {
+        summary: {
+          statusCounts: makeStatusCounts(
+            REQUEST_STATUS_VALUES,
+            statusCountValues,
+          ),
+        },
       },
-    });
+    );
   }
 }

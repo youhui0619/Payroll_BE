@@ -28,6 +28,29 @@ import { csv } from '../reports/reports.utils';
 @Injectable()
 export class EmployeesService {
   constructor(private db: Database) {}
+
+  private employeePresentation<T extends { employeeNo: string; name: string }>(
+    row: T & {
+      manager?: { name: string | null } | null;
+      location?: { id: string } | null;
+    },
+  ) {
+    const initials = row.name
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('');
+    return {
+      ...row,
+      employeeId: row.employeeNo,
+      employeeName: row.name,
+      initials,
+      reportingManager: row.manager?.name ?? '',
+      workLocationId: row.location?.id ?? null,
+    };
+  }
   private async validateReferences(
     tx: Prisma.TransactionClient,
     companyId: string,
@@ -357,9 +380,14 @@ export class EmployeesService {
         statusCountValues[index],
       ]),
     );
-    return paginated(rows, total, q, {
-      summary: { statusCounts },
-    });
+    return paginated(
+      rows.map((row) => this.employeePresentation(row)),
+      total,
+      q,
+      {
+        summary: { statusCounts },
+      },
+    );
   }
 
   async exportCsv(m: Membership, q: EmployeeQueryDto) {
@@ -529,7 +557,7 @@ export class EmployeesService {
       : null;
     return {
       data: {
-        ...employee,
+        ...this.employeePresentation(employee),
         schedule: masterSchedule,
         workingSchedule: normalizeWorkingSchedule(
           employeeWorkSchedule?.scheduleDays ?? schedule?.scheduleDays,

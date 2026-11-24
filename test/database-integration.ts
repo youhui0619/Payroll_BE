@@ -462,7 +462,7 @@ async function main() {
       1,
     );
     const open = await db.attendanceSession.findFirstOrThrow({
-      where: { employeeId: employee.id },
+      where: { employeeId: employee.id, clockOut: null },
     });
     assert.equal(
       (await attendance.clock(member, open.clockInKey, 'IN')).data.id,
@@ -501,12 +501,18 @@ async function main() {
         code: 'AL',
         name: 'Annual',
         paid: true,
+        leaveType: 'PAID',
         allowHalfDay: true,
         noticeDays: 0,
+        minimumAdvanceNotice: 0,
         approval: 'HR_ONLY',
+        approvalOverflow: 'HR_ONLY',
         effectiveFrom: '2020-01-01',
       })
     ).data;
+    assert.equal(policy.leaveType, 'PAID');
+    assert.equal(policy.minimumAdvanceNotice, 0);
+    assert.equal(policy.approvalOverflow, 'HR_ONLY');
     const grant = {
       employeeId: employee.id,
       policyId: policy.id,
@@ -1309,7 +1315,12 @@ async function main() {
       payDay: 28,
       currency: 'MYR',
       makerChecker: true,
+      minimumOvertimeDuration: '30_MINUTES',
     });
+    assert.equal(
+      (await payroll.settings(owner)).data?.minimumOvertimeDuration,
+      '30_MINUTES',
+    );
     const run = (await payroll.create(owner, { year: 2099, month: 1 })).data;
     await definitions.save(owner, {
       ...basicDefinition,

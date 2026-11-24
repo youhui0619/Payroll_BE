@@ -42,6 +42,7 @@ model Company {
   employeeWorkSchedules       EmployeeWorkSchedule[]
   files                       StoredFile[]
   registrationNo              String?
+  llpNo                       String?
   email                       String?
   contactNo                   String?
   financialYearStartMonth     Int                          @default(1)
@@ -839,6 +840,7 @@ model PayrollSettings {
   includeBonus                    Boolean  @default(true)
   includeCommissionAndIncentives  Boolean  @default(true)
   standardWorkingHoursPerDay      Decimal? @default(8) @db.Decimal(5, 2)
+  minimumOvertimeDuration         String   @default("NONE")
   normalWorkingDayMultiplier      Decimal? @default(1.5) @db.Decimal(5, 2)
   normalWorkingDayEarningCode     String   @default("OT")
   configureRestDayRates           Boolean  @default(true)

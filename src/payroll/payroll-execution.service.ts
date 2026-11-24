@@ -27,6 +27,130 @@ export class PayrollExecutionService {
     private calculations: CalculationPreviewService,
   ) {}
 
+  private async leaveBalances(
+    tx: Prisma.TransactionClient,
+    companyId: string,
+    employeeIds: string[],
+    year: number,
+  ) {
+    const empty = () => ({
+      annual: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
+      medical: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
+    });
+    const result = new Map<string, ReturnType<typeof empty>>(
+      employeeIds.map((employeeId) => [employeeId, empty()]),
+    );
+    if (!employeeIds.length) return result;
+    const start = new Date(Date.UTC(year, 0, 1));
+    const next = new Date(Date.UTC(year + 1, 0, 1));
+    const policies = await tx.leavePolicy.findMany({
+      where: {
+        companyId,
+        OR: [
+          { code: { in: ['AL', 'ANNUAL', 'ML', 'MC', 'MEDICAL'] } },
+          { name: { contains: 'annual', mode: 'insensitive' } },
+          { name: { contains: 'medical', mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, code: true, name: true },
+    });
+    if (!policies.length) return result;
+    const policyIds = policies.map((policy) => policy.id);
+    const [ledger, pending] = await Promise.all([
+      tx.leaveLedger.findMany({
+        where: {
+          companyId,
+          employeeId: { in: employeeIds },
+          year,
+          policyId: { in: policyIds },
+        },
+        select: { employeeId: true, policyId: true, days: true, kind: true },
+      }),
+      tx.leaveRequest.findMany({
+        where: {
+          companyId,
+          employeeId: { in: employeeIds },
+          policyId: { in: policyIds },
+          paid: true,
+          status: { in: ['PENDING_MANAGER', 'PENDING_HR'] },
+          startDate: { gte: start, lt: next },
+        },
+        select: { employeeId: true, policyId: true, days: true },
+      }),
+    ]);
+    const decimal = (value: Prisma.Decimal | null | undefined) =>
+      new Prisma.Decimal(value ?? 0);
+    const codeOrName = (policy: (typeof policies)[number]) =>
+      `${policy.code} ${policy.name}`.toUpperCase();
+    const groups = {
+      annual: new Set(
+        policies
+          .filter(
+            (policy) =>
+              codeOrName(policy).includes('ANNUAL') || policy.code === 'AL',
+          )
+          .map((policy) => policy.id),
+      ),
+      medical: new Set(
+        policies
+          .filter(
+            (policy) =>
+              codeOrName(policy).includes('MEDICAL') ||
+              ['ML', 'MC'].includes(policy.code.toUpperCase()),
+          )
+          .map((policy) => policy.id),
+      ),
+    };
+    const calculate = (employeeId: string, ids: Set<string>) => {
+      const entries = ledger.filter(
+        (row) => row.employeeId === employeeId && ids.has(row.policyId),
+      );
+      const held = pending
+        .filter((row) => row.employeeId === employeeId && ids.has(row.policyId))
+        .reduce(
+          (sum, row) => sum.plus(decimal(row.days)),
+          new Prisma.Decimal(0),
+        );
+      const balance = entries.reduce(
+        (sum, row) => sum.plus(decimal(row.days)),
+        new Prisma.Decimal(0),
+      );
+      const granted = entries.reduce(
+        (sum, row) =>
+          ['ACCRUAL', 'CARRY_FORWARD', 'ADJUSTMENT'].includes(row.kind) &&
+          decimal(row.days).greaterThan(0)
+            ? sum.plus(decimal(row.days))
+            : sum,
+        new Prisma.Decimal(0),
+      );
+      const taken = entries.reduce(
+        (sum, row) =>
+          row.kind === 'USAGE' ? sum.plus(decimal(row.days).abs()) : sum,
+        new Prisma.Decimal(0),
+      );
+      const carriedForward = entries.reduce(
+        (sum, row) =>
+          row.kind === 'CARRY_FORWARD' && decimal(row.days).greaterThan(0)
+            ? sum.plus(decimal(row.days))
+            : sum,
+        new Prisma.Decimal(0),
+      );
+      return {
+        available: balance.minus(held).toNumber(),
+        granted: granted.toNumber(),
+        taken: taken.toNumber(),
+        carriedForward: carriedForward.toNumber(),
+      };
+    };
+    for (const employeeId of employeeIds) {
+      result.set(employeeId, {
+        annual: calculate(employeeId, groups.annual),
+        medical: calculate(employeeId, groups.medical),
+      });
+    }
+    return result;
+  }
+
   private async run(tx: Prisma.TransactionClient, m: Membership, id: string) {
     const run = await tx.payrollRun.findUnique({
       where: { companyId_id: { companyId: m.companyId, id } },
@@ -98,6 +222,12 @@ export class PayrollExecutionService {
           employerContributions: string;
           snapshot: Prisma.InputJsonValue;
         }[] = [];
+        const leaveBalances = await this.leaveBalances(
+          tx,
+          m.companyId,
+          employees.map((employee) => employee.id),
+          run.year,
+        );
         for (const employee of employees) {
           const result = await this.calculations.calculateInTransaction(
             tx,
@@ -122,6 +252,7 @@ export class PayrollExecutionService {
               company: {
                 name: company.name,
                 registrationNumber: company.registrationNo,
+                llpNumber: company.llpNo,
                 address: [
                   company.businessAddressLine1,
                   company.businessAddressLine2,
@@ -148,6 +279,7 @@ export class PayrollExecutionService {
                 bankAccount: employee.bankAccount,
               },
               input: calculation.input,
+              leaveBalances: leaveBalances.get(employee.id),
               pcb: calculation.pcb,
               totals: calculation.totals,
               taxPeriod: calculation.taxPeriod,
@@ -500,7 +632,12 @@ export class PayrollExecutionService {
       allowance: sourceAmount('CLAIM'),
       bonus: lineAmount('BONUS', 'EARNING'),
       commissions: sourceAmount('COMMISSION'),
-      commissionItems: snapshot.input.commissionSources ?? [],
+      commissionItems: (snapshot.input.commissionSources ?? []).map(
+        (source: any) => ({
+          ...source,
+          amount: amount(source.amount),
+        }),
+      ),
       grossPay: amount(snapshot.totals.gross),
     };
     const deductions = {
@@ -526,10 +663,10 @@ export class PayrollExecutionService {
       company: snapshot.company,
       employee: visible('employeeDetails') ? employee : { id: employee.id },
       leaveBalances: visible('leaveBalance')
-        ? {
+        ? (snapshot.leaveBalances ?? {
             annual: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
             medical: { available: 0, granted: 0, taken: 0, carriedForward: 0 },
-          }
+          })
         : null,
       earnings: visible('salaryAndEarnings') ? earnings : null,
       deductions: visible('itemizedDeductions') ? deductions : null,

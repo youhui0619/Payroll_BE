@@ -104,6 +104,13 @@ export class PayrollSettingsDto {
   @Min(0.01)
   @Max(24)
   standardWorkingHoursPerDay?: number | null;
+  @ApiPropertyOptional({
+    enum: ['NONE', '15_MINUTES', '30_MINUTES', '60_MINUTES'],
+    description: 'Minimum overtime duration that can be submitted or paid.',
+  })
+  @IsOptional()
+  @IsIn(['NONE', '15_MINUTES', '30_MINUTES', '60_MINUTES'])
+  minimumOvertimeDuration?: string;
   @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @Transform(emptyStringAsNull)

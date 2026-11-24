@@ -170,6 +170,13 @@ export class LeavePolicyDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   maximumCarryForward?: number | null;
+  @ApiPropertyOptional({
+    enum: ['PAID', 'UNPAID'],
+    description: 'FE-compatible alias for the paid flag.',
+  })
+  @IsOptional()
+  @IsIn(['PAID', 'UNPAID'])
+  leaveType?: 'PAID' | 'UNPAID';
   @ApiPropertyOptional({ default: false })
   @IsOptional()
   @IsBoolean()
@@ -180,9 +187,26 @@ export class LeavePolicyDto {
   allowEmployeeSpecificSettings?: boolean;
   @ApiProperty({ default: false }) @IsBoolean() allowHalfDay = false;
   @ApiProperty({ default: 0 }) @IsInt() @Min(0) @Max(365) noticeDays = 0;
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 365,
+    description: 'FE-compatible alias for noticeDays.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(365)
+  minimumAdvanceNotice?: number;
   @ApiProperty({ enum: LeaveApproval })
   @IsEnum(LeaveApproval)
   approval: LeaveApproval;
+  @ApiPropertyOptional({
+    enum: LeaveApproval,
+    description: 'FE-compatible alias for approval.',
+  })
+  @IsOptional()
+  @IsEnum(LeaveApproval)
+  approvalOverflow?: LeaveApproval;
   @ApiProperty()
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)

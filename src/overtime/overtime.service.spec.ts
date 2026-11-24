@@ -85,4 +85,32 @@ describe('OvertimeService', () => {
       }),
     );
   });
+
+  it('enforces the configured minimum overtime duration', async () => {
+    const db = database();
+    db.employee.findFirst.mockResolvedValue({
+      id: 'employee',
+      joinedDate: new Date('2026-01-01T00:00:00.000Z'),
+      departmentId: null,
+      managerId: null,
+      department: null,
+    });
+    db.payrollSettings.findUnique.mockResolvedValue({
+      minimumOvertimeDuration: '60_MINUTES',
+      normalWorkingDayMultiplier: new Prisma.Decimal('1.5'),
+      normalWorkingDayEarningCode: 'OT',
+    });
+
+    await expect(
+      new OvertimeService(db).create(membership, {
+        requestDate: '2026-10-05',
+        overtimeDate: '2026-10-03',
+        overtimeType: 'NORMAL_WORKING_DAY',
+        startTime: '18:00',
+        endTime: '18:45',
+        breakDurationMinutes: 0,
+        description: 'Short overtime',
+      }),
+    ).rejects.toMatchObject({ response: { code: 'OVERTIME_BELOW_MINIMUM' } });
+  });
 });
