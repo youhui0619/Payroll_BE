@@ -8,20 +8,17 @@ const base = {
   scheduledPayDate: 1,
 };
 describe('FE payroll settings validation', () => {
-  it.each([1, 15, 31, 'LAST_DAY'])(
-    'accepts day %s without requiring the backend-only makerChecker field',
-    (day) => {
-      expect(
-        validateSync(
-          plainToInstance(PayrollSettingsDto, {
-            ...base,
-            payrollCutoffDay: day,
-            scheduledPayDate: day,
-          }),
-        ),
-      ).toEqual([]);
-    },
-  );
+  it.each([1, 15, 31, 'LAST_DAY'])('accepts day %s', (day) => {
+    expect(
+      validateSync(
+        plainToInstance(PayrollSettingsDto, {
+          ...base,
+          payrollCutoffDay: day,
+          scheduledPayDate: day,
+        }),
+      ),
+    ).toEqual([]);
+  });
   it.each([0, 32, -1, 1.5, '15', 'BAD', {}, [], true])(
     'rejects invalid cutoff and pay date %j',
     (day) => {
@@ -51,7 +48,6 @@ describe('FE payroll settings validation', () => {
     ).toEqual([]);
   });
   it.each([
-    { makerChecker: null },
     { standardWorkingHoursPerDay: 25 },
     { standardWorkingHoursPerDay: 0 },
     { normalWorkingDayMultiplier: -1 },

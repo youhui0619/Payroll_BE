@@ -323,15 +323,6 @@ export class PayrollExecutionService {
             'Only a calculated payroll run can be approved.',
             409,
           );
-        const settings = await tx.payrollSettings.findUnique({
-          where: { companyId: m.companyId },
-        });
-        if (settings?.makerChecker && run.createdBy === m.userId)
-          fail(
-            'MAKER_CHECKER_REQUIRED',
-            'A payroll creator cannot approve the same run when maker-checker is enabled.',
-            403,
-          );
         const count = await tx.payrollEmployee.count({
           where: { companyId: m.companyId, runId },
         });

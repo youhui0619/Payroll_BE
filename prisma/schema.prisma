@@ -829,7 +829,6 @@ model PayrollSettings {
   payDay                          Int      @default(28)
   payrollCutoffDay                String   @default("25")
   currency                        String   @default("MYR") @db.Char(3)
-  makerChecker                    Boolean  @default(true)
   payrollFrequency                String   @default("MONTHLY")
   scheduledPayDate                String   @default("28")
   salaryProrationMethod           String   @default("CALENDAR_DAYS")

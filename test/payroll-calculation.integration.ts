@@ -40,10 +40,12 @@ export async function verifyPayrollCalculation(
   const savedSettings = (await payroll.saveSettings(actor, settingsBody)).data!;
   assert.equal(savedSettings.payrollCutoffDay, 'LAST_DAY');
   assert.equal(savedSettings.scheduledPayDate, 1);
+  assert.equal(savedSettings.cutoffDay, 31);
+  assert.equal(savedSettings.payDay, 1);
   assert.equal(savedSettings.normalWorkingDayMultiplier, 1.5);
+  assert.equal(savedSettings.restDayOvertimeMultiplier, 2);
+  assert.equal(savedSettings.publicHolidayOvertimeMultiplier, 3);
   assert.equal(savedSettings.standardWorkingHoursPerDay, 8);
-  assert.equal(savedSettings.makerChecker, true);
-  await payroll.saveSettings(actor, { ...settingsBody, makerChecker: false });
   await payroll.saveSettings(actor, {
     ...settingsBody,
     payrollCutoffDay: 15,
@@ -51,16 +53,13 @@ export async function verifyPayrollCalculation(
   });
   const reloadedSettings = (await payroll.settings(actor)).data!;
   assert.equal(reloadedSettings.payrollCutoffDay, 15);
-  assert.equal(reloadedSettings.makerChecker, false);
   assert.equal(reloadedSettings.normalWorkingDayMultiplier, null);
   await assert.rejects(
     () =>
       payroll.saveSettings(actor, { ...settingsBody, scheduledPayDate: 32 }),
     { status: 400 },
   );
-  console.log(
-    'PASS payroll settings FE types, omitted maker-checker preservation and nullable rates',
-  );
+  console.log('PASS payroll settings FE types and nullable rates');
   const inputs = new InputPreviewService(database);
   const service = new CalculationPreviewService(database, inputs);
   const run = (await payroll.create(actor, { year: 2026, month: 1 })).data;

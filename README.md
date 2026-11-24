@@ -336,7 +336,6 @@ Approved claim payroll allocation: OWNER/FINANCE may call `POST /payroll/runs/:r
 
 Allocated claims are now included automatically in employee input previews, with CLAIM source references and claim descriptions/dates. Reimbursements can affect net only when their definition uses those flags. Unallocated claims are omitted. Allocation is not payment: claims remain APPROVED until a future payroll payment command settles them. Run finalization/payment is still pending. Claim allocation fields and a tenant composite run FK are included in the single init.
 
-
 The employee input preview now includes `contributionPreview`: effective profile ID/revision, per-enabled-scheme issues, and calculated EPF/SOCSO/EIS/LINDUNG/HRD contributions. Each calculation retains category, ruleset/version, source URL/checksum, effective dates, parameters, wage basis and arithmetic trace. Employer cost includes the employer-paid remittance rounding difference; employee withholding is unchanged. Exactly one active category ruleset must cover each enabled scheme for the entire month; disabled schemes are not required. LINDUNG participation must agree with the selected contribution/exemption rule. Overall `complete` stays false: final PCB/net-pay validation and profile eligibility still rely on reviewed declarations.
 
 PCB remuneration classification: component definitions now accept `pcbTreatment` (`NORMAL`, `ADDITIONAL`, `EXCLUDED`, `UNCLASSIFIED`). A component flagged for the PCB wage basis must explicitly use NORMAL or ADDITIONAL. Tax-exempt EPF-bearing components use EXCLUDED_NORMAL or EXCLUDED_ADDITIONAL so their EPF can be allocated correctly. Other components outside the PCB basis may use EXCLUDED or the default UNCLASSIFIED; this does not determine legal exemption eligibility. BASIC must use NORMAL when PCB-bearing, and generated unpaid salary deductions must use the same class. Bonuses and other additional remuneration require reviewed additional classifications according to the LHDN specification. Application and database validation reject contradictory combinations.
@@ -434,7 +433,7 @@ FE comparison: `Payroll_FE/src/app/models/commission/commission-payroll-record.m
 The payroll lifecycle is now explicit:
 
 - `POST /api/v1/payroll/runs/:id/calculate` resolves every eligible employee and persists `payroll_employees` snapshots.
-- `POST /api/v1/payroll/runs/:id/approve` moves CALCULATED to APPROVED and applies maker-checker when enabled.
+- `POST /api/v1/payroll/runs/:id/approve` moves CALCULATED to APPROVED after payroll calculation is complete.
 - `POST /api/v1/payroll/runs/:id/publish` assigns stable payslip numbers and publishes the run.
 - `POST /api/v1/payroll/runs/:id/pay` records a payment reference, moves the run to PAID and settles PAYROLL claims, allocated commissions and approved overtime.
 - `POST /api/v1/payroll/runs/:id/reopen` returns a CALCULATED or APPROVED run to DRAFT, deletes its derived employee snapshots and records a required audit reason. PUBLISHED and PAID runs remain immutable.

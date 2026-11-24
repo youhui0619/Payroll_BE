@@ -1314,7 +1314,6 @@ async function main() {
       cutoffDay: 25,
       payDay: 28,
       currency: 'MYR',
-      makerChecker: true,
       minimumOvertimeDuration: '30_MINUTES',
     });
     assert.equal(

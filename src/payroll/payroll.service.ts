@@ -38,10 +38,26 @@ export function payrollPeriod(year: number, month: number) {
   return { start, next, end: new Date(next.getTime() - 86400000) };
 }
 
+function numericValue(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  const decimal = value as { toNumber?: () => number };
+  if (typeof decimal.toNumber === 'function') {
+    const parsed = decimal.toNumber();
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
 function settingsResponse(row: PayrollSettings | null) {
   if (!row) return null;
-  const day = (value: string, fallback: number): PayrollDay => {
-    const resolved = value === 'LAST_DAY' ? value : Number(value ?? fallback);
+  const day = (value: unknown, fallback: number): PayrollDay => {
+    if (value === 'LAST_DAY') return value;
+    const resolved = numericValue(value) ?? fallback;
     if (!PAYROLL_DAYS.includes(resolved))
       fail(
         'PAYROLL_SETTINGS_INVALID',
@@ -50,18 +66,47 @@ function settingsResponse(row: PayrollSettings | null) {
       );
     return resolved;
   };
+  const decimal = (value: unknown, field: string) => {
+    if (value === null || value === undefined) return null;
+    const resolved = numericValue(value);
+    if (resolved === null)
+      fail(
+        'PAYROLL_SETTINGS_INVALID',
+        `Stored ${field} requires correction.`,
+        409,
+      );
+    return resolved;
+  };
+  const cutoffDay = numericValue(row.cutoffDay);
+  const payDay = numericValue(row.payDay);
+  if (cutoffDay === null || payDay === null)
+    fail(
+      'PAYROLL_SETTINGS_INVALID',
+      'Stored payroll days require correction.',
+      409,
+    );
   return {
     ...row,
+    cutoffDay,
+    payDay,
     payrollCutoffDay: day(row.payrollCutoffDay, row.cutoffDay),
     scheduledPayDate: day(row.scheduledPayDate, row.payDay),
-    standardWorkingHoursPerDay:
-      row.standardWorkingHoursPerDay?.toNumber() ?? null,
-    normalWorkingDayMultiplier:
-      row.normalWorkingDayMultiplier?.toNumber() ?? null,
-    restDayOvertimeMultiplier:
-      row.restDayOvertimeMultiplier?.toNumber() ?? null,
-    publicHolidayOvertimeMultiplier:
-      row.publicHolidayOvertimeMultiplier?.toNumber() ?? null,
+    standardWorkingHoursPerDay: decimal(
+      row.standardWorkingHoursPerDay,
+      'standardWorkingHoursPerDay',
+    ),
+    normalWorkingDayMultiplier: decimal(
+      row.normalWorkingDayMultiplier,
+      'normalWorkingDayMultiplier',
+    ),
+    restDayOvertimeMultiplier: decimal(
+      row.restDayOvertimeMultiplier,
+      'restDayOvertimeMultiplier',
+    ),
+    publicHolidayOvertimeMultiplier: decimal(
+      row.publicHolidayOvertimeMultiplier,
+      'publicHolidayOvertimeMultiplier',
+    ),
   };
 }
 

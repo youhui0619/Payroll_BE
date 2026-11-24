@@ -12,7 +12,6 @@ import {
   Max,
   Min,
   Matches,
-  ValidateIf,
 } from 'class-validator';
 
 const emptyStringAsNull = ({ value }: { value: unknown }) =>
@@ -50,14 +49,6 @@ export class PayrollSettingsDto {
   payrollCutoffDay?: PayrollDay;
 
   @ApiProperty({ enum: ['MYR'] }) @IsIn(['MYR']) currency: string;
-  @ApiPropertyOptional({
-    description:
-      'Require an approver other than the payroll creator. Defaults to true on creation; omission preserves an existing setting.',
-  })
-  @ValidateIf((_, value) => value !== undefined)
-  @IsBoolean()
-  makerChecker?: boolean;
-
   @ApiPropertyOptional({
     enum: ['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'],
   })
