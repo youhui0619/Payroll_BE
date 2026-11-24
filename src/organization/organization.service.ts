@@ -140,8 +140,10 @@ export class OrganizationService {
     };
   }
   async createDepartment(companyId: string, dto: DepartmentDto) {
-    const { effectiveFrom, effectiveTo, status, ...rest } = dto;
-    const normalizedStatus = status?.toUpperCase() ?? 'ACTIVE';
+    const { effectiveFrom, effectiveTo, status, isActive, ...rest } = dto;
+    const active =
+      isActive ?? (status ? status.toUpperCase() !== 'INACTIVE' : true);
+    const normalizedStatus = active ? 'ACTIVE' : 'INACTIVE';
     const data = await this.db.department.create({
       data: {
         ...rest,
@@ -171,15 +173,18 @@ export class OrganizationService {
     id: string,
     dto: UpdateDepartmentDto,
   ) {
-    const { effectiveFrom, effectiveTo, status, ...rest } = dto;
+    const { effectiveFrom, effectiveTo, status, isActive, ...rest } = dto;
+    const active =
+      isActive ??
+      (status !== undefined ? status.toUpperCase() !== 'INACTIVE' : undefined);
     const data = await this.db.department.update({
       where: { companyId_id: { companyId, id } },
       data: {
         ...rest,
-        ...(status !== undefined
+        ...(active !== undefined
           ? {
-              status: status.toUpperCase(),
-              active: status.toUpperCase() !== 'INACTIVE',
+              status: active ? 'ACTIVE' : 'INACTIVE',
+              active,
             }
           : {}),
         ...(effectiveFrom !== undefined

@@ -152,7 +152,6 @@ describe('WorkforceService', () => {
       endDate: '2027-01-01',
       scope: 'NATIONAL',
       regions: [],
-      isActive: true,
     } as any);
 
     expect(result).toEqual({

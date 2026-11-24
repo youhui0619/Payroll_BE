@@ -10,6 +10,7 @@ describe('organization and employee tenant boundaries', () => {
     department: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      create: jest.fn(),
       update: jest.fn(),
     },
     position: { create: jest.fn(), findFirst: jest.fn() },
@@ -52,6 +53,28 @@ describe('organization and employee tenant boundaries', () => {
     expect(db.department.update).toHaveBeenCalledWith({
       where: { companyId_id: { companyId: 'company-a', id: 'department' } },
       data: { name: 'HR' },
+    });
+  });
+  it('creates departments active by default without a status field', async () => {
+    db.department.create.mockResolvedValue({
+      id: 'department',
+      code: 'HR',
+      name: 'Human Resources',
+      active: true,
+      status: 'ACTIVE',
+    });
+
+    await org.createDepartment('company-a', {
+      code: 'HR',
+      name: 'Human Resources',
+    });
+
+    expect(db.department.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        companyId: 'company-a',
+        active: true,
+        status: 'ACTIVE',
+      }),
     });
   });
   it('rejects a position referencing another company department before creation', async () => {

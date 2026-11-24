@@ -78,7 +78,17 @@ export class DepartmentDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string | null;
 
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
+    enum: ['ACTIVE', 'INACTIVE'],
+    default: 'ACTIVE',
+    deprecated: true,
+    description: 'Legacy alias; omit on create to default to isActive=true.',
+  })
   @IsOptional()
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
