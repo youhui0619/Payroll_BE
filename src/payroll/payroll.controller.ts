@@ -6,7 +6,6 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
-  Put,
   Query,
   Req,
 } from '@nestjs/common';
@@ -91,19 +90,6 @@ export class PayrollController {
     summary: 'Append an effective-month category and participation revision',
   })
   saveProfile(
-    @Req() r: TenantRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() d: PayrollProfileDto,
-  ) {
-    return this.service.saveProfile(r.membership, id, d);
-  }
-  @Put('employees/:id/payroll-profile')
-  @Roles('OWNER', 'HR')
-  @ApiOkResponse({ type: PayrollProfileResponseDto })
-  @ApiOperation({
-    summary: 'Append a payroll profile revision (PUT compatibility route)',
-  })
-  saveProfilePut(
     @Req() r: TenantRequest,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() d: PayrollProfileDto,

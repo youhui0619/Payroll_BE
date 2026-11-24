@@ -766,7 +766,7 @@ describe('application HTTP contract', () => {
         roles: [role],
       });
       await request(app.getHttpServer())
-        .put(path)
+        .patch(path)
         .set('Authorization', 'Bearer ' + token)
         .send({})
         .expect(403);
@@ -799,7 +799,7 @@ describe('application HTTP contract', () => {
       { revision: 100 },
     ]) {
       await request(app.getHttpServer())
-        .put(path)
+        .patch(path)
         .set('Authorization', 'Bearer ' + token)
         .send({ ...input, ...change })
         .expect(400);
