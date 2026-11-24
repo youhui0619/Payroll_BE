@@ -19,9 +19,14 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 import { EMPLOYMENT_TYPE_VALUES } from './employment-types';
 import type { EmploymentType } from './employment-types';
 import { WorkingScheduleDto } from './working-schedule.dto';
+
+const emptyStringToNull = ({ value }: { value: unknown }) =>
+  value === '' ? null : value;
+
 export const STATES = [
   'JOHOR',
   'KEDAH',
@@ -72,6 +77,7 @@ export class LocationDto {
   state: string;
   @ApiPropertyOptional({ enum: ['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
   type?: string;
   @ApiPropertyOptional()
@@ -82,30 +88,36 @@ export class LocationDto {
   remark?: string | null;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 200)
   addressLine1?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   addressLine2?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 100)
   city?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 20)
   postcode?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 100)
   country?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 500)
   address?: string;
@@ -119,13 +131,18 @@ export class UpdateLocationDto extends PartialType(LocationDto) {}
 export class LocationQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: ['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['OFFICE', 'BRANCH', 'WAREHOUSE', 'REMOTE'])
   type?: string;
 
   @ApiPropertyOptional({ enum: LOCATION_STATES })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string'
+      ? value.trim() === ''
+        ? undefined
+        : value.trim().toUpperCase()
+      : value,
   )
   @IsIn(LOCATION_STATES)
   state?: string;
@@ -135,6 +152,7 @@ export class LocationQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -168,16 +186,22 @@ export class ScheduleDto {
   @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string'
+      ? value.trim() === ''
+        ? undefined
+        : value.trim().toUpperCase()
+      : value,
   )
   @IsIn(EMPLOYMENT_TYPE_VALUES)
   employmentType?: EmploymentType;
   @ApiPropertyOptional({ type: 'object' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsObject()
   scheduleDays?: Record<string, unknown>;
   @ApiPropertyOptional({ type: WorkingScheduleDto, nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @ValidateNested()
   @Type(() => WorkingScheduleDto)
   workingSchedule?: WorkingScheduleDto;
@@ -187,6 +211,7 @@ export class ScheduleDto {
   effectiveFrom: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string;
@@ -197,7 +222,11 @@ export class ScheduleQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: EMPLOYMENT_TYPE_VALUES })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string'
+      ? value.trim() === ''
+        ? undefined
+        : value.trim().toUpperCase()
+      : value,
   )
   @IsIn(EMPLOYMENT_TYPE_VALUES)
   employmentType?: EmploymentType;
@@ -207,6 +236,7 @@ export class ScheduleQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -216,15 +246,20 @@ export class ScheduleQueryDto extends PageDto {
 }
 export class HolidayDto {
   @ApiProperty() @IsString() @Length(1, 150) name: string;
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ nullable: true })
+  @Transform(emptyStringToNull)
   @IsOptional()
   @IsString()
   @Length(1, 1000)
-  description?: string;
+  description?: string | null;
   @ApiPropertyOptional({ enum: ['NATIONAL', 'STATE'] })
   @IsOptional()
   @Transform(({ value }) =>
-    typeof value === 'string' ? value.trim().toUpperCase() : value,
+    typeof value === 'string'
+      ? value.trim() === ''
+        ? undefined
+        : value.trim().toUpperCase()
+      : value,
   )
   @IsIn(['NATIONAL', 'STATE'])
   scope?: 'NATIONAL' | 'STATE';
@@ -241,6 +276,7 @@ export class HolidayDto {
     description: 'Empty for national; otherwise Malaysian state codes.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @ArrayUnique()
   @IsIn(STATES, { each: true })
@@ -251,6 +287,7 @@ export class HolidayDto {
     description: 'Archive-compatible region names or Malaysian state codes.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @ArrayUnique()
   @IsIn(HOLIDAY_REGIONS, { each: true })
@@ -258,6 +295,7 @@ export class HolidayDto {
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   isActive?: boolean;
 
@@ -267,6 +305,7 @@ export class HolidayDto {
     description: 'Legacy alias for isActive.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   active?: boolean;
 }
@@ -275,7 +314,7 @@ export class UpdateHolidayDto extends PartialType(HolidayDto) {}
 export class HolidayQueryDto extends PageDto {
   @ApiPropertyOptional({ minimum: 2000, maximum: 2200 })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
   @IsInt()
   @Min(2000)
   @Max(2200)
@@ -283,6 +322,7 @@ export class HolidayQueryDto extends PageDto {
 
   @ApiPropertyOptional({ enum: ['NATIONAL', 'STATE'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['NATIONAL', 'STATE'])
   scope?: 'NATIONAL' | 'STATE';
 
@@ -292,6 +332,7 @@ export class HolidayQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -301,16 +342,26 @@ export class HolidayQueryDto extends PageDto {
 
   @ApiPropertyOptional({ enum: HOLIDAY_REGIONS })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(HOLIDAY_REGIONS)
   region?: string;
 }
 export class AssignmentDto {
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() managerId?:
-    string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() locationId?:
-    string | null;
-  @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsUUID() scheduleId?:
-    string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  managerId?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  locationId?: string | null;
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  scheduleId?: string | null;
 }
 export class DateRangeDto {
   @ApiProperty()

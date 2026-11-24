@@ -10,6 +10,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export class InviteEmployeeAccountDto {
   @ApiPropertyOptional({
@@ -17,6 +18,7 @@ export class InviteEmployeeAccountDto {
     example: 'employee@example.com',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @Transform(({ value }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
@@ -31,6 +33,7 @@ export class InviteEmployeeAccountDto {
     default: 72,
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(1)
   @Max(168)
@@ -73,6 +76,7 @@ export class IssuePasswordResetDto {
     default: 1,
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(1)
   @Max(24)

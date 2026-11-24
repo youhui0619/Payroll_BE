@@ -13,6 +13,7 @@ import {
 } from 'class-validator';
 import { RequestStatus } from '@prisma/client';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 const emptyStringAsNull = ({ value }: { value: unknown }) =>
   value === '' ? null : value;
@@ -28,10 +29,12 @@ export class ClaimTypeDto {
   description?: string | null;
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   active?: boolean;
   @ApiPropertyOptional({ default: false })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   receiptRequired?: boolean;
   @ApiPropertyOptional({
@@ -90,17 +93,28 @@ export class PayClaimDto {
 export class ClaimQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: RequestStatus })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(RequestStatus)
   status?: RequestStatus;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() typeId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  typeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   from?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;

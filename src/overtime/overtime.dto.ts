@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsDateString,
   IsEnum,
@@ -15,6 +15,7 @@ import {
 } from 'class-validator';
 import { RequestStatus } from '@prisma/client';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export const OVERTIME_TYPES = [
   'NORMAL_WORKING_DAY',
@@ -27,11 +28,13 @@ export class OvertimeDto {
     description: 'Required when an admin creates for another employee.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   employeeId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   departmentId?: string;
 
@@ -74,25 +77,37 @@ export class UpdateOvertimeDto extends PartialType(OvertimeDto) {}
 export class OvertimeQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: RequestStatus })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(RequestStatus)
   status?: RequestStatus;
 
   @ApiPropertyOptional({ enum: OVERTIME_TYPES })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(OVERTIME_TYPES)
   overtimeType?: (typeof OVERTIME_TYPES)[number];
 
-  @ApiPropertyOptional() @IsOptional() @IsUUID() departmentId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  departmentId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   from?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;

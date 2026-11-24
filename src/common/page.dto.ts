@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsInt,
   IsOptional,
@@ -8,20 +8,22 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
+import { emptyStringAsUndefined } from './transformers';
 export class PageDto {
   @ApiPropertyOptional({ default: 1 })
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? 1 : Number(value)))
   @IsInt()
   @Min(1)
   page = 1;
   @ApiPropertyOptional({ default: 20, maximum: 100 })
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? 20 : Number(value)))
   @IsInt()
   @Min(1)
   @Max(100)
   pageSize = 20;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @MaxLength(100)
   search?: string;

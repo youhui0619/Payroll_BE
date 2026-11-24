@@ -20,6 +20,7 @@ import { LeaveApproval } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { Transform } from 'class-transformer';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 const emptyStringAsNull = ({ value }: { value: unknown }) =>
   value === '' ? null : value;
@@ -31,7 +32,7 @@ export class LeaveBalanceQueryDto {
     description: 'Defaults to the current year in the company timezone.',
   })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
   @IsInt()
   @Min(2000)
   @Max(2200)
@@ -100,20 +101,24 @@ export class LeavePolicyDto {
   @ApiProperty() @IsString() @Length(1, 150) name: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsString()
   @Length(1, 1000)
-  description?: string;
+  description?: string | null;
   @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
   @ApiProperty({ default: true }) @IsBoolean() paid = true;
   @ApiPropertyOptional({ enum: ['DAILY', 'HOURLY'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['DAILY', 'HOURLY'])
   entitlementUnit?: string;
   @ApiPropertyOptional({ enum: ['FIXED', 'SERVICE'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['FIXED', 'SERVICE'])
   entitlementCalculationMethod?: string;
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
@@ -124,6 +129,7 @@ export class LeavePolicyDto {
   defaultEntitlement?: number | null;
   @ApiPropertyOptional({ type: [LeaveServiceEntitlementTierDto] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => LeaveServiceEntitlementTierDto)
@@ -132,6 +138,7 @@ export class LeavePolicyDto {
     enum: ['ANNUAL', 'MONTHLY_ACCRUAL', 'SERVICE_ANNIVERSARY', 'MANUAL'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ANNUAL', 'MONTHLY_ACCRUAL', 'SERVICE_ANNIVERSARY', 'MANUAL'])
   entitlementGrantMethod?: string;
   @ApiPropertyOptional({
@@ -145,6 +152,7 @@ export class LeavePolicyDto {
     ],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn([
     'ALL_EMPLOYEES',
     'PERMANENT',
@@ -158,10 +166,12 @@ export class LeavePolicyDto {
     enum: ['CALENDAR', 'EMPLOYMENT_ANNIVERSARY', 'FINANCIAL'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['CALENDAR', 'EMPLOYMENT_ANNIVERSARY', 'FINANCIAL'])
   leaveYear?: string;
   @ApiPropertyOptional({ enum: ['NONE', 'LIMITED', 'UNLIMITED', 'HR_REVIEW'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['NONE', 'LIMITED', 'UNLIMITED', 'HR_REVIEW'])
   carryForwardPolicy?: string;
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
@@ -175,14 +185,17 @@ export class LeavePolicyDto {
     description: 'FE-compatible alias for the paid flag.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['PAID', 'UNPAID'])
   leaveType?: 'PAID' | 'UNPAID';
   @ApiPropertyOptional({ default: false })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   requireSupportingDocuments?: boolean;
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   allowEmployeeSpecificSettings?: boolean;
   @ApiProperty({ default: false }) @IsBoolean() allowHalfDay = false;
@@ -193,6 +206,7 @@ export class LeavePolicyDto {
     description: 'FE-compatible alias for noticeDays.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(0)
   @Max(365)
@@ -205,6 +219,7 @@ export class LeavePolicyDto {
     description: 'FE-compatible alias for approval.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(LeaveApproval)
   approvalOverflow?: LeaveApproval;
   @ApiProperty()
@@ -213,13 +228,15 @@ export class LeavePolicyDto {
   effectiveFrom: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsNull)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
-  effectiveTo?: string;
+  effectiveTo?: string | null;
 }
 export class UpdateLeavePolicyDto extends PartialType(LeavePolicyDto) {
   @ApiPropertyOptional({ description: 'Archive the policy from new requests.' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   active?: boolean;
 }
@@ -231,6 +248,7 @@ export class LeavePolicyQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -242,6 +260,7 @@ export class LeavePolicyQueryDto extends PageDto {
   @IsOptional()
   @IsBoolean()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -250,6 +269,7 @@ export class LeavePolicyQueryDto extends PageDto {
 
   @ApiPropertyOptional({ enum: LeaveApproval })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(LeaveApproval)
   approval?: LeaveApproval;
 }

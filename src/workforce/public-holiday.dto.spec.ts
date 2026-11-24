@@ -6,7 +6,7 @@ describe('HolidayDto', () => {
   it('accepts FE public-holiday fields and normalizes scope casing', async () => {
     const dto = plainToInstance(HolidayDto, {
       name: 'Malaysia Day',
-      description: 'Malaysia Day',
+      description: '',
       scope: 'State',
       regions: [],
       startDate: '2026-09-16',
@@ -15,6 +15,7 @@ describe('HolidayDto', () => {
     });
 
     expect(await validate(dto)).toHaveLength(0);
+    expect(dto.description).toBeNull();
     expect(dto.scope).toBe('STATE');
     expect(dto.active).toBe(true);
   });

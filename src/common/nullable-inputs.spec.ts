@@ -1,15 +1,34 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { LeaveApproval } from '@prisma/client';
+import { AttendanceAdjustmentQueryDto } from '../attendance/attendance.dto';
 import { ClaimTypeDto } from '../claims/claims.dto';
 import {
   CommissionRecordDto,
   CommissionSettingDto,
 } from '../commission/commission.dto';
 import { CreateEmployeeDto } from '../employees/employees.dto';
-import { LeaveDto, LeavePolicyDto } from '../leave/leave.dto';
-import { DepartmentDto, PositionDto } from '../organization/organization.dto';
+import { EmployeeImportRowDto } from '../employees/employee-import.dto';
+import { FileQueryDto } from '../files/files.dto';
+import {
+  LeaveBalanceQueryDto,
+  LeaveDto,
+  LeavePolicyDto,
+} from '../leave/leave.dto';
+import {
+  CompanyDto,
+  DepartmentDto,
+  PositionDto,
+} from '../organization/organization.dto';
+import { OvertimeQueryDto } from '../overtime/overtime.dto';
 import { PayrollSettingsDto } from '../payroll/payroll.dto';
+import { ReportYearQueryDto } from '../reports/reports.dto';
+import {
+  NotificationSettingsDto,
+  RegionalSettingsDto,
+} from '../settings/settings.dto';
+import { HolidayQueryDto } from '../workforce/workforce.dto';
+import { PageDto } from './page.dto';
 
 async function expectValid(value: object) {
   await expect(validate(value)).resolves.toEqual([]);
@@ -142,5 +161,72 @@ describe('nullable input normalization', () => {
     expect(payrollSettings.restDayOvertimeMultiplier).toBeNull();
     expect(payrollSettings.publicHolidayOvertimeMultiplier).toBeNull();
     await expectValid(payrollSettings);
+
+    const attendanceQuery = plainToInstance(AttendanceAdjustmentQueryDto, {
+      status: '',
+      employeeId: '',
+      from: '',
+      to: '',
+    });
+    await expectValid(attendanceQuery);
+
+    const fileQuery = plainToInstance(FileQueryDto, {
+      employeeId: '',
+      claimId: '',
+      category: '',
+    });
+    await expectValid(fileQuery);
+
+    const overtimeQuery = plainToInstance(OvertimeQueryDto, {
+      status: '',
+      overtimeType: '',
+      departmentId: '',
+      employeeId: '',
+      from: '',
+      to: '',
+    });
+    await expectValid(overtimeQuery);
+
+    const employeeImport = plainToInstance(EmployeeImportRowDto, {
+      employeeNo: 'E-001',
+      name: 'Employee',
+      joinedDate: '2026-01-01',
+      email: '',
+      departmentId: '',
+      positionId: '',
+      basicSalary: '',
+      salaryType: '',
+    });
+    await expectValid(employeeImport);
+
+    const company = plainToInstance(CompanyDto, {
+      name: '',
+      email: '',
+      financialYearStartMonth: '',
+      businessCity: '',
+    });
+    await expectValid(company);
+
+    const notifications = plainToInstance(NotificationSettingsDto, {
+      emailNotifications: '',
+      probationConfirmationLeadMonths: '',
+    });
+    await expectValid(notifications);
+
+    const regional = plainToInstance(RegionalSettingsDto, {
+      language: '',
+      currency: '',
+      numberFormat: '',
+    });
+    await expectValid(regional);
+
+    const page = plainToInstance(PageDto, { page: '', pageSize: '' });
+    expect(page.page).toBe(1);
+    expect(page.pageSize).toBe(20);
+    await expectValid(page);
+
+    await expectValid(plainToInstance(HolidayQueryDto, { year: '' }));
+    await expectValid(plainToInstance(LeaveBalanceQueryDto, { year: '' }));
+    await expectValid(plainToInstance(ReportYearQueryDto, { year: '' }));
   });
 });

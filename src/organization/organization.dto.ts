@@ -16,6 +16,7 @@ import {
   Min,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 const emptyStringToNull = ({ value }: { value: unknown }) =>
   value === '' ? null : value;
@@ -48,6 +49,7 @@ export class DepartmentDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsString()
   @MaxLength(500)
   description?: string;
@@ -80,6 +82,7 @@ export class DepartmentDto {
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   isActive?: boolean;
 
@@ -90,6 +93,7 @@ export class DepartmentDto {
     description: 'Legacy alias; omit on create to default to isActive=true.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
 }
@@ -117,11 +121,13 @@ export class PositionDto {
     enum: ['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   jobLevel?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringToNull)
   @IsString()
   @MaxLength(500)
   description?: string;
@@ -135,6 +141,7 @@ export class PositionDto {
 
   @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
 
@@ -162,6 +169,7 @@ export class DepartmentQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -171,6 +179,7 @@ export class DepartmentQueryDto extends PageDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   parentDepartmentId?: string;
 }
@@ -178,6 +187,7 @@ export class DepartmentQueryDto extends PageDto {
 export class PositionQueryDto extends PageDto {
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   departmentId?: string;
 
@@ -185,6 +195,7 @@ export class PositionQueryDto extends PageDto {
     enum: ['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ENTRY', 'INTERMEDIATE', 'SENIOR', 'LEAD', 'MANAGER', 'DIRECTOR'])
   jobLevel?: string;
 
@@ -194,6 +205,7 @@ export class PositionQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -205,12 +217,14 @@ export class PositionQueryDto extends PageDto {
 export class CompanyDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 200)
   name?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 80)
   registrationNo?: string;
@@ -219,6 +233,7 @@ export class CompanyDto {
     description: 'Limited liability partnership registration number.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 80)
   llpNo?: string;
@@ -227,20 +242,27 @@ export class CompanyDto {
     description: 'FE-compatible alias for llpNo.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 80)
   llpNumber?: string;
 
-  @ApiPropertyOptional() @IsOptional() @IsEmail() email?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsEmail()
+  email?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @MaxLength(40)
   contactNo?: string;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 12 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(1)
   @Max(12)
@@ -248,65 +270,76 @@ export class CompanyDto {
 
   @ApiPropertyOptional({ enum: FINANCIAL_MONTHS })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(FINANCIAL_MONTHS)
   financialStartingMonth?: (typeof FINANCIAL_MONTHS)[number];
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 50)
   sstNo?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 50)
   taxNo?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 200)
   website?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 500)
   logo?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 200)
   businessAddressLine1?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 200)
   businessAddressLine2?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 100)
   businessCity?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 20)
   businessPostcode?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 100)
   businessState?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 100)
   businessCountry?: string;

@@ -12,6 +12,7 @@ import {
   Matches,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export const COMMISSION_TYPES = [
   'SALES_COMMISSION',
@@ -107,11 +108,13 @@ export class CommissionSettingDto {
 
   @ApiPropertyOptional({ enum: COMMISSION_FREQUENCIES })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(COMMISSION_FREQUENCIES)
   calculationFrequency?: (typeof COMMISSION_FREQUENCIES)[number];
 
   @ApiPropertyOptional({ enum: PAYOUT_TIMINGS })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(PAYOUT_TIMINGS)
   payoutTiming?: (typeof PAYOUT_TIMINGS)[number];
 
@@ -124,23 +127,27 @@ export class CommissionSettingDto {
 
   @ApiPropertyOptional({ enum: ELIGIBILITY_OPTIONS })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(ELIGIBILITY_OPTIONS)
   eligibleEmployees?: (typeof ELIGIBILITY_OPTIONS)[number];
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsUUID('4', { each: true })
   eligibleDepartmentIds?: string[];
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsUUID('4', { each: true })
   eligiblePositionIds?: string[];
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsUUID('4', { each: true })
   eligibleEmployeeIds?: string[];
@@ -153,6 +160,7 @@ export class CommissionSettingDto {
 
   @ApiPropertyOptional({ default: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   requiresApproval?: boolean;
 }
@@ -162,6 +170,7 @@ export class UpdateCommissionSettingDto extends PartialType(
 ) {
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   active?: boolean;
 }
@@ -170,6 +179,7 @@ export class CommissionSettingQueryDto extends PageDto {
   @ApiPropertyOptional()
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -185,11 +195,13 @@ export class CommissionRecordDto {
     description: 'Use settingId or planCode to select a plan.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   settingId?: string;
 
   @ApiPropertyOptional({ maxLength: 20 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 20)
   planCode?: string;
@@ -217,6 +229,7 @@ export class CommissionRecordDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   createdDate?: string;
@@ -225,20 +238,31 @@ export class CommissionRecordDto {
 export class CommissionRecordQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: RECORD_STATUSES })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(RECORD_STATUSES)
   status?: (typeof RECORD_STATUSES)[number];
 
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() planCode?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsString()
+  planCode?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   from?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;

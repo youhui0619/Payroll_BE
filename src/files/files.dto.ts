@@ -1,6 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import { IsIn, IsOptional, IsUUID } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export type Upload = {
   buffer: Buffer;
@@ -18,6 +20,7 @@ export class UploadDto {
       'COMPANY_LOGO',
     ],
   })
+  @Transform(({ value }) => (value === '' ? 'EMPLOYEE_DOCUMENT' : value))
   @IsIn([
     'EMPLOYEE_DOCUMENT',
     'CLAIM_RECEIPT',
@@ -26,16 +29,48 @@ export class UploadDto {
     'COMPANY_LOGO',
   ])
   category = 'EMPLOYEE_DOCUMENT';
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() overtimeRequestId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  claimId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  leaveRequestId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  overtimeRequestId?: string;
 }
 export class FileQueryDto extends PageDto {
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() claimId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() leaveRequestId?: string;
-  @ApiPropertyOptional() @IsOptional() @IsUUID() overtimeRequestId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  claimId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  leaveRequestId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  overtimeRequestId?: string;
   @ApiPropertyOptional({
     enum: [
       'EMPLOYEE_DOCUMENT',
@@ -46,6 +81,7 @@ export class FileQueryDto extends PageDto {
     ],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn([
     'EMPLOYEE_DOCUMENT',
     'CLAIM_RECEIPT',

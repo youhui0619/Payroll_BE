@@ -8,6 +8,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export class PayrollRosterQueryDto extends PageDto {
   @ApiPropertyOptional({
@@ -17,7 +18,9 @@ export class PayrollRosterQueryDto extends PageDto {
       'Repeat departmentIds for multiple departments. Omit for all departments.',
   })
   @IsOptional()
-  @Transform(({ value }) => (typeof value === 'string' ? [value] : value))
+  @Transform(({ value }) =>
+    value === '' ? undefined : typeof value === 'string' ? [value] : value,
+  )
   @IsArray()
   @ArrayUnique()
   @ArrayMaxSize(100)

@@ -13,6 +13,7 @@ import {
   Min,
   Matches,
 } from 'class-validator';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 const emptyStringAsNull = ({ value }: { value: unknown }) =>
   value === '' ? null : value;
@@ -26,6 +27,7 @@ export const PAYROLL_DAYS = [
 export class PayrollSettingsDto {
   @ApiPropertyOptional({ minimum: 1, maximum: 31 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(1)
   @Max(31)
@@ -33,6 +35,7 @@ export class PayrollSettingsDto {
 
   @ApiPropertyOptional({ minimum: 1, maximum: 31 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsInt()
   @Min(1)
   @Max(31)
@@ -45,6 +48,7 @@ export class PayrollSettingsDto {
     ],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(PAYROLL_DAYS)
   payrollCutoffDay?: PayrollDay;
 
@@ -53,6 +57,7 @@ export class PayrollSettingsDto {
     enum: ['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['WEEKLY', 'BIWEEKLY', 'SEMIMONTHLY', 'MONTHLY'])
   payrollFrequency?: string;
   @ApiPropertyOptional({
@@ -62,30 +67,44 @@ export class PayrollSettingsDto {
     ],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(PAYROLL_DAYS)
   scheduledPayDate?: PayrollDay;
   @ApiPropertyOptional({
     enum: ['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['CALENDAR_DAYS', 'FIXED_26_DAYS', 'WORKING_DAYS'])
   salaryProrationMethod?: string;
   @ApiPropertyOptional({ enum: [2, 3] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn([2, 3])
   calculationPrecision?: number;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   includeBasicSalary?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeOvertime?: boolean;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeOvertime?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   includeClaimsAndAllowance?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeBonus?: boolean;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeBonus?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   includeCommissionAndIncentives?: boolean;
   @ApiPropertyOptional({ nullable: true })
@@ -100,6 +119,7 @@ export class PayrollSettingsDto {
     description: 'Minimum overtime duration that can be submitted or paid.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['NONE', '15_MINUTES', '30_MINUTES', '60_MINUTES'])
   minimumOvertimeDuration?: string;
   @ApiPropertyOptional({ nullable: true })
@@ -111,11 +131,13 @@ export class PayrollSettingsDto {
   normalWorkingDayMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   normalWorkingDayEarningCode?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   configureRestDayRates?: boolean;
   @ApiPropertyOptional({ nullable: true })
@@ -127,11 +149,13 @@ export class PayrollSettingsDto {
   restDayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   restDayEarningCode?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   configurePublicHolidayRates?: boolean;
   @ApiPropertyOptional({ nullable: true })
@@ -143,6 +167,7 @@ export class PayrollSettingsDto {
   publicHolidayOvertimeMultiplier?: number | null;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Matches(/^$|^[A-Z][A-Z0-9_]{0,29}$/)
   publicHolidayEarningCode?: string;
@@ -155,6 +180,7 @@ export class PayrollSettingsDto {
     ],
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn([
     'CALENDAR_DAYS',
     'FIXED_26_DAYS',
@@ -162,33 +188,59 @@ export class PayrollSettingsDto {
     'FOLLOW_SALARY_PRORATION',
   ])
   deductionProrationMethod?: string;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeEpf?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeSocso?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeEis?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includePcb?: boolean;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeEpf?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeSocso?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeEis?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includePcb?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   includeHrdCorpLevy?: boolean;
   @ApiPropertyOptional({ enum: ['BANK_TRANSFER', 'CASH', 'OTHER'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['BANK_TRANSFER', 'CASH', 'OTHER'])
   paymentMethod?: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   automaticallyCalculatePayroll?: boolean;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   blockApprovalOnValidationErrors?: boolean;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   lockAfterFinalApproval?: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() notifyApprovers?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  notifyApprovers?: boolean;
   @ApiPropertyOptional({ enum: ['ONE_APPROVER', 'TWO_STEP'] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsIn(['ONE_APPROVER', 'TWO_STEP'])
   approvalWorkflow?: string;
 }

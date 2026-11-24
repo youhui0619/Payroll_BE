@@ -18,6 +18,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 import { EMPLOYMENT_TYPE_VALUES } from '../workforce/employment-types';
 import type { EmploymentType } from '../workforce/employment-types';
 import { WorkingScheduleDto } from '../workforce/working-schedule.dto';
@@ -28,16 +29,19 @@ const emptyStringAsNull = ({ value }: TransformFnParams) =>
 export class EmployeeQueryDto extends PageDto {
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   departmentId?: string;
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   positionId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 50)
   employmentStatus?: string;
@@ -46,7 +50,7 @@ export class EmployeeQueryDto extends PageDto {
   @IsOptional()
   @Transform(({ value }) =>
     value === ''
-      ? null
+      ? undefined
       : typeof value === 'string'
         ? value.trim().toUpperCase()
         : value,
@@ -58,6 +62,7 @@ export class EmployeeQueryDto extends PageDto {
   })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -222,6 +227,7 @@ export class CreateEmployeeDto {
   employmentType?: EmploymentType | null;
   @ApiPropertyOptional({ type: WorkingScheduleDto, nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @ValidateNested()
   @Type(() => WorkingScheduleDto)
   workingSchedule?: WorkingScheduleDto | null;
@@ -321,19 +327,28 @@ export class CreateEmployeeDto {
   hrdRegisterNo?: string;
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsString({ each: true })
   statutoryEntitlementCodes?: string[];
 
   // Overtime Settings
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() includeOvertime?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsBoolean()
+  includeOvertime?: boolean;
   @ApiPropertyOptional()
   @Transform(emptyStringAsNull)
   @IsOptional()
   @IsString()
   @Length(1, 50)
   overtimeCalculationBasis?: string;
-  @ApiPropertyOptional() @IsOptional() @IsNumber() overtimeHourlyRate?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsNumber()
+  overtimeHourlyRate?: number;
 
   // Emergency Contact
   @ApiPropertyOptional()
@@ -394,26 +409,32 @@ export class CreateEmployeeDto {
   // Leave & Commission Assignments
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsString({ each: true })
   leavePolicyCodes?: string[];
   @ApiPropertyOptional({ type: Object })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   leaveEntitlementOverrides?: Record<string, any>;
   @ApiPropertyOptional({ type: Object })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   leaveServiceEntitlementTiers?: Record<string, any>;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsNumber()
   medicalLeaveEntitlement?: number;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 20)
   medicalLeavePeriod?: string;
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsArray()
   @IsString({ each: true })
   commissionSettingCodes?: string[];
@@ -422,6 +443,7 @@ export class CreateEmployeeDto {
 export class UpdateEmployeeDto extends PartialType(CreateEmployeeDto) {
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsBoolean()
   active?: boolean;
 }
@@ -452,12 +474,14 @@ export class EmployeeLifecycleDto {
     nullable: true,
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveDate?: string;
 
   @ApiPropertyOptional({ maxLength: 1000 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 1000)
   reason?: string;

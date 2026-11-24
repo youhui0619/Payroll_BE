@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString, Length } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { emptyStringAsUndefined } from '../common/transformers';
 import { CalculationPreviewDto } from './calculation-preview.dto';
 
 export class CalculatePayrollDto extends CalculationPreviewDto {
@@ -8,6 +10,7 @@ export class CalculatePayrollDto extends CalculationPreviewDto {
       'Optional note retained in the run audit event. Employee-specific tax review is supplied by the saved declarations; currentZakat is the reviewed run-wide default.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 1000)
   note?: string;
@@ -21,6 +24,7 @@ export class PayrollPaymentDto {
 
   @ApiPropertyOptional({ format: 'date' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   paymentDate?: string;
 }

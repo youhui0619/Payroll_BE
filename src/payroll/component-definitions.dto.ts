@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayUnique,
@@ -57,6 +58,7 @@ export class ComponentDefinitionDto {
     description:
       'PCB-bearing components require NORMAL or ADDITIONAL. Tax-exempt EPF-bearing payments use EXCLUDED_NORMAL or EXCLUDED_ADDITIONAL; other excluded payments may use EXCLUDED or UNCLASSIFIED; exclusion eligibility must be reviewed separately.',
   })
+  @Transform(({ value }) => (value === '' ? 'UNCLASSIFIED' : value))
   @IsIn([
     'NORMAL',
     'ADDITIONAL',

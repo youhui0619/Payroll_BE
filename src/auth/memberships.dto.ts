@@ -15,16 +15,19 @@ import {
 import { Transform } from 'class-transformer';
 import { Role } from '@prisma/client';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export class MembershipQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: Role })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(Role)
   role?: Role;
 
   @ApiPropertyOptional({ description: 'Filter by active or inactive access.' })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '') return undefined;
     if (value === true || value === 'true') return true;
     if (value === false || value === 'false') return false;
     return value;
@@ -36,6 +39,7 @@ export class MembershipQueryDto extends PageDto {
 export class CreateMemberDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @MaxLength(200)
   fullName?: string;
@@ -57,11 +61,16 @@ export class CreateMemberDto {
   @ArrayUnique()
   @IsEnum(Role, { each: true })
   roles: Role[];
-  @ApiPropertyOptional() @IsOptional() @IsUUID() employeeId?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
 }
 export class UpdateMemberDto {
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @MaxLength(200)
   fullName?: string;

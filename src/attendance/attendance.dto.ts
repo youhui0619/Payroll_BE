@@ -12,8 +12,9 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PageDto } from '../common/page.dto';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export class ClockDto {
   @ApiProperty({
@@ -25,6 +26,7 @@ export class ClockDto {
 export class ClockOutDto extends ClockDto {
   @ApiPropertyOptional({ maxLength: 1000 })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsString()
   @Length(1, 1000)
   remark?: string;
@@ -42,16 +44,19 @@ export class AttendanceAdjustmentDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   attendanceSessionId?: string;
 
   @ApiPropertyOptional({ format: 'date-time', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString()
   requestedClockIn?: string;
 
   @ApiPropertyOptional({ format: 'date-time', nullable: true })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString()
   requestedClockOut?: string;
 
@@ -70,22 +75,26 @@ export class AttendanceCorrectionDto extends AttendanceAdjustmentDto {
 export class AttendanceAdjustmentQueryDto extends PageDto {
   @ApiPropertyOptional({ enum: RequestStatus })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsEnum(RequestStatus)
   status?: RequestStatus;
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   employeeId?: string;
 
   @ApiPropertyOptional({ example: '2026-11-01' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   from?: string;
 
   @ApiPropertyOptional({ example: '2026-11-30' })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   to?: string;
@@ -111,6 +120,7 @@ export class AttendanceCalendarQueryDto {
     description: 'Filter the company calendar to one department.',
   })
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsUUID()
   departmentId?: string;
 }

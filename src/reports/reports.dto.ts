@@ -1,11 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
+import { emptyStringAsUndefined } from '../common/transformers';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 
 export class ReportYearQueryDto {
   @ApiPropertyOptional({ minimum: 2000, maximum: 2200 })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
   @IsInt()
   @Min(2000)
   @Max(2200)
@@ -15,7 +16,7 @@ export class ReportYearQueryDto {
 export class PayslipHistoryQueryDto extends ReportYearQueryDto {
   @ApiPropertyOptional({ minimum: 1, maximum: 12 })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
   @IsInt()
   @Min(1)
   @Max(12)

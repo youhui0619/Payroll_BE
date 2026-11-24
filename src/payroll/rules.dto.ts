@@ -10,6 +10,8 @@ import {
   Matches,
 } from 'class-validator';
 import { StatutoryScheme } from '@prisma/client';
+import { Transform } from 'class-transformer';
+import { emptyStringAsUndefined } from '../common/transformers';
 
 export class CatalogItemDto {
   @ApiProperty() key: string;
@@ -47,6 +49,7 @@ export class RulesDto {
   effectiveFrom: string;
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(emptyStringAsUndefined)
   @IsDateString({ strict: true })
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   effectiveTo?: string;
