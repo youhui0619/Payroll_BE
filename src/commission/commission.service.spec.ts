@@ -73,7 +73,7 @@ describe('CommissionService', () => {
     expect(result.data).toEqual(
       expect.objectContaining({
         code: 'SALES-COMM',
-        rate: '5.0000',
+        rate: 5,
         amount: null,
       }),
     );
@@ -132,8 +132,8 @@ describe('CommissionService', () => {
       expect.objectContaining({
         employeeName: 'Alex',
         planName: 'Sales Commission',
-        calculationBasis: '24000.00',
-        amount: '1200.00',
+        calculationBasis: 24000,
+        amount: 1200,
       }),
     );
   });

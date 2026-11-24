@@ -657,6 +657,13 @@ export async function verifyPayrollCalculation(
   assert.ok(dashboard.data.activeEmployees >= 1);
   assert.equal(dashboard.data.latestPayroll?.runId, run.id);
   assert.equal(dashboard.data.latestPayroll?.status, 'PAID');
+  assert.equal(typeof dashboard.data.latestPayroll?.gross, 'number');
+  assert.equal(typeof dashboard.data.latestPayroll?.net, 'number');
+  assert.ok(
+    dashboard.data.payrollTrend.every(
+      (row) => typeof row.gross === 'number' && typeof row.net === 'number',
+    ),
+  );
   assert.ok(dashboard.data.payrollTrend.some((row) => row.runId === run.id));
   console.log(
     'PASS dashboard aggregates, payroll trend, team counts and upcoming calendar data',

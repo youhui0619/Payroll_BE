@@ -558,6 +558,9 @@ export class EmployeesService {
     return {
       data: {
         ...this.employeePresentation(employee),
+        overtimeHourlyRate: employee.overtimeHourlyRate?.toNumber() ?? null,
+        medicalLeaveEntitlement:
+          employee.medicalLeaveEntitlement?.toNumber() ?? null,
         schedule: masterSchedule,
         workingSchedule: normalizeWorkingSchedule(
           employeeWorkSchedule?.scheduleDays ?? schedule?.scheduleDays,

@@ -125,6 +125,16 @@ async function main() {
       roles: ['OWNER'],
     } as Membership;
     const employeesService = new EmployeesService(db as Database);
+    await db.employee.update({
+      where: { id: employee.id },
+      data: {
+        overtimeHourlyRate: '20.50',
+        medicalLeaveEntitlement: '14.00',
+      },
+    });
+    const employeeView = await employeesService.get(company.id, employee.id);
+    assert.equal(employeeView.data.overtimeHourlyRate, 20.5);
+    assert.equal(employeeView.data.medicalLeaveEntitlement, 14);
     const importPreview = await employeesService.importPreview(company.id, {
       idempotencyKey: randomUUID(),
       rows: [
@@ -543,6 +553,8 @@ async function main() {
         effectiveFrom: '2020-01-01',
       })
     ).data;
+    assert.equal(accrualPolicy.defaultEntitlement, 12);
+    assert.equal(accrualPolicy.maximumCarryForward, 5);
     await leave.grant(owner, {
       employeeId: employee.id,
       policyId: accrualPolicy.id,
@@ -593,9 +605,9 @@ async function main() {
     const reservedBalance = (
       await leave.balance(member, { year: 2099 })
     ).data.find((row) => row.policyId === policy.id);
-    assert.equal(reservedBalance?.balance, '14.00');
-    assert.equal(reservedBalance?.reserved, '0.50');
-    assert.equal(reservedBalance?.available, '13.50');
+    assert.equal(reservedBalance?.balance, 14);
+    assert.equal(reservedBalance?.reserved, 0.5);
+    assert.equal(reservedBalance?.available, 13.5);
     await assert.rejects(() =>
       leave.edit(member, application.id, {
         policyId: policy.id,
@@ -629,13 +641,13 @@ async function main() {
     const approvedBalance = (
       await leave.balance(member, { year: 2099 })
     ).data.find((row) => row.policyId === policy.id);
-    assert.equal(approvedBalance?.balance, '13.50');
-    assert.equal(approvedBalance?.reserved, '0.00');
+    assert.equal(approvedBalance?.balance, 13.5);
+    assert.equal(approvedBalance?.reserved, 0);
     await leave.cancel(member, application.id);
     const restored = (
       await leave.balance(owner, { year: 2099 }, employee.id)
     ).data.find((row) => row.policyId === policy.id);
-    assert.equal(restored?.available, '14.00');
+    assert.equal(restored?.available, 14);
     const leaveHistory = (await leave.detail(member, application.id)).data
       .events;
     assert.equal(leaveHistory.length, 5);
@@ -656,7 +668,7 @@ async function main() {
     const noGrant = (await leave.balance(member, { year: 2100 })).data.find(
       (row) => row.policyId === policy.id,
     );
-    assert.equal(noGrant?.available, '0.00');
+    assert.equal(noGrant?.available, 0);
     const unpaidPolicy = (
       await leave.createPolicy(owner, {
         code: 'UL',

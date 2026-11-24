@@ -34,8 +34,8 @@ const RATE_METHODS = [
   'TIERED_RATE',
 ] as const;
 
-const decimal = (value: Prisma.Decimal | null | undefined, places: number) =>
-  value === null || value === undefined ? null : value.toFixed(places);
+const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
+  value === null || value === undefined ? null : value.toNumber();
 
 @Injectable()
 export class CommissionService {
@@ -176,8 +176,8 @@ export class CommissionService {
   private serializeSetting(row: any) {
     return {
       ...row,
-      rate: decimal(row.rate, 4),
-      amount: decimal(row.amount, 2),
+      rate: decimalNumber(row.rate),
+      amount: decimalNumber(row.amount),
     };
   }
 
@@ -386,9 +386,9 @@ export class CommissionService {
       ...row,
       employeeName: row.employee?.name ?? null,
       planName: row.planName ?? row.setting?.name ?? null,
-      rate: decimal(row.rate, 4),
-      amount: decimal(row.amount, 2),
-      calculationBasis: decimal(row.calculationBasis, 2),
+      rate: decimalNumber(row.rate),
+      amount: decimalNumber(row.amount),
+      calculationBasis: decimalNumber(row.calculationBasis),
       createdDate: dateString(row.createdDate),
     };
   }

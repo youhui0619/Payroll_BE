@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Membership } from '@prisma/client';
+import { Membership, Prisma } from '@prisma/client';
 import { Database } from '../database.module';
 import { audit, dateOnly, fail, localDate } from '../common/domain';
 import { DateRangeDto } from '../workforce/workforce.dto';
@@ -9,6 +9,9 @@ import {
   ReportYearQueryDto,
 } from './reports.dto';
 import { csv } from './reports.utils';
+
+const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
+  value === null || value === undefined ? 0 : value.toNumber();
 
 @Injectable()
 export class ReportsService {
@@ -153,11 +156,10 @@ export class ReportsService {
         year: run.year,
         month: run.month,
         status: run.status,
-        gross: totals._sum.gross?.toFixed(2) ?? '0.00',
-        deductions: totals._sum.deductions?.toFixed(2) ?? '0.00',
-        employerContributions:
-          totals._sum.employerContributions?.toFixed(2) ?? '0.00',
-        net: totals._sum.net?.toFixed(2) ?? '0.00',
+        gross: decimalNumber(totals._sum.gross),
+        deductions: decimalNumber(totals._sum.deductions),
+        employerContributions: decimalNumber(totals._sum.employerContributions),
+        net: decimalNumber(totals._sum.net),
       };
     };
     const trend = await Promise.all(
@@ -171,10 +173,11 @@ export class ReportsService {
           year: run.year,
           month: run.month,
           status: run.status,
-          gross: totals._sum.gross?.toFixed(2) ?? '0.00',
-          net: totals._sum.net?.toFixed(2) ?? '0.00',
-          employerContributions:
-            totals._sum.employerContributions?.toFixed(2) ?? '0.00',
+          gross: decimalNumber(totals._sum.gross),
+          net: decimalNumber(totals._sum.net),
+          employerContributions: decimalNumber(
+            totals._sum.employerContributions,
+          ),
         };
       }),
     );

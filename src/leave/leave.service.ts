@@ -43,6 +43,8 @@ import {
 } from './leave.dto';
 import { accrualDays, carryForwardDays } from './leave-accrual';
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
+const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
+  value === null || value === undefined ? null : value.toNumber();
 export function workingDates(
   start: Date,
   end: Date,
@@ -516,10 +518,14 @@ export class LeaveService {
       paid: boolean;
       noticeDays: number;
       approval: LeaveApproval;
+      defaultEntitlement: Prisma.Decimal | null;
+      maximumCarryForward: Prisma.Decimal | null;
     },
   >(data: T) {
     return {
       ...data,
+      defaultEntitlement: decimalNumber(data.defaultEntitlement),
+      maximumCarryForward: decimalNumber(data.maximumCarryForward),
       status: data.active ? 'ACTIVE' : 'INACTIVE',
       leaveType: data.paid ? 'PAID' : 'UNPAID',
       minimumAdvanceNotice: data.noticeDays,
@@ -814,9 +820,9 @@ export class LeaveService {
               year,
               paid: policy.paid,
               active: policy.active,
-              balance: balance.toFixed(2),
-              reserved: held.toFixed(2),
-              available: policy.paid ? balance.minus(held).toFixed(2) : null,
+              balance: balance.toNumber(),
+              reserved: held.toNumber(),
+              available: policy.paid ? balance.minus(held).toNumber() : null,
             };
           }),
           meta: { year, employeeId: e.id },

@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-11-24. **MVP is in progress and is not ready for production payroll.**
+Updated: 2026-11-25. **MVP is in progress and is not ready for production payroll.**
 
 Current migration policy: the user ended the single-init requirement on 2026-11-23. Existing migration history is preserved; new schema changes use incremental migrations. Earlier dated entries describing consolidated init are historical.
 
@@ -23,13 +23,15 @@ Current migration policy: the user ended the single-init requirement on 2026-11-
 
 ## Workflow invariants
 
+FE numeric response alignment update (2026-11-25): commission settings/records, leave-policy entitlements, employee overtime and medical-leave fields, leave balances and dashboard payroll totals now serialize bounded Decimal values as JavaScript numbers for the current FE models. Internal calculations and database storage remain Prisma Decimal; exact monetary calculation previews, salary history and statutory values remain decimal strings where their contracts require precision. Build, lint, Swagger and the disposable PostgreSQL integration suite passed; application database untouched.
+
 Payroll corrections update (2026-11-24): finalized PUBLISHED/PAID runs are immutable. OWNER/FINANCE can create an audited, idempotent correction linked to its finalized source run and a later DRAFT target run; the correction is represented by a normal target payroll input and retains source/target IDs, employee, component, amount and reason. Draft-only voiding preserves the original record and the target payroll lock prevents edits after calculation. Disposable PostgreSQL integration covers traceability, retries, voiding and same-period rejection.
 
 Attendance calendar update (2026-11-24): added `GET /attendance/calendar` for OWNER/HR and `GET /attendance/me/calendar` for employee self-service. The month contract returns FE-shaped employee rows with daily attendance timestamps/durations, approved leave, approved overtime, active public holidays and present/leave/worked/overtime summaries, with optional department filtering and a bounded 500-employee response. The disposable PostgreSQL suite verifies the real clocking record is represented without widening tenant scope.
 
 Approval notification update (2026-11-24): leave and claim submission/step transitions now create settings-aware, idempotent in-app notifications for the assigned manager and the next HR/Finance approvers inside the same serializable transaction as the workflow event. Existing employee decision notifications remain unchanged; external email and invitation delivery remain adapter work.
 
-Dashboard update (2026-11-24): `GET /dashboard?year=YYYY` now supplies FE-ready aggregates for active headcount, present employees today, open clocks, pending leave/claim/overtime/attendance approvals, payroll status counts, latest finalized payroll totals, selected-year payroll trend, department team counts, upcoming holidays and the next 31 days of approved leave. All rows are company-scoped and payroll amounts remain decimal strings. Disposable PostgreSQL integration covers the latest paid run and trend data.
+Dashboard update (2026-11-24): `GET /dashboard?year=YYYY` now supplies FE-ready aggregates for active headcount, present employees today, open clocks, pending leave/claim/overtime/attendance approvals, payroll status counts, latest finalized payroll totals, selected-year payroll trend, department team counts, upcoming holidays and the next 31 days of approved leave. All rows are company-scoped; payroll totals are numeric response values while internal payroll amounts remain decimal-backed. Disposable PostgreSQL integration covers the latest paid run and trend data.
 
 Employee export update (2026-11-24): added `GET /employees/export.csv` for OWNER/HR/FINANCE with the same search/status/department/position/employment filters as the employee list. Exports are bounded to 5,000 rows, include organization and manager labels but omit bank/statutory secrets, escape formula-like CSV cells, and write an `EMPLOYEES_EXPORTED` audit event. Disposable PostgreSQL integration verifies filtering, audit linkage and restricted columns.
 
