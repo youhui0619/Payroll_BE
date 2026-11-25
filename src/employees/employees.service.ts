@@ -35,16 +35,16 @@ export class EmployeesService {
       location?: { id: string } | null;
     },
   ) {
-    const initials = row.name
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('');
+    // const initials = row.name
+    //   .trim()
+    //   .split(/\s+/)
+    //   .filter(Boolean)
+    //   .slice(0, 2)
+    //   .map((part) => part[0]?.toUpperCase() ?? '')
+    //   .join('');
     return {
       ...row,
-      initials,
+      // initials,
       reportingManager: row.manager?.name ?? '',
       workLocationId: row.location?.id ?? null,
     };
