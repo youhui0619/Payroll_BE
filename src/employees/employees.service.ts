@@ -557,6 +557,7 @@ export class EmployeesService {
         workingSchedule: normalizeWorkingSchedule(
           employeeWorkSchedule?.scheduleDays ?? schedule?.scheduleDays,
         ),
+        basicSalary: currentSalary?.amount ?? null,
         salaries,
         currentSalary,
       },
