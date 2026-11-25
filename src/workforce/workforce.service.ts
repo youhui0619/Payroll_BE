@@ -19,7 +19,10 @@ import {
   ACTIVE_STATUS_VALUES,
   makeStatusCounts,
 } from '../common/status-summary';
-import { toWorkingScheduleResponse } from './working-schedule.mapper';
+import {
+  toWorkingScheduleMap,
+  toWorkingScheduleResponse,
+} from './working-schedule.mapper';
 
 function validateTimezone(timezone: string) {
   try {
@@ -101,9 +104,10 @@ export class WorkforceService {
   }
   async schedules(m: Membership, q: ScheduleQueryDto) {
     const search = q.search?.trim();
-    const baseWhere = {
+    const where = {
       companyId: m.companyId,
       ...(q.employmentType ? { employmentType: q.employmentType } : {}),
+      active: q.active ?? true,
       ...(search
         ? {
             OR: [
@@ -113,31 +117,11 @@ export class WorkforceService {
           }
         : {}),
     };
-    const where = {
-      ...baseWhere,
-      ...(q.active !== undefined ? { active: q.active } : {}),
-    };
-    const [data, total] = await this.db.$transaction([
-      this.db.workSchedule.findMany({
-        where,
-        skip: (q.page - 1) * q.pageSize,
-        take: q.pageSize,
-        orderBy: { code: 'asc' },
-      }),
-      this.db.workSchedule.count({ where }),
-    ]);
-    const statusCountValues = await Promise.all(
-      ACTIVE_STATUS_VALUES.map((status) =>
-        this.db.workSchedule.count({
-          where: { ...baseWhere, active: status === 'ACTIVE' },
-        }),
-      ),
-    );
-    return paginated(data.map(toWorkingScheduleResponse), total, q, {
-      summary: {
-        statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
-      },
+    const data = await this.db.workSchedule.findMany({
+      where,
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
     });
+    return { data: toWorkingScheduleMap(data) };
   }
   async schedule(m: Membership, id: string) {
     const data = await this.db.workSchedule.findFirst({

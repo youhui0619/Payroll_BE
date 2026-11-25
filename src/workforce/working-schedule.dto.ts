@@ -63,3 +63,13 @@ export class WorkingScheduleDto {
   @Type(() => WorkingDayDto)
   days: WorkingDayDto[];
 }
+
+export class WorkingScheduleMapResponseDto {
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { type: 'object' },
+    description:
+      'Working schedules keyed by employment type, for example data["PART-TIME"].',
+  })
+  data: Record<string, WorkingScheduleDto | null>;
+}

@@ -9,7 +9,7 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Roles, TenantRequest } from '../auth/auth.decorators';
 import {
   HolidayQueryDto,
@@ -23,6 +23,7 @@ import {
   UpdateLocationDto,
   UpdateScheduleDto,
 } from './workforce.dto';
+import { WorkingScheduleMapResponseDto } from './working-schedule.dto';
 import { WorkforceService } from './workforce.service';
 import { EMPLOYMENT_TYPES } from './employment-types';
 
@@ -67,10 +68,9 @@ export class WorkforceController {
   ) {
     return this.service.deactivateLocation(r.membership, id);
   }
-  @Get('work-schedules') schedules(
-    @Req() r: TenantRequest,
-    @Query() q: ScheduleQueryDto,
-  ) {
+  @Get('work-schedules')
+  @ApiOkResponse({ type: WorkingScheduleMapResponseDto })
+  schedules(@Req() r: TenantRequest, @Query() q: ScheduleQueryDto) {
     return this.service.schedules(r.membership, q);
   }
   @Get('work-schedules/:id') scheduleDetail(

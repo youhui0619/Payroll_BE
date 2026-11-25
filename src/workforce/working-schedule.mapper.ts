@@ -12,3 +12,16 @@ export function toWorkingScheduleResponse<
     workingSchedule: normalizeWorkingSchedule(scheduleDays),
   };
 }
+
+export function toWorkingScheduleMap<
+  T extends { employmentType?: string | null; scheduleDays?: unknown | null },
+>(data: T[]) {
+  return data.reduce<Record<string, unknown | null>>((result, schedule) => {
+    if (schedule.employmentType && !(schedule.employmentType in result)) {
+      result[schedule.employmentType] = normalizeWorkingSchedule(
+        schedule.scheduleDays,
+      );
+    }
+    return result;
+  }, {});
+}

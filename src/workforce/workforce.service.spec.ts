@@ -74,11 +74,13 @@ describe('WorkforceService', () => {
     });
   });
 
-  it('returns workingSchedule using the FE shape', async () => {
+  it('returns working schedules keyed by employment type using the FE shape', async () => {
     const db = database();
-    const schedule = {
+    const permanentSchedule = {
       id: 'schedule',
       code: 'STANDARD-5D',
+      employmentType: 'PERMANENT',
+      effectiveFrom: new Date('2026-01-01'),
       scheduleDays: {
         days: [
           {
@@ -92,22 +94,45 @@ describe('WorkforceService', () => {
         ],
       },
     };
-    db.workSchedule.findMany.mockResolvedValue([schedule]);
-    db.workSchedule.count.mockResolvedValue(1);
+    const partTimeSchedule = {
+      id: 'part-time-schedule',
+      code: 'PART-TIME-4H',
+      employmentType: 'PART-TIME',
+      effectiveFrom: new Date('2026-01-01'),
+      scheduleDays: {
+        days: [
+          {
+            day: 'Monday',
+            isWorkingDay: true,
+            startTime: '09:00',
+            endTime: '13:00',
+            breakStartTime: '',
+            breakEndTime: '',
+          },
+        ],
+      },
+    };
+    db.workSchedule.findMany.mockResolvedValue([
+      partTimeSchedule,
+      permanentSchedule,
+    ]);
 
     const result = await new WorkforceService(db).schedules(membership, {
       page: 1,
       pageSize: 20,
     } as any);
 
-    expect(result.data).toEqual([
-      {
-        id: 'schedule',
-        code: 'STANDARD-5D',
-        workingSchedule: schedule.scheduleDays,
+    expect(result).toEqual({
+      data: {
+        PERMANENT: permanentSchedule.scheduleDays,
+        'PART-TIME': partTimeSchedule.scheduleDays,
       },
-    ]);
-    expect(result.data[0]).not.toHaveProperty('scheduleDays');
+    });
+    expect(result.data).not.toHaveProperty('scheduleDays');
+    expect(db.workSchedule.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company', active: true },
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
+    });
   });
 
   it('returns public-holiday status counts in pagination metadata', async () => {
