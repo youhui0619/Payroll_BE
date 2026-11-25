@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
@@ -6,6 +6,7 @@ import {
   IsArray,
   IsBoolean,
   IsIn,
+  IsOptional,
   IsString,
   Matches,
   ValidateNested,
@@ -62,6 +63,56 @@ export class WorkingScheduleDto {
   @ValidateNested({ each: true })
   @Type(() => WorkingDayDto)
   days: WorkingDayDto[];
+}
+
+export class WorkingScheduleMapDto {
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  PERMANENT?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  CONTRACT?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  ['PART-TIME']?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  INTERN?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  TEMPORARY?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  TRAINEE?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  FREELANCE?: WorkingScheduleDto;
+
+  @ApiPropertyOptional({ type: WorkingScheduleDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => WorkingScheduleDto)
+  CASUAL?: WorkingScheduleDto;
 }
 
 export class WorkingScheduleMapResponseDto {

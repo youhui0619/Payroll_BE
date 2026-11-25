@@ -24,6 +24,7 @@ import {
 } from './workforce.dto';
 import {
   WorkingScheduleDto,
+  WorkingScheduleMapDto,
   WorkingScheduleMapResponseDto,
 } from './working-schedule.dto';
 import { WorkforceService } from './workforce.service';
@@ -86,6 +87,11 @@ export class WorkforceController {
     @Body() d: ScheduleDto,
   ) {
     return this.service.createSchedule(r.membership, d);
+  }
+  @Patch('work-schedules')
+  @ApiOkResponse({ type: WorkingScheduleMapResponseDto })
+  updateSchedules(@Req() r: TenantRequest, @Body() d: WorkingScheduleMapDto) {
+    return this.service.updateSchedules(r.membership, d);
   }
   @Patch('work-schedules/:employmentType')
   @ApiOkResponse({ type: WorkingScheduleMapResponseDto })

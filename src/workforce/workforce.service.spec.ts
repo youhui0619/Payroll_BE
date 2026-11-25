@@ -214,6 +214,88 @@ describe('WorkforceService', () => {
     });
   });
 
+  it('updates multiple working schedules by employment type in one transaction', async () => {
+    const db = database();
+    const permanent = {
+      days: [
+        {
+          day: 'Monday',
+          isWorkingDay: true,
+          startTime: '09:00',
+          endTime: '18:00',
+          breakStartTime: '13:00',
+          breakEndTime: '14:00',
+        },
+      ],
+    };
+    const partTime = {
+      days: [
+        {
+          day: 'Monday',
+          isWorkingDay: true,
+          startTime: '09:00',
+          endTime: '13:00',
+          breakStartTime: '',
+          breakEndTime: '',
+        },
+      ],
+    };
+    db.workSchedule.findMany.mockResolvedValue([
+      {
+        id: 'permanent-schedule',
+        employmentType: 'PERMANENT',
+        code: 'STANDARD-5D',
+        effectiveFrom: new Date('2026-01-01'),
+      },
+      {
+        id: 'part-time-schedule',
+        employmentType: 'PART-TIME',
+        code: 'PART-TIME-4H',
+        effectiveFrom: new Date('2026-01-01'),
+      },
+    ]);
+    db.workSchedule.update
+      .mockResolvedValueOnce({
+        id: 'permanent-schedule',
+        employmentType: 'PERMANENT',
+        scheduleDays: permanent,
+      })
+      .mockResolvedValueOnce({
+        id: 'part-time-schedule',
+        employmentType: 'PART-TIME',
+        scheduleDays: partTime,
+      });
+
+    const result = await new WorkforceService(db).updateSchedules(membership, {
+      PERMANENT: permanent,
+      'PART-TIME': partTime,
+    } as any);
+
+    expect(result).toEqual({
+      data: { PERMANENT: permanent, 'PART-TIME': partTime },
+    });
+    expect(db.workSchedule.findMany).toHaveBeenCalledWith({
+      where: {
+        companyId: 'company',
+        employmentType: { in: ['PERMANENT', 'PART-TIME'] },
+      },
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
+    });
+    expect(db.workSchedule.update).toHaveBeenNthCalledWith(1, {
+      where: {
+        companyId_id: { companyId: 'company', id: 'permanent-schedule' },
+      },
+      data: { scheduleDays: permanent },
+    });
+    expect(db.workSchedule.update).toHaveBeenNthCalledWith(2, {
+      where: {
+        companyId_id: { companyId: 'company', id: 'part-time-schedule' },
+      },
+      data: { scheduleDays: partTime },
+    });
+    expect(db.auditEvent.create).toHaveBeenCalledTimes(2);
+  });
+
   it('generates a company-scoped public-holiday code', async () => {
     const db = database();
     db.publicHoliday.findMany

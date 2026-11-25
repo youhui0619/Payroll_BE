@@ -14,7 +14,10 @@ import {
   UpdateLocationDto,
 } from './workforce.dto';
 import { EmploymentType, EMPLOYMENT_TYPE_VALUES } from './employment-types';
-import { WorkingScheduleDto } from './working-schedule.dto';
+import {
+  WorkingScheduleDto,
+  WorkingScheduleMapDto,
+} from './working-schedule.dto';
 import { paginated } from '../common/page.dto';
 import {
   ACTIVE_STATUS_VALUES,
@@ -322,6 +325,62 @@ export class WorkforceService {
       });
       await audit(tx, m, 'SCHEDULE_UPDATED', existing.id);
       return { data: toWorkingScheduleMap([data]) };
+    });
+  }
+  async updateSchedules(m: Membership, dto: WorkingScheduleMapDto) {
+    const employmentTypes = EMPLOYMENT_TYPE_VALUES.filter(
+      (employmentType) => dto[employmentType] !== undefined,
+    );
+    if (!employmentTypes.length)
+      fail(
+        'INVALID_WORKING_SCHEDULES',
+        'At least one employment type schedule is required.',
+      );
+
+    const existingSchedules = await this.db.workSchedule.findMany({
+      where: {
+        companyId: m.companyId,
+        employmentType: { in: employmentTypes },
+      },
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
+    });
+    const schedulesByType = new Map<
+      string,
+      (typeof existingSchedules)[number]
+    >();
+    for (const schedule of existingSchedules) {
+      if (
+        schedule.employmentType &&
+        !schedulesByType.has(schedule.employmentType)
+      ) {
+        schedulesByType.set(schedule.employmentType, schedule);
+      }
+    }
+    for (const employmentType of employmentTypes) {
+      if (!schedulesByType.has(employmentType))
+        throw new NotFoundException(
+          `Working schedule for ${employmentType} was not found.`,
+        );
+    }
+
+    return this.db.$transaction(async (tx) => {
+      const updated = [];
+      for (const employmentType of employmentTypes) {
+        const existing = schedulesByType.get(employmentType)!;
+        const data = await tx.workSchedule.update({
+          where: {
+            companyId_id: { companyId: m.companyId, id: existing.id },
+          },
+          data: {
+            scheduleDays: dto[
+              employmentType
+            ] as unknown as Prisma.InputJsonValue,
+          },
+        });
+        await audit(tx, m, 'SCHEDULE_UPDATED', existing.id);
+        updated.push(data);
+      }
+      return { data: toWorkingScheduleMap(updated) };
     });
   }
   async deactivateSchedule(m: Membership, id: string) {
