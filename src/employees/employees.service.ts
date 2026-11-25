@@ -30,10 +30,7 @@ export class EmployeesService {
   constructor(private db: Database) {}
 
   private employeePresentation<T extends { employeeNo: string; name: string }>(
-    row: T & {
-      manager?: { name: string | null } | null;
-      location?: { id: string } | null;
-    },
+    row: T,
   ) {
     // const initials = row.name
     //   .trim()
@@ -44,9 +41,6 @@ export class EmployeesService {
     //   .join('');
     return {
       ...row,
-      // initials,
-      reportingManager: row.manager?.name ?? '',
-      workLocationId: row.location?.id ?? null,
     };
   }
   private async validateReferences(
@@ -545,11 +539,11 @@ export class EmployeesService {
     });
     if (!data) throw new NotFoundException();
     const { employeeWorkSchedule, schedule, ...employee } = data;
-    const salaryHistory = data.salaries.map((salary) => ({
+    const salaries = data.salaries.map((salary) => ({
       ...salary,
       amount: salary.amount.toFixed(2),
     }));
-    const currentSalary = salaryHistory[0] ?? null;
+    const currentSalary = salaries[0] ?? null;
     const masterSchedule = schedule
       ? toWorkingScheduleResponse(schedule)
       : null;
@@ -563,8 +557,7 @@ export class EmployeesService {
         workingSchedule: normalizeWorkingSchedule(
           employeeWorkSchedule?.scheduleDays ?? schedule?.scheduleDays,
         ),
-        salaries: salaryHistory,
-        salaryHistory,
+        salaries,
         currentSalary,
       },
     };
