@@ -44,8 +44,6 @@ export class EmployeesService {
       .join('');
     return {
       ...row,
-      employeeId: row.employeeNo,
-      employeeName: row.name,
       initials,
       reportingManager: row.manager?.name ?? '',
       workLocationId: row.location?.id ?? null,
