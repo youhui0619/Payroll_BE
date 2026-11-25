@@ -80,10 +80,12 @@ describe('OvertimeService', () => {
         requestDate: '2026-10-05',
         overtimeDate: '2026-10-03',
         hourlyRateMultiplier: 1.5,
-        employeeName: 'Alex',
-        departmentName: 'Operations',
+        employee: expect.objectContaining({ name: 'Alex' }),
+        department: expect.objectContaining({ name: 'Operations' }),
       }),
     );
+    expect(result.data).not.toHaveProperty('employeeName');
+    expect(result.data).not.toHaveProperty('departmentName');
   });
 
   it('enforces the configured minimum overtime duration', async () => {

@@ -37,16 +37,6 @@ import {
 export class ClaimsService {
   constructor(private db: Database) {}
 
-  private statusLabel(status: string) {
-    return status === 'APPROVED'
-      ? 'Approved'
-      : status === 'REJECTED'
-        ? 'Rejected'
-        : status === 'PAID'
-          ? 'Paid'
-          : 'Pending';
-  }
-
   private serializeType(row: any) {
     return {
       ...row,
@@ -60,31 +50,14 @@ export class ClaimsService {
   }
 
   private serializeClaim(row: any) {
-    const workflowStatus = String(row.status);
-    const status = this.statusLabel(workflowStatus);
     return {
       ...row,
       date: row.date ? dateString(row.date) : row.date,
-      claimDate: row.date ? dateString(row.date) : null,
       amount:
         row.amount === null || row.amount === undefined
           ? 0
           : Number(row.amount),
-      employeeName: row.employee?.name ?? null,
-      departmentId: row.employee?.department?.id ?? null,
-      departmentName: row.employee?.department?.name ?? null,
-      claimType: row.type?.code ?? row.typeId ?? null,
-      supportingDocuments:
-        row.files?.map((file: any) => file.originalName) ?? [],
-      workflowStatus,
-      status,
       submittedAt: row.submittedAt?.toISOString() ?? null,
-      approval: {
-        approver: row.decidedBy ?? '-',
-        status,
-        comments: row.decisionComment ?? '',
-        approvedDate: row.decidedAt ? dateString(row.decidedAt) : null,
-      },
     };
   }
 

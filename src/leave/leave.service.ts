@@ -74,47 +74,12 @@ export function workingDays(
 export class LeaveService {
   constructor(private db: Database) {}
 
-  private statusLabel(status: string) {
-    return status === 'DRAFT'
-      ? 'Draft'
-      : status === 'APPROVED'
-        ? 'Approved'
-        : status === 'REJECTED'
-          ? 'Rejected'
-          : status === 'CANCELLED'
-            ? 'Cancelled'
-            : status === 'PAID'
-              ? 'Paid'
-              : 'Pending';
-  }
-
   private serializeRequest(row: any) {
-    const startDate = row.startDate ? dateString(row.startDate) : null;
-    const endDate = row.endDate ? dateString(row.endDate) : null;
-    const workflowStatus = String(row.status);
-    const status = this.statusLabel(workflowStatus);
     return {
       ...row,
       requestDate: row.requestDate ? dateString(row.requestDate) : null,
-      startDate,
-      endDate,
-      dateRange: startDate && endDate ? `${startDate} ~ ${endDate}` : '',
-      daysTaken:
-        row.days === null || row.days === undefined
-          ? '0.00'
-          : new Prisma.Decimal(row.days).toFixed(2),
-      leaveType: row.policy?.name ?? row.policy?.code ?? null,
-      code: row.policy?.code ?? row.policyId ?? null,
-      supportingDocuments:
-        row.files?.map((file: any) => file.originalName) ?? [],
-      workflowStatus,
-      status,
-      approval: {
-        approver: row.decidedBy ?? row.managerId ?? '-',
-        status,
-        comments: row.decisionComment ?? '',
-        approvedDate: row.decidedAt ? dateString(row.decidedAt) : null,
-      },
+      startDate: row.startDate ? dateString(row.startDate) : null,
+      endDate: row.endDate ? dateString(row.endDate) : null,
     };
   }
   private async unlocked(

@@ -384,8 +384,6 @@ export class CommissionService {
   private serializeRecord(row: any) {
     return {
       ...row,
-      employeeName: row.employee?.name ?? null,
-      planName: row.planName ?? row.setting?.name ?? null,
       rate: decimalNumber(row.rate),
       amount: decimalNumber(row.amount),
       calculationBasis: decimalNumber(row.calculationBasis),

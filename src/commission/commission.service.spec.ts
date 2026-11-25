@@ -130,7 +130,7 @@ describe('CommissionService', () => {
     );
     expect(result.data).toEqual(
       expect.objectContaining({
-        employeeName: 'Alex',
+        employee: expect.objectContaining({ name: 'Alex' }),
         planName: 'Sales Commission',
         calculationBasis: 24000,
         amount: 1200,

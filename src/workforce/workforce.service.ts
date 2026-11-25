@@ -50,6 +50,15 @@ function nextPublicHolidayCode(codes: number[]) {
   return codes.reduce((max, code) => Math.max(max, code), 0) + 1;
 }
 
+function publicHolidayResponse<
+  T extends { states?: unknown; status?: unknown },
+>(data: T) {
+  const { states, status, ...response } = data;
+  void states;
+  void status;
+  return response;
+}
+
 @Injectable()
 export class WorkforceService {
   constructor(private db: Database) {}
@@ -187,7 +196,7 @@ export class WorkforceService {
         }),
       ),
     );
-    return paginated(data, total, q, {
+    return paginated(data.map(publicHolidayResponse), total, q, {
       summary: {
         statusCounts: makeStatusCounts(ACTIVE_STATUS_VALUES, statusCountValues),
       },
@@ -198,7 +207,7 @@ export class WorkforceService {
       where: { id, companyId: m.companyId },
     });
     if (!data) throw new NotFoundException();
-    return { data };
+    return { data: publicHolidayResponse(data) };
   }
   async createLocation(m: Membership, dto: LocationDto) {
     validateTimezone(dto.timezone);
@@ -474,7 +483,7 @@ export class WorkforceService {
           },
         });
         await audit(tx, m, 'HOLIDAY_CREATED', data.id);
-        return { data };
+        return { data: publicHolidayResponse(data) };
       },
       { isolationLevel: 'Serializable' },
     );
@@ -562,7 +571,7 @@ export class WorkforceService {
           },
         });
         await audit(tx, m, 'HOLIDAY_UPDATED', id);
-        return { data };
+        return { data: publicHolidayResponse(data) };
       },
       { isolationLevel: 'Serializable' },
     );
@@ -584,7 +593,7 @@ export class WorkforceService {
         active ? 'HOLIDAY_ACTIVATED' : 'HOLIDAY_DEACTIVATED',
         id,
       );
-      return { data };
+      return { data: publicHolidayResponse(data) };
     });
   }
   async assign(m: Membership, id: string, dto: AssignmentDto) {

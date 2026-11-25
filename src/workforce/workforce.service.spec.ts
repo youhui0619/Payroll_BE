@@ -137,7 +137,15 @@ describe('WorkforceService', () => {
 
   it('returns public-holiday status counts in pagination metadata', async () => {
     const db = database();
-    db.publicHoliday.findMany.mockResolvedValue([]);
+    db.publicHoliday.findMany.mockResolvedValue([
+      {
+        id: 'holiday',
+        active: false,
+        status: 'INACTIVE',
+        states: ['JOHOR'],
+        regions: ['JOHOR'],
+      },
+    ]);
     db.publicHoliday.count
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(0)
@@ -158,6 +166,11 @@ describe('WorkforceService', () => {
     expect(result.meta.summary?.statusCounts).toEqual({
       ACTIVE: 0,
       INACTIVE: 2,
+    });
+    expect(result.data[0]).toEqual({
+      id: 'holiday',
+      active: false,
+      regions: ['JOHOR'],
     });
   });
 
