@@ -12,8 +12,9 @@ import {
   AssignmentDto,
   UpdateHolidayDto,
   UpdateLocationDto,
-  UpdateScheduleDto,
 } from './workforce.dto';
+import { EmploymentType, EMPLOYMENT_TYPE_VALUES } from './employment-types';
+import { WorkingScheduleDto } from './working-schedule.dto';
 import { paginated } from '../common/page.dto';
 import {
   ACTIVE_STATUS_VALUES,
@@ -289,49 +290,38 @@ export class WorkforceService {
       return { data: toWorkingScheduleResponse(data) };
     });
   }
-  async updateSchedule(m: Membership, id: string, dto: UpdateScheduleDto) {
-    const existing = await this.db.workSchedule.findUnique({
-      where: { companyId_id: { companyId: m.companyId, id } },
+  async updateSchedule(
+    m: Membership,
+    employmentType: string,
+    dto: WorkingScheduleDto,
+  ) {
+    if (
+      !EMPLOYMENT_TYPE_VALUES.includes(
+        employmentType as (typeof EMPLOYMENT_TYPE_VALUES)[number],
+      )
+    ) {
+      fail('INVALID_EMPLOYMENT_TYPE', 'Unknown employment type.');
+    }
+
+    const existing = await this.db.workSchedule.findFirst({
+      where: {
+        companyId: m.companyId,
+        employmentType: employmentType as EmploymentType,
+      },
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
     });
     if (!existing) throw new NotFoundException();
-    const startMinute = dto.startMinute ?? existing.startMinute;
-    const endMinute = dto.endMinute ?? existing.endMinute;
-    const breakMinutes = dto.breakMinutes ?? existing.breakMinutes;
-    validateSchedule(startMinute, endMinute, breakMinutes);
-    const effectiveFrom =
-      dto.effectiveFrom ?? dateString(existing.effectiveFrom);
-    const effectiveTo =
-      dto.effectiveTo !== undefined
-        ? dto.effectiveTo
-        : existing.effectiveTo
-          ? dateString(existing.effectiveTo)
-          : undefined;
-    if (effectiveTo && effectiveTo < effectiveFrom)
-      fail('INVALID_DATES', 'End date precedes start date.');
-    const {
-      effectiveFrom: from,
-      effectiveTo: to,
-      scheduleDays,
-      workingSchedule,
-      ...rest
-    } = dto;
-    const scheduleDaysValue = workingSchedule ?? scheduleDays;
     return this.db.$transaction(async (tx) => {
       const data = await tx.workSchedule.update({
-        where: { companyId_id: { companyId: m.companyId, id } },
+        where: {
+          companyId_id: { companyId: m.companyId, id: existing.id },
+        },
         data: {
-          ...rest,
-          ...(scheduleDaysValue !== undefined
-            ? { scheduleDays: scheduleDaysValue as Prisma.InputJsonValue }
-            : {}),
-          ...(from !== undefined ? { effectiveFrom: dateOnly(from) } : {}),
-          ...(to !== undefined
-            ? { effectiveTo: to ? dateOnly(to) : null }
-            : {}),
+          scheduleDays: dto as unknown as Prisma.InputJsonValue,
         },
       });
-      await audit(tx, m, 'SCHEDULE_UPDATED', id);
-      return { data: toWorkingScheduleResponse(data) };
+      await audit(tx, m, 'SCHEDULE_UPDATED', existing.id);
+      return { data: toWorkingScheduleMap([data]) };
     });
   }
   async deactivateSchedule(m: Membership, id: string) {

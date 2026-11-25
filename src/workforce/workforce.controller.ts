@@ -21,9 +21,11 @@ import {
   AssignmentDto,
   UpdateHolidayDto,
   UpdateLocationDto,
-  UpdateScheduleDto,
 } from './workforce.dto';
-import { WorkingScheduleMapResponseDto } from './working-schedule.dto';
+import {
+  WorkingScheduleDto,
+  WorkingScheduleMapResponseDto,
+} from './working-schedule.dto';
 import { WorkforceService } from './workforce.service';
 import { EMPLOYMENT_TYPES } from './employment-types';
 
@@ -85,12 +87,14 @@ export class WorkforceController {
   ) {
     return this.service.createSchedule(r.membership, d);
   }
-  @Patch('work-schedules/:id') updateSchedule(
+  @Patch('work-schedules/:employmentType')
+  @ApiOkResponse({ type: WorkingScheduleMapResponseDto })
+  updateSchedule(
     @Req() r: TenantRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() d: UpdateScheduleDto,
+    @Param('employmentType') employmentType: string,
+    @Body() d: WorkingScheduleDto,
   ) {
-    return this.service.updateSchedule(r.membership, id, d);
+    return this.service.updateSchedule(r.membership, employmentType, d);
   }
   @Post('work-schedules/:id/deactivate') deactivateSchedule(
     @Req() r: TenantRequest,

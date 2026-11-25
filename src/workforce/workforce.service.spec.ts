@@ -161,6 +161,59 @@ describe('WorkforceService', () => {
     });
   });
 
+  it('updates working schedule days by employment type using the FE shape', async () => {
+    const db = database();
+    const scheduleDays = {
+      days: [
+        {
+          day: 'Monday',
+          isWorkingDay: true,
+          startTime: '09:00',
+          endTime: '18:00',
+          breakStartTime: '13:00',
+          breakEndTime: '14:00',
+        },
+      ],
+    };
+    db.workSchedule.findFirst.mockResolvedValue({
+      id: 'part-time-schedule',
+      employmentType: 'PART-TIME',
+      code: 'PART-TIME-4H',
+      effectiveFrom: new Date('2026-01-01'),
+    });
+    db.workSchedule.update.mockResolvedValue({
+      id: 'part-time-schedule',
+      employmentType: 'PART-TIME',
+      scheduleDays,
+    });
+
+    const result = await new WorkforceService(db).updateSchedule(
+      membership,
+      'PART-TIME',
+      scheduleDays as any,
+    );
+
+    expect(result).toEqual({ data: { 'PART-TIME': scheduleDays } });
+    expect(db.workSchedule.findFirst).toHaveBeenCalledWith({
+      where: { companyId: 'company', employmentType: 'PART-TIME' },
+      orderBy: [{ effectiveFrom: 'desc' }, { code: 'asc' }],
+    });
+    expect(db.workSchedule.update).toHaveBeenCalledWith({
+      where: {
+        companyId_id: { companyId: 'company', id: 'part-time-schedule' },
+      },
+      data: { scheduleDays },
+    });
+    expect(db.auditEvent.create).toHaveBeenCalledWith({
+      data: {
+        companyId: 'company',
+        actorId: 'user',
+        action: 'SCHEDULE_UPDATED',
+        resourceId: 'part-time-schedule',
+      },
+    });
+  });
+
   it('generates a company-scoped public-holiday code', async () => {
     const db = database();
     db.publicHoliday.findMany
