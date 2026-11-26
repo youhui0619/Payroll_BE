@@ -122,6 +122,15 @@ export class LeaveController {
   @Get('me/applications') own(@Req() r: TenantRequest, @Query() q: PageDto) {
     return this.service.list(r.membership, q);
   }
+  @Get('employees/:id/applications')
+  @Roles('OWNER', 'HR')
+  employeeApplications(
+    @Req() r: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() q: PageDto,
+  ) {
+    return this.service.list(r.membership, q, false, id);
+  }
   @Get('applications')
   @Roles('OWNER', 'HR')
   all(@Req() r: TenantRequest, @Query() q: PageDto) {

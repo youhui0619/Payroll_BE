@@ -37,6 +37,7 @@ function database() {
       findFirst: jest.fn(),
       findMany: jest.fn(),
       aggregate: jest.fn(),
+      count: jest.fn(),
       groupBy: jest.fn(),
       update: jest.fn(),
     },
@@ -206,6 +207,47 @@ const leave = {
   managerId: 'manager',
 };
 describe('leave balances and decisions', () => {
+  it('lists leave records for one employee with pagination and status counts', async () => {
+    const db = database();
+    db.employee.findUnique.mockResolvedValue({ id: 'employee' });
+    db.leaveRequest.findMany.mockResolvedValue([
+      {
+        ...leave,
+        requestDate: new Date('2026-11-01'),
+        startDate: new Date('2026-11-10'),
+        endDate: new Date('2026-11-11'),
+        files: [],
+      },
+    ]);
+    db.leaveRequest.count.mockResolvedValueOnce(1).mockResolvedValue(0);
+
+    const result = await new LeaveService(db).list(
+      { ...member, roles: ['HR'] },
+      { page: 1, pageSize: 20 },
+      false,
+      'employee',
+    );
+
+    expect(db.employee.findUnique).toHaveBeenCalledWith({
+      where: { companyId_id: { companyId: 'company', id: 'employee' } },
+      select: { id: true },
+    });
+    expect(db.leaveRequest.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { companyId: 'company', employeeId: 'employee' },
+        skip: 0,
+        take: 20,
+      }),
+    );
+    expect(result.data).toHaveLength(1);
+    expect(result.meta).toMatchObject({
+      page: 1,
+      pageSize: 20,
+      total: 1,
+      summary: { statusCounts: expect.any(Object) },
+    });
+  });
+
   it('returns only the leave policies selected for the employee', async () => {
     const db = database();
     db.employee.findFirst.mockResolvedValue({

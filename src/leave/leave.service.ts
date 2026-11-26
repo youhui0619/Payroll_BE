@@ -960,9 +960,32 @@ export class LeaveService {
       { isolationLevel: 'Serializable' },
     );
   }
-  async list(m: Membership, q: PageDto, all = false) {
-    const employeeId = all ? undefined : (await selfEmployee(this.db, m)).id;
-    const where = { companyId: m.companyId, employeeId };
+  async list(
+    m: Membership,
+    q: PageDto,
+    all = false,
+    requestedEmployeeId?: string,
+  ) {
+    const employeeId = requestedEmployeeId
+      ? (
+          await this.db.employee.findUnique({
+            where: {
+              companyId_id: {
+                companyId: m.companyId,
+                id: requestedEmployeeId,
+              },
+            },
+            select: { id: true },
+          })
+        )?.id
+      : all
+        ? undefined
+        : (await selfEmployee(this.db, m)).id;
+    if (requestedEmployeeId && !employeeId) throw new NotFoundException();
+    const where = {
+      companyId: m.companyId,
+      ...(employeeId ? { employeeId } : {}),
+    };
     const [data, total] = await this.db.$transaction([
       this.db.leaveRequest.findMany({
         where,
