@@ -95,7 +95,7 @@ async function main() {
         joinedDate: new Date('2020-01-01'),
         scheduleId: schedule.id,
         managerId: manager.id,
-        leavePolicyCodes: ['AL', 'ACCR'],
+        leavePolicyCodes: ['AL', 'ACCR', 'UL'],
       },
     });
     const member = await db.membership.create({

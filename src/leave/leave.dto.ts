@@ -282,6 +282,25 @@ export class LeavePolicyQueryDto extends PageDto {
   approval?: LeaveApproval;
 }
 export class LeaveDto {
+  @ApiPropertyOptional({
+    description:
+      'Target employee UUID; OWNER/HR may also provide the employee number when creating on behalf of an employee.',
+  })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsString()
+  @Length(1, 100)
+  employeeId?: string;
+  @ApiPropertyOptional({
+    format: 'date',
+    description:
+      'Request date. Defaults to the current date in the company timezone.',
+  })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsDateString({ strict: true })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/)
+  requestDate?: string;
   @ApiProperty() @IsUUID() policyId: string;
   @ApiProperty()
   @IsDateString({ strict: true })

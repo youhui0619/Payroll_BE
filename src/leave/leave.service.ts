@@ -50,6 +50,14 @@ import {
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
 const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
   value === null || value === undefined ? null : value.toNumber();
+function documentScanAccepted(status: string) {
+  return (
+    status === 'CLEAN' ||
+    (status === 'UNSCANNED' &&
+      process.env.NODE_ENV !== 'production' &&
+      process.env.ALLOW_UNSCANNED_UPLOADS === 'true')
+  );
+}
 export function workingDates(
   start: Date,
   end: Date,
@@ -124,6 +132,23 @@ export class LeaveService {
         409,
       );
   }
+  private async resolveApplicationEmployee(
+    tx: Prisma.TransactionClient,
+    m: Membership,
+    employeeIdentifier: string,
+  ) {
+    const employee = await tx.employee.findFirst({
+      where: {
+        companyId: m.companyId,
+        active: true,
+        OR: [{ id: employeeIdentifier }, { employeeNo: employeeIdentifier }],
+      },
+    });
+    if (!employee) throw new NotFoundException('Active employee not found.');
+    if (employee.id !== m.employeeId && !privileged(m, ['OWNER', 'HR']))
+      throw new ForbiddenException();
+    return employee;
+  }
   private async event(
     tx: Prisma.TransactionClient,
     m: Membership,
@@ -177,7 +202,14 @@ export class LeaveService {
         events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         files: {
           where: { archived: false },
-          select: { originalName: true },
+          select: {
+            id: true,
+            originalName: true,
+            mimeType: true,
+            size: true,
+            scanStatus: true,
+            createdAt: true,
+          },
         },
       },
     });
@@ -825,14 +857,31 @@ export class LeaveService {
       { isolationLevel: 'RepeatableRead' },
     );
   }
-  async eligibility(tx: Prisma.TransactionClient, m: Membership, d: LeaveDto) {
+  async eligibility(
+    tx: Prisma.TransactionClient,
+    m: Membership,
+    d: LeaveDto,
+    targetEmployeeId?: string,
+  ) {
     if (!d.reason.trim())
       fail('REASON_REQUIRED', 'Provide a reason for leave.', 400);
-    const employee = await selfEmployee(tx, m);
+    const employee = targetEmployeeId
+      ? await this.resolveApplicationEmployee(tx, m, targetEmployeeId)
+      : await selfEmployee(tx, m);
     const policy = await tx.leavePolicy.findFirst({
       where: { id: d.policyId, companyId: m.companyId, active: true },
     });
     if (!policy) throw new NotFoundException('Leave policy not found.');
+    if (
+      Array.isArray(employee.leavePolicyCodes) &&
+      !employee.leavePolicyCodes.some(
+        (code) => code.trim().toUpperCase() === policy.code.toUpperCase(),
+      )
+    )
+      fail(
+        'LEAVE_POLICY_NOT_ASSIGNED',
+        'This leave policy is not assigned to the employee.',
+      );
     const start = dateOnly(d.startDate),
       end = dateOnly(d.endDate);
     if (end < start || start.getUTCFullYear() !== end.getUTCFullYear())
@@ -916,12 +965,15 @@ export class LeaveService {
         })))
     )
       fail('MANAGER_REQUIRED', 'Assign a reporting manager first.');
+    const requestDate = d.requestDate ? dateOnly(d.requestDate) : today;
+    if (requestDate > today)
+      fail('INVALID_REQUEST_DATE', 'Request date cannot be in the future.');
     return {
       employee,
       policy,
       start,
       end,
-      requestDate: today,
+      requestDate,
       days,
       daySnapshot: {
         version: 1,
@@ -937,7 +989,7 @@ export class LeaveService {
     return this.db.$transaction(
       async (tx) => {
         const { employee, policy, start, end, requestDate, days } =
-          await this.eligibility(tx, m, d);
+          await this.eligibility(tx, m, d, d.employeeId);
         const data = await tx.leaveRequest.create({
           data: {
             companyId: m.companyId,
@@ -1005,7 +1057,14 @@ export class LeaveService {
           policy: true,
           files: {
             where: { archived: false },
-            select: { originalName: true },
+            select: {
+              id: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
+              scanStatus: true,
+              createdAt: true,
+            },
           },
         },
       }),
@@ -1120,6 +1179,28 @@ export class LeaveService {
           halfDay: row.halfDay,
           reason: row.reason,
         });
+        if (current.policy.requireSupportingDocuments) {
+          const documents = await tx.storedFile.findMany({
+            where: {
+              companyId: m.companyId,
+              employeeId: row.employeeId,
+              leaveRequestId: id,
+              category: 'LEAVE_DOCUMENT',
+              archived: false,
+            },
+          });
+          if (!documents.length)
+            fail(
+              'LEAVE_DOCUMENT_REQUIRED',
+              'Attach at least one supporting document before submission.',
+            );
+          if (documents.some((file) => !documentScanAccepted(file.scanStatus)))
+            fail(
+              'FILE_QUARANTINED',
+              'All supporting documents must pass scanning before submission.',
+              409,
+            );
+        }
         row = {
           ...row,
           days: new Prisma.Decimal(row.halfDay ? '0.50' : String(current.days)),
@@ -1317,7 +1398,14 @@ export class LeaveService {
           policy: true,
           files: {
             where: { archived: false },
-            select: { originalName: true },
+            select: {
+              id: true,
+              originalName: true,
+              mimeType: true,
+              size: true,
+              scanStatus: true,
+              createdAt: true,
+            },
           },
         },
       }),
