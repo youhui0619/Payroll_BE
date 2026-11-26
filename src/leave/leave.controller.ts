@@ -27,6 +27,7 @@ import {
   LeaveBalanceQueryDto,
   LeaveBalanceResponseDto,
   LeaveAccrualDto,
+  LeaveApplicationQueryDto,
 } from './leave.dto';
 import { LeaveService } from './leave.service';
 
@@ -119,7 +120,8 @@ export class LeaveController {
   ) {
     return this.service.edit(r.membership, id, d);
   }
-  @Get('me/applications') own(@Req() r: TenantRequest, @Query() q: PageDto) {
+  @Get('me/applications')
+  own(@Req() r: TenantRequest, @Query() q: LeaveApplicationQueryDto) {
     return this.service.list(r.membership, q);
   }
   @Get('employees/:id/applications')
@@ -127,13 +129,13 @@ export class LeaveController {
   employeeApplications(
     @Req() r: TenantRequest,
     @Param('id', ParseUUIDPipe) id: string,
-    @Query() q: PageDto,
+    @Query() q: LeaveApplicationQueryDto,
   ) {
     return this.service.list(r.membership, q, false, id);
   }
   @Get('applications')
   @Roles('OWNER', 'HR')
-  all(@Req() r: TenantRequest, @Query() q: PageDto) {
+  all(@Req() r: TenantRequest, @Query() q: LeaveApplicationQueryDto) {
     return this.service.list(r.membership, q, true);
   }
   @Get('pending') pending(@Req() r: TenantRequest, @Query() q: PageDto) {

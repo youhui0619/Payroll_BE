@@ -73,6 +73,14 @@ export class LeaveBalanceResponseDto {
   @ApiProperty({ type: LeaveBalanceMetaDto }) meta: LeaveBalanceMetaDto;
 }
 
+export class LeaveApplicationQueryDto extends PageDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  employeeId?: string;
+}
+
 export class LeaveServiceEntitlementTierDto {
   @ApiPropertyOptional({ nullable: true, minimum: 0 })
   @IsOptional()

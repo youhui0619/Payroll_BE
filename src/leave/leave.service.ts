@@ -40,6 +40,7 @@ import {
   LeaveBalanceQueryDto,
   UpdateLeavePolicyDto,
   LeaveAccrualDto,
+  LeaveApplicationQueryDto,
 } from './leave.dto';
 import {
   accrualDays,
@@ -962,7 +963,7 @@ export class LeaveService {
   }
   async list(
     m: Membership,
-    q: PageDto,
+    q: LeaveApplicationQueryDto,
     all = false,
     requestedEmployeeId?: string,
   ) {
@@ -979,7 +980,7 @@ export class LeaveService {
           })
         )?.id
       : all
-        ? undefined
+        ? q.employeeId
         : (await selfEmployee(this.db, m)).id;
     if (requestedEmployeeId && !employeeId) throw new NotFoundException();
     const where = {

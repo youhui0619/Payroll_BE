@@ -223,15 +223,10 @@ describe('leave balances and decisions', () => {
 
     const result = await new LeaveService(db).list(
       { ...member, roles: ['HR'] },
-      { page: 1, pageSize: 20 },
-      false,
-      'employee',
+      { page: 1, pageSize: 20, employeeId: 'employee' },
+      true,
     );
 
-    expect(db.employee.findUnique).toHaveBeenCalledWith({
-      where: { companyId_id: { companyId: 'company', id: 'employee' } },
-      select: { id: true },
-    });
     expect(db.leaveRequest.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { companyId: 'company', employeeId: 'employee' },
