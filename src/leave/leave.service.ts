@@ -741,11 +741,11 @@ export class LeaveService {
               .filter((code): code is string => typeof code === 'string')
               .map((code) => code.trim().toUpperCase())
               .filter(Boolean)
-          : [];
+          : null;
         const policies = await tx.leavePolicy.findMany({
           where: {
             companyId: m.companyId,
-            ...(selectedPolicyCodes.length > 0
+            ...(selectedPolicyCodes !== null
               ? { code: { in: selectedPolicyCodes } }
               : {}),
             OR: [

@@ -453,8 +453,9 @@ async function seed() {
             scheduleId,
             employmentStatus: 'ACTIVE',
             employmentType: 'PERMANENT',
+            leavePolicyCodes: ['AL', 'ML', 'UL'],
           },
-          update: {},
+          update: { leavePolicyCodes: ['AL', 'ML', 'UL'] },
         });
         managerIds.set(row.employeeNo, manager.id);
       }
@@ -744,8 +745,9 @@ async function seed() {
           emergencyContactPostcode: '50250',
           emergencyContactState: 'KUALA LUMPUR',
           emergencyContactCountry: 'MALAYSIA',
+          leavePolicyCodes: ['AL', 'ML', 'UL'],
         },
-        update: {},
+        update: { leavePolicyCodes: ['AL', 'ML', 'UL'] },
       });
 
       await tx.employeeWorkSchedule.upsert({
@@ -924,6 +926,7 @@ async function seed() {
             employmentType: true,
             employmentStatus: true,
             active: true,
+            leavePolicyCodes: true,
           },
         }),
       ]);

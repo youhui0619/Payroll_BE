@@ -103,6 +103,16 @@ describe('leave accrual rules', () => {
     ).toBe('24.00');
   });
 
+  it('treats an empty policy assignment as no leave selection', () => {
+    expect(
+      accrualDays(
+        { ...policy, code: 'AL' },
+        { ...employee, leavePolicyCodes: [] },
+        2026,
+      ).toFixed(2),
+    ).toBe('0.00');
+  });
+
   it('creates an idempotent accrual and adjusts it when entitlement changes', async () => {
     const tx: any = {
       employee: { findUnique: jest.fn() },

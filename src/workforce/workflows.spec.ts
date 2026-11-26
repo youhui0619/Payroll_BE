@@ -286,6 +286,27 @@ describe('leave balances and decisions', () => {
     expect(result.data.map((policy) => policy.code)).toEqual(['AL', 'ML']);
   });
 
+  it('returns no leave policies when the employee has no selections', async () => {
+    const db = database();
+    db.employee.findFirst.mockResolvedValue({
+      id: 'employee',
+      active: true,
+      leavePolicyCodes: [],
+    });
+    db.leavePolicy.findMany.mockResolvedValue([]);
+    db.leaveLedger.groupBy.mockResolvedValue([]);
+    db.leaveRequest.groupBy.mockResolvedValue([]);
+
+    const result = await new LeaveService(db).balance(member, { year: 2026 });
+
+    expect(db.leavePolicy.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ code: { in: [] } }),
+      }),
+    );
+    expect(result.data).toEqual([]);
+  });
+
   it('blocks cancellation and approval in a calculated payroll month', async () => {
     const db = database();
     db.payrollRun.count.mockResolvedValue(1);

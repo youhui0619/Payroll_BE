@@ -52,12 +52,10 @@ export function eligibleForPolicy(policy: Policy, employee: Employee) {
         .filter((value): value is string => typeof value === 'string')
         .map((value) => value.trim().toUpperCase())
     : [];
-  if (
-    assignedCodes.length > 0 &&
-    policy.code &&
-    !assignedCodes.includes(policy.code.toUpperCase())
-  )
-    return false;
+  if (Array.isArray(employee.leavePolicyCodes)) {
+    if (!policy.code || !assignedCodes.includes(policy.code.toUpperCase()))
+      return false;
+  }
 
   const employmentType = employee.employmentType
     ?.trim()
