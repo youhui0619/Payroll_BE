@@ -994,6 +994,14 @@ export class LeaveService {
         skip: (q.page - 1) * q.pageSize,
         take: q.pageSize,
         include: {
+          employee: {
+            select: {
+              id: true,
+              employeeNo: true,
+              name: true,
+              department: { select: { id: true, name: true } },
+            },
+          },
           policy: true,
           files: {
             where: { archived: false },

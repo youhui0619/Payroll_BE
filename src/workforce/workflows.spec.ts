@@ -216,6 +216,12 @@ describe('leave balances and decisions', () => {
         requestDate: new Date('2026-11-01'),
         startDate: new Date('2026-11-10'),
         endDate: new Date('2026-11-11'),
+        employee: {
+          id: 'employee',
+          employeeNo: 'EMP-001',
+          name: 'Alex Employee',
+          department: { id: 'department', name: 'Operations' },
+        },
         files: [],
       },
     ]);
@@ -235,6 +241,12 @@ describe('leave balances and decisions', () => {
       }),
     );
     expect(result.data).toHaveLength(1);
+    expect(result.data[0].employee).toEqual({
+      id: 'employee',
+      employeeNo: 'EMP-001',
+      name: 'Alex Employee',
+      department: { id: 'department', name: 'Operations' },
+    });
     expect(result.meta).toMatchObject({
       page: 1,
       pageSize: 20,
