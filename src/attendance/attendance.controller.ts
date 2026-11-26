@@ -52,6 +52,15 @@ export class AttendanceController {
   ) {
     return this.service.calendar(r.membership, q);
   }
+  @Get('employees/:employeeId/calendar')
+  @Roles('OWNER', 'HR')
+  employeeCalendar(
+    @Req() r: TenantRequest,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Query() q: AttendanceCalendarQueryDto,
+  ) {
+    return this.service.employeeCalendar(r.membership, employeeId, q);
+  }
   @Get('calendar') @Roles('OWNER', 'HR') calendar(
     @Req() r: TenantRequest,
     @Query() q: AttendanceCalendarQueryDto,

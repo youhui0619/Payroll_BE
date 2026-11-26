@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Database } from '../database.module';
 import { Membership } from '@prisma/client';
 import {
@@ -151,11 +151,36 @@ export class AttendanceService {
     };
   }
 
-  async calendar(m: Membership, q: AttendanceCalendarQueryDto, all = false) {
+  async employeeCalendar(
+    m: Membership,
+    employeeId: string,
+    q: AttendanceCalendarQueryDto,
+  ) {
+    return this.calendar(m, q, true, employeeId);
+  }
+
+  async calendar(
+    m: Membership,
+    q: AttendanceCalendarQueryDto,
+    all = false,
+    targetEmployeeId?: string,
+  ) {
     const start = new Date(Date.UTC(q.year, q.month - 1, 1));
     const end = new Date(Date.UTC(q.year, q.month, 0));
     const next = new Date(Date.UTC(q.year, q.month, 1));
-    const employee = all ? null : await selfEmployee(this.db, m);
+    const employee = targetEmployeeId
+      ? await this.db.employee.findFirst({
+          where: {
+            companyId: m.companyId,
+            id: targetEmployeeId,
+            active: true,
+          },
+        })
+      : all
+        ? null
+        : await selfEmployee(this.db, m);
+    if (targetEmployeeId && !employee)
+      throw new NotFoundException('Active employee not found.');
     const employeeWhere = employee
       ? { id: employee.id }
       : {

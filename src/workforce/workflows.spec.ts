@@ -18,6 +18,7 @@ function database() {
         id: 'employee',
         joinedDate: new Date('2026-01-01'),
       }),
+      findMany: jest.fn(),
       findUnique: jest.fn(),
     },
     company: {
@@ -27,15 +28,19 @@ function database() {
     },
     attendanceSession: {
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     },
     leaveRequest: {
       findUnique: jest.fn(),
       findFirst: jest.fn(),
+      findMany: jest.fn(),
       aggregate: jest.fn(),
       update: jest.fn(),
     },
+    overtimeRequest: { findMany: jest.fn() },
+    publicHoliday: { findMany: jest.fn() },
     leaveLedger: { aggregate: jest.fn(), create: jest.fn() },
     payrollRun: { count: jest.fn().mockResolvedValue(0) },
     leaveEvent: { create: jest.fn() },
@@ -44,7 +49,9 @@ function database() {
     auditEvent: { create: jest.fn() },
     $transaction: jest.fn(),
   };
-  tx.$transaction.mockImplementation((fn) => fn(tx));
+  tx.$transaction.mockImplementation((input) =>
+    Array.isArray(input) ? Promise.all(input) : input(tx),
+  );
   return tx;
 }
 describe('work calendar', () => {
@@ -116,6 +123,67 @@ describe('clocking', () => {
     expect(db.$transaction).toHaveBeenCalledWith(expect.any(Function), {
       isolationLevel: 'Serializable',
     });
+  });
+});
+
+describe('employee attendance calendar', () => {
+  it('returns one employee calendar for the requested month', async () => {
+    const db = database();
+    db.employee.findFirst.mockResolvedValue({ id: 'employee', active: true });
+    db.employee.findMany.mockResolvedValue([
+      {
+        id: 'employee',
+        employeeNo: 'EMP-001',
+        name: 'Alex',
+        departmentId: 'department',
+        department: { id: 'department', code: 'OPS', name: 'Operations' },
+      },
+    ]);
+    db.attendanceSession.findMany.mockResolvedValue([]);
+    db.leaveRequest.findMany.mockResolvedValue([]);
+    db.overtimeRequest.findMany.mockResolvedValue([]);
+    db.publicHoliday.findMany.mockResolvedValue([]);
+
+    const result = await new AttendanceService(db).employeeCalendar(
+      member,
+      'employee',
+      { year: 2026, month: 11 } as any,
+    );
+
+    expect(db.employee.findFirst).toHaveBeenCalledWith({
+      where: { companyId: 'company', id: 'employee', active: true },
+    });
+    expect(db.employee.findMany).toHaveBeenCalledWith({
+      where: { companyId: 'company', id: 'employee' },
+      select: {
+        id: true,
+        employeeNo: true,
+        name: true,
+        departmentId: true,
+        department: { select: { id: true, code: true, name: true } },
+      },
+      orderBy: [{ employeeNo: 'asc' }, { id: 'asc' }],
+      take: 501,
+    });
+    expect(result.data).toMatchObject({
+      year: 2026,
+      month: 11,
+      startDate: '2026-11-01',
+      endDate: '2026-11-30',
+    });
+    expect(result.data.employees).toHaveLength(1);
+    expect(result.data.employees[0]).toMatchObject({
+      employeeId: 'employee',
+      employeeNo: 'EMP-001',
+      days: expect.any(Array),
+      summary: {
+        presentDays: 0,
+        leaveDays: 0,
+        overtimeMinutes: 0,
+        workedMinutes: 0,
+      },
+    });
+    expect(result.data.employees[0].days).toHaveLength(30);
   });
 });
 const leave = {
