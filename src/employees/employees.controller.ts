@@ -29,6 +29,8 @@ import { EmployeeImportDto } from './employee-import.dto';
 import { EmployeesService } from './employees.service';
 import { AccountTokensService } from '../auth/account-tokens.service';
 import { InviteEmployeeAccountDto } from '../auth/account-tokens.dto';
+import { AttendanceCalendarQueryDto } from '../attendance/attendance.dto';
+import { AttendanceService } from '../attendance/attendance.service';
 
 @ApiBearerAuth()
 @ApiTags('employees')
@@ -39,6 +41,7 @@ export class EmployeesController {
     private service: EmployeesService,
     private accounts: EmployeeAccountsService,
     private accountTokens: AccountTokensService,
+    private attendance: AttendanceService,
   ) {}
   @Get('me') @Roles('OWNER', 'HR', 'FINANCE', 'EMPLOYEE') me(
     @Req() req: TenantRequest,
@@ -87,6 +90,13 @@ export class EmployeesController {
     @Body() dto: EmployeeImportDto,
   ) {
     return this.service.importCommit(req.membership, dto);
+  }
+  @Get(':id/calendar') calendar(
+    @Req() req: TenantRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() q: AttendanceCalendarQueryDto,
+  ) {
+    return this.attendance.employeeCalendar(req.membership, id, q);
   }
   @Get(':id') get(
     @Req() req: TenantRequest,
