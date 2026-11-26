@@ -123,6 +123,7 @@ async function seed() {
         },
       });
       let companyId: string;
+      let seedOwnerUserId: string;
       if (existingOwner) {
         const membership = existingOwner.memberships[0];
         if (!membership)
@@ -130,6 +131,7 @@ async function seed() {
             'Existing seed owner has no active OWNER membership for a company.',
           );
         companyId = membership.companyId;
+        seedOwnerUserId = existingOwner.id;
       } else {
         const passwordHash = await hashPassword(password);
         const company = await tx.company.create({
@@ -142,6 +144,7 @@ async function seed() {
           data: { companyId: company.id, userId: user.id, roles: ['OWNER'] },
         });
         companyId = company.id;
+        seedOwnerUserId = user.id;
       }
       const company = await tx.company.findUniqueOrThrow({
         where: { id: companyId },
@@ -424,12 +427,13 @@ async function seed() {
           positionCode: 'IT-MGR',
         },
       ];
+      const managerIds = new Map<string, string>();
       for (const row of managerRows) {
         const positionId = positionIds.get(row.positionCode);
         const scheduleId = scheduleIds.get('PERMANENT');
         if (!positionId || !scheduleId)
           throw new Error(`Missing seed reference for ${row.employeeNo}.`);
-        await tx.employee.upsert({
+        const manager = await tx.employee.upsert({
           where: {
             companyId_employeeNo: {
               companyId: company.id,
@@ -451,6 +455,7 @@ async function seed() {
           },
           update: {},
         });
+        managerIds.set(row.employeeNo, manager.id);
       }
 
       await tx.leavePolicy.createMany({
@@ -668,6 +673,335 @@ async function seed() {
             },
           });
         }
+      }
+
+      const demoDepartmentId = departmentIds.get('IT');
+      const demoPositionId = positionIds.get('IT-DEV');
+      const demoScheduleId = scheduleIds.get('PERMANENT');
+      const demoManagerId = managerIds.get('MGR-IT');
+      if (
+        !demoDepartmentId ||
+        !demoPositionId ||
+        !demoScheduleId ||
+        !demoManagerId
+      )
+        throw new Error('Missing seed reference for E00001.');
+
+      const demoEmployee = await tx.employee.upsert({
+        where: {
+          companyId_employeeNo: {
+            companyId: company.id,
+            employeeNo: 'E00001',
+          },
+        },
+        create: {
+          companyId: company.id,
+          employeeNo: 'E00001',
+          name: 'Demo Employee',
+          email: 'demo.employee@example.test',
+          joinedDate: day('2026-01-01'),
+          active: true,
+          departmentId: demoDepartmentId,
+          positionId: demoPositionId,
+          managerId: demoManagerId,
+          locationId: location.id,
+          scheduleId: demoScheduleId,
+          employmentStatus: 'ACTIVE',
+          employmentType: 'PERMANENT',
+          nricPassportNo: '950615-14-0001',
+          dateOfBirth: day('1995-06-15'),
+          gender: 'MALE',
+          nationality: 'MALAYSIAN',
+          race: 'CHINESE',
+          religion: 'BUDDHISM',
+          maritalStatus: 'SINGLE',
+          contactNo: '0123456789',
+          addressLine1: '12 Jalan Sultan Ismail',
+          city: 'Kuala Lumpur',
+          postcode: '50250',
+          state: 'KUALA LUMPUR',
+          country: 'MALAYSIA',
+          confirmationDate: day('2026-04-01'),
+          salaryType: 'MONTHLY',
+          paymentMethod: 'BANK',
+          bank: 'MAYBANK',
+          bankAccount: '1122334455',
+          epfEmployeeNo: 'EPF-DEMO-0001',
+          epfEmployerNo: 'EPF-EMPLOYER-0001',
+          epfRate: '11',
+          socsoNo: 'SOCSO-DEMO-0001',
+          contributionCategory: 'CATEGORY1',
+          eisStatus: 'ACTIVE',
+          statutoryEntitlementCodes: ['EPF', 'SOCSO', 'EIS'],
+          includeOvertime: true,
+          overtimeCalculationBasis: 'DAILY_RATE_CONVERTED',
+          emergencyContactName: 'Demo Contact',
+          emergencyContactRelationship: 'PARENT',
+          emergencyContactNo: '0139876543',
+          emergencyContactAddressLine1: '12 Jalan Sultan Ismail',
+          emergencyContactCity: 'Kuala Lumpur',
+          emergencyContactPostcode: '50250',
+          emergencyContactState: 'KUALA LUMPUR',
+          emergencyContactCountry: 'MALAYSIA',
+        },
+        update: {},
+      });
+
+      await tx.employeeWorkSchedule.upsert({
+        where: {
+          companyId_employeeId: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+          },
+        },
+        create: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          scheduleDays: standardScheduleDays as Prisma.InputJsonValue,
+          effectiveFrom: day('2026-01-01'),
+          active: true,
+        },
+        update: {},
+      });
+
+      await tx.salaryHistory.upsert({
+        where: {
+          companyId_employeeId_effectiveFrom: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+            effectiveFrom: day('2026-01-01'),
+          },
+        },
+        create: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          amount: new Prisma.Decimal('3500.00'),
+          effectiveFrom: day('2026-01-01'),
+        },
+        update: {},
+      });
+
+      const demoAttendanceRows = [
+        ['2026-11-02', '09:00', '18:00', 540, 480, 0, 'On time'],
+        ['2026-11-03', '09:05', '18:00', 535, 475, 0, 'Late arrival'],
+        ['2026-11-04', '09:00', '18:30', 570, 510, 30, 'Project deployment'],
+        ['2026-11-05', '08:55', '18:00', 545, 485, 0, null],
+        ['2026-11-06', '09:00', '17:45', 525, 465, 0, null],
+        ['2026-11-09', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-10', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-12', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-13', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-18', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-19', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-23', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-24', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-25', '09:00', '18:00', 540, 480, 0, null],
+        ['2026-11-26', '09:00', '18:00', 540, 480, 0, 'Seeded attendance'],
+      ] as const;
+      for (const [
+        date,
+        clockInTime,
+        clockOutTime,
+        durationMinutes,
+        hoursWorkedMinutes,
+        overtimeMinutes,
+        remark,
+      ] of demoAttendanceRows) {
+        const clockInKey = `seed:E00001:${date}:IN`;
+        const clockOutKey = `seed:E00001:${date}:OUT`;
+        const clockIn = new Date(`${date}T${clockInTime}:00+08:00`);
+        const clockOut = new Date(`${date}T${clockOutTime}:00+08:00`);
+        await tx.attendanceSession.upsert({
+          where: {
+            companyId_employeeId_clockInKey: {
+              companyId: company.id,
+              employeeId: demoEmployee.id,
+              clockInKey,
+            },
+          },
+          create: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+            date: day(date),
+            clockIn,
+            clockOut,
+            durationMinutes,
+            hoursWorkedMinutes,
+            overtimeMinutes,
+            remark,
+            clockInKey,
+            clockOutKey,
+          },
+          update: {
+            date: day(date),
+            clockIn,
+            clockOut,
+            durationMinutes,
+            hoursWorkedMinutes,
+            overtimeMinutes,
+            remark,
+            clockOutKey,
+          },
+        });
+      }
+
+      const annualLeavePolicy = await tx.leavePolicy.findUnique({
+        where: {
+          companyId_code: { companyId: company.id, code: 'AL' },
+        },
+      });
+      if (!annualLeavePolicy) throw new Error('Missing AL leave policy.');
+      const existingDemoLeave = await tx.leaveRequest.findFirst({
+        where: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          reference: 'LV-DEMO-0001',
+        },
+      });
+      const demoLeave =
+        existingDemoLeave ??
+        (await tx.leaveRequest.create({
+          data: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+            policyId: annualLeavePolicy.id,
+            reference: 'LV-DEMO-0001',
+            requestDate: day('2026-11-05'),
+            startDate: day('2026-11-16'),
+            endDate: day('2026-11-17'),
+            halfDay: false,
+            days: new Prisma.Decimal('2.00'),
+            reason: 'Family appointment.',
+            status: 'APPROVED',
+            managerId: demoManagerId,
+            approval: 'MANAGER_HR',
+            paid: true,
+            decisionComment: 'Approved for demo data.',
+            decidedBy: seedOwnerUserId,
+            decidedAt: new Date('2026-11-06T10:00:00+08:00'),
+          },
+        }));
+      if (
+        !(await tx.leaveEvent.findFirst({ where: { requestId: demoLeave.id } }))
+      ) {
+        await tx.leaveEvent.create({
+          data: {
+            companyId: company.id,
+            requestId: demoLeave.id,
+            actorId: seedOwnerUserId,
+            action: 'LEAVE_APPROVE',
+            status: 'APPROVED',
+            comment: 'Approved for demo data.',
+          },
+        });
+      }
+
+      const existingDemoOvertime = await tx.overtimeRequest.findFirst({
+        where: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          overtimeDate: day('2026-11-04'),
+          description: 'Deployment support.',
+        },
+      });
+      if (!existingDemoOvertime) {
+        await tx.overtimeRequest.create({
+          data: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+            departmentId: demoDepartmentId,
+            requestDate: day('2026-11-04'),
+            overtimeDate: day('2026-11-04'),
+            overtimeType: 'NORMAL_WORKING_DAY',
+            startTime: '18:00',
+            endTime: '18:30',
+            totalMinutes: 30,
+            breakDurationMinutes: 0,
+            netMinutes: 30,
+            hourlyRateMultiplier: new Prisma.Decimal('1.50'),
+            earningCode: 'OT',
+            description: 'Deployment support.',
+            status: 'APPROVED',
+            submittedAt: new Date('2026-11-04T18:35:00+08:00'),
+            decisionComment: 'Approved for demo data.',
+            decidedBy: seedOwnerUserId,
+            decidedAt: new Date('2026-11-05T10:00:00+08:00'),
+          },
+        });
+      }
+
+      const travelClaimType = await tx.claimType.findUnique({
+        where: { companyId_code: { companyId: company.id, code: 'TRV' } },
+      });
+      if (!travelClaimType) throw new Error('Missing TRV claim type.');
+      const existingDemoClaim = await tx.claim.findFirst({
+        where: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          date: day('2026-11-18'),
+          description: 'Travel expense for client meeting.',
+        },
+      });
+      const demoClaim =
+        existingDemoClaim ??
+        (await tx.claim.create({
+          data: {
+            companyId: company.id,
+            employeeId: demoEmployee.id,
+            typeId: travelClaimType.id,
+            date: day('2026-11-18'),
+            amount: new Prisma.Decimal('86.50'),
+            description: 'Travel expense for client meeting.',
+            status: 'APPROVED',
+            managerId: demoManagerId,
+            paymentMethod: 'BANK_TRANSFER',
+            paymentDate: day('2026-11-20'),
+            paymentReference: 'DEMO-CLAIM-0001',
+            decisionComment: 'Approved for demo data.',
+            decidedBy: seedOwnerUserId,
+            submittedAt: new Date('2026-11-18T18:00:00+08:00'),
+          },
+        }));
+      if (
+        !(await tx.claimEvent.findFirst({ where: { claimId: demoClaim.id } }))
+      ) {
+        await tx.claimEvent.create({
+          data: {
+            companyId: company.id,
+            claimId: demoClaim.id,
+            actorId: seedOwnerUserId,
+            action: 'CLAIM_APPROVE',
+            status: 'APPROVED',
+            comment: 'Approved for demo data.',
+          },
+        });
+      }
+
+      const demoHolidayDate = day('2026-11-20');
+      const demoHoliday = await tx.publicHoliday.findFirst({
+        where: {
+          companyId: company.id,
+          name: 'Demo Company Day',
+          startDate: demoHolidayDate,
+          endDate: demoHolidayDate,
+        },
+      });
+      if (!demoHoliday) {
+        await tx.publicHoliday.create({
+          data: {
+            companyId: company.id,
+            code: await nextPublicHolidayCode(tx, company.id),
+            name: 'Demo Company Day',
+            description: 'Seeded public holiday for calendar testing.',
+            scope: 'NATIONAL',
+            startDate: demoHolidayDate,
+            endDate: demoHolidayDate,
+            states: [],
+            regions: [],
+            status: 'ACTIVE',
+            active: true,
+          },
+        });
       }
     });
   } finally {
