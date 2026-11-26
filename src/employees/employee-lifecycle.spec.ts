@@ -10,6 +10,8 @@ const manager = {
 function database() {
   const db: any = {
     employee: { findUnique: jest.fn(), update: jest.fn() },
+    leavePolicy: { findMany: jest.fn().mockResolvedValue([]) },
+    leaveLedger: { aggregate: jest.fn(), upsert: jest.fn() },
     payrollRun: { count: jest.fn() },
     auditEvent: { create: jest.fn() },
   };

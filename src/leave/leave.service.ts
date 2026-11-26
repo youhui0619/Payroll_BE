@@ -41,7 +41,11 @@ import {
   UpdateLeavePolicyDto,
   LeaveAccrualDto,
 } from './leave.dto';
-import { accrualDays, carryForwardDays } from './leave-accrual';
+import {
+  accrualDays,
+  carryForwardDays,
+  syncCompanyLeaveEntitlements,
+} from './leave-accrual';
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
 const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
   value === null || value === undefined ? null : value.toNumber();
@@ -375,6 +379,11 @@ export class LeaveService {
         data: this.policyValues(d),
       });
       await audit(tx, m, 'LEAVE_POLICY_UPDATED', id);
+      await syncCompanyLeaveEntitlements(
+        tx,
+        m.companyId,
+        new Date().getUTCFullYear(),
+      );
       return { data: this.policyView(data) };
     });
   }
@@ -395,6 +404,11 @@ export class LeaveService {
         m,
         active ? 'LEAVE_POLICY_ACTIVATED' : 'LEAVE_POLICY_DEACTIVATED',
         id,
+      );
+      await syncCompanyLeaveEntitlements(
+        tx,
+        m.companyId,
+        new Date().getUTCFullYear(),
       );
       return { data: this.policyView(data) };
     });
@@ -473,6 +487,11 @@ export class LeaveService {
         },
       });
       await audit(tx, m, 'LEAVE_POLICY_CREATED', data.id);
+      await syncCompanyLeaveEntitlements(
+        tx,
+        m.companyId,
+        new Date().getUTCFullYear(),
+      );
       return { data: this.policyView(data) };
     });
   }

@@ -24,6 +24,7 @@ import {
 } from '../workforce/working-schedule.mapper';
 import { makeStatusCounts } from '../common/status-summary';
 import { csv } from '../reports/reports.utils';
+import { syncEmployeeLeaveEntitlements } from '../leave/leave-accrual';
 
 @Injectable()
 export class EmployeesService {
@@ -276,6 +277,12 @@ export class EmployeesService {
                 effectiveFrom: joinedDate,
               },
             });
+          await syncEmployeeLeaveEntitlements(
+            tx,
+            m.companyId,
+            employee.id,
+            new Date().getUTCFullYear(),
+          );
           created.push({ id: employee.id, employeeNo: employee.employeeNo });
         }
         const summary = {
@@ -650,6 +657,13 @@ export class EmployeesService {
           });
         }
 
+        await syncEmployeeLeaveEntitlements(
+          tx,
+          companyId,
+          employee.id,
+          new Date().getUTCFullYear(),
+        );
+
         return { data: employee };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
@@ -662,10 +676,22 @@ export class EmployeesService {
       dto.managerId !== undefined ||
       dto.locationId !== undefined ||
       dto.scheduleId !== undefined;
+    const leaveEntitlementChanged =
+      dto.joinedDate !== undefined ||
+      dto.resignationDate !== undefined ||
+      dto.employmentStatus !== undefined ||
+      dto.employmentType !== undefined ||
+      dto.active !== undefined ||
+      dto.leavePolicyCodes !== undefined ||
+      dto.leaveEntitlementOverrides !== undefined ||
+      dto.leaveServiceEntitlementTiers !== undefined ||
+      dto.medicalLeaveEntitlement !== undefined ||
+      dto.medicalLeavePeriod !== undefined;
     const current =
       referencesChanged ||
       dto.workingSchedule !== undefined ||
-      dto.basicSalary !== undefined
+      dto.basicSalary !== undefined ||
+      leaveEntitlementChanged
         ? await this.db.employee.findUnique({
             where: { companyId_id: { companyId, id } },
             select: { departmentId: true, joinedDate: true },
@@ -674,7 +700,8 @@ export class EmployeesService {
     if (
       (referencesChanged ||
         dto.workingSchedule !== undefined ||
-        dto.basicSalary !== undefined) &&
+        dto.basicSalary !== undefined ||
+        leaveEntitlementChanged) &&
       !current
     )
       throw new NotFoundException();
@@ -793,6 +820,14 @@ export class EmployeesService {
           });
         }
       }
+      if (leaveEntitlementChanged) {
+        await syncEmployeeLeaveEntitlements(
+          tx,
+          companyId,
+          id,
+          new Date().getUTCFullYear(),
+        );
+      }
       return { data };
     });
   }
@@ -902,6 +937,12 @@ export class EmployeesService {
           status: data.employmentStatus,
           active: data.active,
         });
+        await syncEmployeeLeaveEntitlements(
+          tx,
+          m.companyId,
+          id,
+          effectiveDate.getUTCFullYear(),
+        );
         return { data };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },

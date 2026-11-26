@@ -5,6 +5,7 @@ import {
   completedServiceYears,
   entitlementForService,
   eligibleForPolicy,
+  syncEmployeeLeaveEntitlements,
 } from './leave-accrual';
 
 const employee = {
@@ -58,7 +59,7 @@ describe('leave accrual rules', () => {
     expect(
       eligibleForPolicy(
         { ...policy, eligibility: 'PART_TIME' },
-        { ...employee, employmentType: 'PART_TIME' },
+        { ...employee, employmentType: 'PART-TIME' },
       ),
     ).toBe(true);
     expect(
@@ -68,6 +69,95 @@ describe('leave accrual rules', () => {
         2026,
       ).toFixed(2),
     ).toBe('6.00');
+  });
+
+  it('applies employee policy assignments and entitlement overrides', () => {
+    const assigned = {
+      ...employee,
+      leavePolicyCodes: ['AL'],
+      leaveEntitlementOverrides: { AL: 10 },
+    };
+    expect(
+      accrualDays({ ...policy, code: 'AL' }, assigned, 2026).toFixed(2),
+    ).toBe('10.00');
+    expect(
+      accrualDays({ ...policy, code: 'ML' }, assigned, 2026).toFixed(2),
+    ).toBe('0.00');
+    expect(
+      accrualDays(
+        { ...policy, code: 'AL' },
+        { ...employee, employmentStatus: 'RESIGNED', active: true },
+        2026,
+      ).toFixed(2),
+    ).toBe('0.00');
+    expect(
+      accrualDays(
+        { ...policy, code: 'ML' },
+        {
+          ...employee,
+          medicalLeaveEntitlement: new Prisma.Decimal(2),
+          medicalLeavePeriod: 'month',
+        },
+        2026,
+      ).toFixed(2),
+    ).toBe('24.00');
+  });
+
+  it('creates an idempotent accrual and adjusts it when entitlement changes', async () => {
+    const tx: any = {
+      employee: { findUnique: jest.fn() },
+      leavePolicy: { findMany: jest.fn() },
+      leaveLedger: { aggregate: jest.fn(), upsert: jest.fn() },
+    };
+    const employeeWithId = { ...employee, id: 'employee' };
+    const annualLeave = {
+      ...policy,
+      id: 'policy',
+      code: 'AL',
+      defaultEntitlement: new Prisma.Decimal(8),
+    };
+    tx.employee.findUnique.mockResolvedValue(employeeWithId);
+    tx.leavePolicy.findMany.mockResolvedValue([annualLeave]);
+    tx.leaveLedger.aggregate.mockResolvedValue({ _sum: { days: null } });
+
+    await syncEmployeeLeaveEntitlements(tx, 'company', 'employee', 2026);
+
+    expect(tx.leaveLedger.upsert).toHaveBeenCalledWith({
+      where: {
+        companyId_idempotencyKey: {
+          companyId: 'company',
+          idempotencyKey: 'accrual:2026:employee:policy',
+        },
+      },
+      create: expect.objectContaining({
+        days: new Prisma.Decimal(8),
+        kind: 'ACCRUAL',
+      }),
+      update: {},
+    });
+
+    tx.leaveLedger.aggregate.mockResolvedValue({
+      _sum: { days: new Prisma.Decimal(8) },
+    });
+    tx.leavePolicy.findMany.mockResolvedValue([
+      { ...annualLeave, defaultEntitlement: new Prisma.Decimal(12) },
+    ]);
+    await syncEmployeeLeaveEntitlements(tx, 'company', 'employee', 2026);
+
+    expect(tx.leaveLedger.upsert).toHaveBeenLastCalledWith({
+      where: {
+        companyId_idempotencyKey: {
+          companyId: 'company',
+          idempotencyKey: 'entitlement-sync:2026:employee:policy:12.00',
+        },
+      },
+      create: expect.objectContaining({
+        days: new Prisma.Decimal(4),
+        kind: 'ADJUSTMENT',
+        reason: 'ENTITLEMENT_SYNC:2026:AL',
+      }),
+      update: {},
+    });
   });
 
   it('caps carry-forward and skips HR-review carry', () => {
