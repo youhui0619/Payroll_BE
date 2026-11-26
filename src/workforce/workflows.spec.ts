@@ -43,14 +43,12 @@ function database() {
     },
     overtimeRequest: { findMany: jest.fn() },
     publicHoliday: { findMany: jest.fn() },
-    workSchedule: { findFirst: jest.fn() },
     leaveLedger: {
       aggregate: jest.fn(),
       create: jest.fn(),
       groupBy: jest.fn(),
     },
-    leavePolicy: { findMany: jest.fn(), findFirst: jest.fn() },
-    storedFile: { findMany: jest.fn() },
+    leavePolicy: { findMany: jest.fn() },
     payrollRun: { count: jest.fn().mockResolvedValue(0) },
     leaveEvent: { create: jest.fn() },
     claim: { findUnique: jest.fn(), update: jest.fn() },
@@ -209,59 +207,6 @@ const leave = {
   managerId: 'manager',
 };
 describe('leave balances and decisions', () => {
-  it('requires supporting documents when the leave policy requires them', async () => {
-    const db = database();
-    db.leaveRequest.findUnique.mockResolvedValue({
-      ...leave,
-      status: 'DRAFT',
-      employeeId: 'employee',
-      policyId: 'policy',
-      halfDay: false,
-      reason: 'Medical appointment',
-      startDate: new Date('2099-01-05'),
-      endDate: new Date('2099-01-05'),
-    });
-    db.employee.findFirst.mockResolvedValue({
-      id: 'employee',
-      active: true,
-      joinedDate: new Date('2020-01-01'),
-      scheduleId: 'schedule',
-      leavePolicyCodes: ['AL'],
-      managerId: null,
-      locationId: null,
-    });
-    db.payrollRun.count.mockResolvedValue(0);
-    db.leavePolicy.findFirst.mockResolvedValue({
-      id: 'policy',
-      code: 'AL',
-      active: true,
-      paid: true,
-      approval: 'HR_ONLY',
-      allowHalfDay: false,
-      noticeDays: 0,
-      effectiveFrom: new Date('2020-01-01'),
-      effectiveTo: null,
-      requireSupportingDocuments: true,
-    });
-    db.company.findUniqueOrThrow.mockResolvedValue({
-      timezone: 'Asia/Kuala_Lumpur',
-    });
-    db.workSchedule.findFirst.mockResolvedValue({
-      id: 'schedule',
-      workingDays: [1, 2, 3, 4, 5],
-      effectiveFrom: new Date('2020-01-01'),
-      effectiveTo: null,
-    });
-    db.publicHoliday.findMany.mockResolvedValue([]);
-    db.storedFile.findMany.mockResolvedValue([]);
-
-    await expect(
-      new LeaveService(db).submit(member, 'leave'),
-    ).rejects.toMatchObject({
-      response: { code: 'LEAVE_DOCUMENT_REQUIRED' },
-    });
-  });
-
   it('lists leave records for one employee with pagination and status counts', async () => {
     const db = database();
     db.employee.findUnique.mockResolvedValue({ id: 'employee' });

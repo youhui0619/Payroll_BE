@@ -50,14 +50,6 @@ import {
 const pending: RequestStatus[] = ['PENDING_MANAGER', 'PENDING_HR'];
 const decimalNumber = (value: Prisma.Decimal | null | undefined) =>
   value === null || value === undefined ? null : value.toNumber();
-function documentScanAccepted(status: string) {
-  return (
-    status === 'CLEAN' ||
-    (status === 'UNSCANNED' &&
-      process.env.NODE_ENV !== 'production' &&
-      process.env.ALLOW_UNSCANNED_UPLOADS === 'true')
-  );
-}
 export function workingDates(
   start: Date,
   end: Date,
@@ -202,14 +194,7 @@ export class LeaveService {
         events: { orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         files: {
           where: { archived: false },
-          select: {
-            id: true,
-            originalName: true,
-            mimeType: true,
-            size: true,
-            scanStatus: true,
-            createdAt: true,
-          },
+          select: { originalName: true },
         },
       },
     });
@@ -1057,14 +1042,7 @@ export class LeaveService {
           policy: true,
           files: {
             where: { archived: false },
-            select: {
-              id: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-              scanStatus: true,
-              createdAt: true,
-            },
+            select: { originalName: true },
           },
         },
       }),
@@ -1179,28 +1157,6 @@ export class LeaveService {
           halfDay: row.halfDay,
           reason: row.reason,
         });
-        if (current.policy.requireSupportingDocuments) {
-          const documents = await tx.storedFile.findMany({
-            where: {
-              companyId: m.companyId,
-              employeeId: row.employeeId,
-              leaveRequestId: id,
-              category: 'LEAVE_DOCUMENT',
-              archived: false,
-            },
-          });
-          if (!documents.length)
-            fail(
-              'LEAVE_DOCUMENT_REQUIRED',
-              'Attach at least one supporting document before submission.',
-            );
-          if (documents.some((file) => !documentScanAccepted(file.scanStatus)))
-            fail(
-              'FILE_QUARANTINED',
-              'All supporting documents must pass scanning before submission.',
-              409,
-            );
-        }
         row = {
           ...row,
           days: new Prisma.Decimal(row.halfDay ? '0.50' : String(current.days)),
@@ -1398,14 +1354,7 @@ export class LeaveService {
           policy: true,
           files: {
             where: { archived: false },
-            select: {
-              id: true,
-              originalName: true,
-              mimeType: true,
-              size: true,
-              scanStatus: true,
-              createdAt: true,
-            },
+            select: { originalName: true },
           },
         },
       }),
