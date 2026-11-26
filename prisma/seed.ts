@@ -5,6 +5,7 @@ import {
   EMPLOYMENT_TYPE_VALUES,
   type EmploymentType,
 } from '../src/workforce/employment-types';
+import { accrualDays } from '../src/leave/leave-accrual';
 
 const day = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
@@ -895,6 +896,83 @@ async function seed() {
           },
         });
       }
+
+      const accrualStart = day('2026-01-01');
+      const accrualEnd = day('2026-12-31');
+      const [accrualPolicies, accrualEmployees] = await Promise.all([
+        tx.leavePolicy.findMany({
+          where: {
+            companyId: company.id,
+            active: true,
+            effectiveFrom: { lte: accrualEnd },
+            OR: [{ effectiveTo: null }, { effectiveTo: { gte: accrualStart } }],
+          },
+        }),
+        tx.employee.findMany({
+          where: {
+            companyId: company.id,
+            joinedDate: { lte: accrualEnd },
+            OR: [
+              { resignationDate: null },
+              { resignationDate: { gte: accrualStart } },
+            ],
+          },
+          select: {
+            id: true,
+            joinedDate: true,
+            resignationDate: true,
+            employmentType: true,
+            employmentStatus: true,
+            active: true,
+          },
+        }),
+      ]);
+      for (const employee of accrualEmployees) {
+        for (const policy of accrualPolicies) {
+          const amount = accrualDays(policy, employee, 2026);
+          if (amount.isZero()) continue;
+          const idempotencyKey = `seed:accrual:2026:${employee.id}:${policy.id}`;
+          await tx.leaveLedger.upsert({
+            where: {
+              companyId_idempotencyKey: {
+                companyId: company.id,
+                idempotencyKey,
+              },
+            },
+            create: {
+              companyId: company.id,
+              employeeId: employee.id,
+              policyId: policy.id,
+              year: 2026,
+              days: amount,
+              kind: 'ACCRUAL',
+              reason: `Seeded ${policy.code} entitlement for 2026.`,
+              idempotencyKey,
+            },
+            update: {},
+          });
+        }
+      }
+      await tx.leaveLedger.upsert({
+        where: {
+          companyId_idempotencyKey: {
+            companyId: company.id,
+            idempotencyKey: `seed:usage:${demoLeave.id}`,
+          },
+        },
+        create: {
+          companyId: company.id,
+          employeeId: demoEmployee.id,
+          policyId: annualLeavePolicy.id,
+          requestId: demoLeave.id,
+          year: 2026,
+          days: new Prisma.Decimal('-2.00'),
+          kind: 'USAGE',
+          reason: 'Seeded approved leave usage.',
+          idempotencyKey: `seed:usage:${demoLeave.id}`,
+        },
+        update: {},
+      });
 
       const existingDemoOvertime = await tx.overtimeRequest.findFirst({
         where: {
