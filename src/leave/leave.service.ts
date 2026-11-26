@@ -1005,35 +1005,39 @@ export class LeaveService {
         string,
         Record<string, unknown>
       > = Object.fromEntries(
-        policies
-          .filter(
-            (policy) =>
-              selectedCodes === null ||
-              selectedCodes.has(policy.code.toUpperCase()),
-          )
-          .map((policy) => {
-            const key = `${employee.id}:${policy.id}`;
-            const entitled = entitlementMap.get(key) ?? new Prisma.Decimal(0);
-            const used = takenMap.get(key) ?? new Prisma.Decimal(0);
-            const held = reservedMap.get(key) ?? new Prisma.Decimal(0);
-            const balance = entitled.minus(used);
-            return [
-              policy.code,
-              {
-                policyId: policy.id,
-                code: policy.code,
-                name: policy.name,
-                year,
-                paid: policy.paid,
-                active: policy.active,
-                entitled: entitled.toNumber(),
-                taken: used.toNumber(),
-                reserved: held.toNumber(),
-                balance: balance.toNumber(),
-                available: policy.paid ? balance.minus(held).toNumber() : null,
-              },
-            ] as const;
-          }),
+        policies.map((policy) => {
+          const assigned =
+            selectedCodes === null ||
+            selectedCodes.has(policy.code.toUpperCase());
+          const key = `${employee.id}:${policy.id}`;
+          const entitled = assigned
+            ? (entitlementMap.get(key) ?? new Prisma.Decimal(0))
+            : new Prisma.Decimal(0);
+          const used = assigned
+            ? (takenMap.get(key) ?? new Prisma.Decimal(0))
+            : new Prisma.Decimal(0);
+          const held = assigned
+            ? (reservedMap.get(key) ?? new Prisma.Decimal(0))
+            : new Prisma.Decimal(0);
+          const balance = entitled.minus(used);
+          return [
+            policy.code,
+            {
+              policyId: policy.id,
+              code: policy.code,
+              name: policy.name,
+              year,
+              paid: policy.paid,
+              active: policy.active,
+              assigned,
+              entitled: entitled.toNumber(),
+              taken: used.toNumber(),
+              reserved: held.toNumber(),
+              balance: balance.toNumber(),
+              available: policy.paid ? balance.minus(held).toNumber() : null,
+            },
+          ] as const;
+        }),
       ) as Record<string, Record<string, unknown>>;
       return {
         id: employee.id,

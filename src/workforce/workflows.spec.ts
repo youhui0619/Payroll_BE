@@ -229,6 +229,13 @@ describe('leave balances and decisions', () => {
         paid: true,
         active: true,
       },
+      {
+        id: 'medical-policy',
+        code: 'ML',
+        name: 'Medical Leave',
+        paid: true,
+        active: true,
+      },
     ]);
     db.leaveLedger.groupBy.mockResolvedValue([
       {
@@ -292,7 +299,16 @@ describe('leave balances and decisions', () => {
           reserved: 1,
           balance: 12,
           available: 11,
+          assigned: true,
         }),
+        ML: {
+          entitled: 0,
+          taken: 0,
+          reserved: 0,
+          balance: 0,
+          available: 0,
+          assigned: false,
+        },
       },
     });
     expect(result.meta).toMatchObject({
