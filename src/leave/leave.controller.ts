@@ -26,6 +26,7 @@ import {
   GrantDto,
   LeaveBalanceQueryDto,
   LeaveBalanceResponseDto,
+  LeaveOverviewQueryDto,
   LeaveAccrualDto,
   LeaveApplicationQueryDto,
 } from './leave.dto';
@@ -101,6 +102,14 @@ export class LeaveController {
     @Query() q: LeaveBalanceQueryDto,
   ) {
     return this.service.balance(r.membership, q, id);
+  }
+  @Get('overview')
+  @Roles('OWNER', 'HR')
+  @ApiOperation({
+    summary: 'Read a paginated employee leave balance overview.',
+  })
+  overview(@Req() r: TenantRequest, @Query() q: LeaveOverviewQueryDto) {
+    return this.service.overview(r.membership, q);
   }
   @Get('applications/:id')
   @ApiOperation({

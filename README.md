@@ -210,6 +210,8 @@ The API now persists payroll calculations, applies the saved earning/statutory i
 
 OWNER/HR can use `GET /leave/employees/:id/balances?year=2027` for another employee, including historical inactive profiles. Managers do not receive administrative access to staff balances.
 
+The leave overview page should use `GET /leave/overview?year=2026&month=11&page=1&pageSize=20&search=alex&departmentId=<uuid>&active=true`. It returns one paginated employee list with balances keyed by leave-policy code (`AL`, `ML`, etc.), including `entitled`, `taken`, `reserved`, `balance` and `available`, plus `meta.policies`, `meta.asAt`, and application `statusCounts`. This avoids one balance request per employee. `month` is the as-at month; posted entitlement entries and leave requests are limited through that month.
+
 Employees can replace their draft using `PATCH /leave/applications/:id` with the same body as creation. Editing recalculates eligibility and duration; submitted applications cannot be edited. `GET /leave/applications/:id` returns the application and all retained workflow events, including each manager/HR decision and comment. Access is limited to the employee, assigned manager, OWNER and HR. Submission still revalidates eligibility; approval posts usage and cancellation reverses it atomically.
 
 ### Employee import

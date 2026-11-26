@@ -39,6 +39,53 @@ export class LeaveBalanceQueryDto {
   year?: number;
 }
 
+export class LeaveOverviewQueryDto extends PageDto {
+  @ApiPropertyOptional({
+    minimum: 2000,
+    maximum: 2200,
+    description: 'Leave balance year; defaults to the company current year.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
+  @IsInt()
+  @Min(2000)
+  @Max(2200)
+  year?: number;
+
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 12,
+    description: 'As-at month; defaults to the company current month.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : Number(value)))
+  @IsInt()
+  @Min(1)
+  @Max(12)
+  month?: number;
+
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @Transform(emptyStringAsUndefined)
+  @IsUUID()
+  departmentId?: string;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    default: true,
+    description: 'Filter active employees; defaults to true for this overview.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === '') return undefined;
+    if (value === true || value === 'true') return true;
+    if (value === false || value === 'false') return false;
+    return value;
+  })
+  @IsBoolean()
+  active?: boolean;
+}
+
 export class LeaveBalanceItemDto {
   @ApiProperty() policyId: string;
   @ApiProperty() code: string;

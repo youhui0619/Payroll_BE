@@ -20,6 +20,7 @@ function database() {
       }),
       findMany: jest.fn(),
       findUnique: jest.fn(),
+      count: jest.fn(),
     },
     company: {
       findUniqueOrThrow: jest
@@ -207,6 +208,101 @@ const leave = {
   managerId: 'manager',
 };
 describe('leave balances and decisions', () => {
+  it('returns a paginated leave overview with FE filters and balances', async () => {
+    const db = database();
+    db.employee.findMany.mockResolvedValue([
+      {
+        id: 'employee',
+        employeeNo: 'EMP-001',
+        name: 'Alex Employee',
+        active: true,
+        leavePolicyCodes: ['AL'],
+        department: { id: 'department', name: 'Operations' },
+      },
+    ]);
+    db.employee.count.mockResolvedValue(1);
+    db.leavePolicy.findMany.mockResolvedValue([
+      {
+        id: 'policy',
+        code: 'AL',
+        name: 'Annual Leave',
+        paid: true,
+        active: true,
+      },
+    ]);
+    db.leaveLedger.groupBy.mockResolvedValue([
+      {
+        employeeId: 'employee',
+        policyId: 'policy',
+        _sum: { days: new Prisma.Decimal(14) },
+      },
+    ]);
+    db.leaveRequest.groupBy.mockImplementation(async (args: any) => {
+      const statuses = args.where.status?.in as string[] | undefined;
+      if (statuses?.includes('APPROVED'))
+        return [
+          {
+            employeeId: 'employee',
+            policyId: 'policy',
+            _sum: { days: new Prisma.Decimal(2) },
+          },
+        ];
+      if (statuses?.includes('PENDING_MANAGER'))
+        return [
+          {
+            employeeId: 'employee',
+            policyId: 'policy',
+            _sum: { days: new Prisma.Decimal(1) },
+          },
+        ];
+      return [];
+    });
+
+    const result = await new LeaveService(db).overview(
+      { ...member, roles: ['HR'] },
+      {
+        page: 1,
+        pageSize: 20,
+        search: 'Alex',
+        departmentId: 'department',
+        active: true,
+        year: 2026,
+        month: 11,
+      },
+    );
+
+    expect(db.employee.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          active: true,
+          departmentId: 'department',
+          OR: expect.any(Array),
+        }),
+        skip: 0,
+        take: 20,
+      }),
+    );
+    expect(result.data[0]).toMatchObject({
+      id: 'employee',
+      employeeNo: 'EMP-001',
+      balances: {
+        AL: expect.objectContaining({
+          entitled: 14,
+          taken: 2,
+          reserved: 1,
+          balance: 12,
+          available: 11,
+        }),
+      },
+    });
+    expect(result.meta).toMatchObject({
+      total: 1,
+      year: 2026,
+      month: 11,
+      asAt: '2026-11-30',
+    });
+  });
+
   it('lists leave records for one employee with pagination and status counts', async () => {
     const db = database();
     db.employee.findUnique.mockResolvedValue({ id: 'employee' });

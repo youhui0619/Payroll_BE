@@ -38,6 +38,7 @@ import {
   LeavePolicyQueryDto,
   LeavePolicyDto,
   LeaveBalanceQueryDto,
+  LeaveOverviewQueryDto,
   UpdateLeavePolicyDto,
   LeaveAccrualDto,
   LeaveApplicationQueryDto,
@@ -841,6 +842,215 @@ export class LeaveService {
       },
       { isolationLevel: 'RepeatableRead' },
     );
+  }
+  async overview(m: Membership, q: LeaveOverviewQueryDto) {
+    const company = await this.db.company.findUniqueOrThrow({
+      where: { id: m.companyId },
+      select: { timezone: true },
+    });
+    const today = localDate(new Date(), company.timezone);
+    const currentYear = Number(today.slice(0, 4));
+    const currentMonth = Number(today.slice(5, 7));
+    const year = q.year ?? currentYear;
+    const month = q.month ?? (q.year === currentYear ? currentMonth : 12);
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const periodEnd = new Date(Date.UTC(year, month, 1));
+    const asAt = new Date(periodEnd.getTime() - 86_400_000);
+    const search = q.search?.trim();
+    const employeeWhere: Prisma.EmployeeWhereInput = {
+      companyId: m.companyId,
+      active: q.active ?? true,
+      ...(q.departmentId ? { departmentId: q.departmentId } : {}),
+      ...(search
+        ? {
+            OR: [
+              { employeeNo: { contains: search, mode: 'insensitive' } },
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+    const [employees, total, policies] = await this.db.$transaction([
+      this.db.employee.findMany({
+        where: employeeWhere,
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+        skip: (q.page - 1) * q.pageSize,
+        take: q.pageSize,
+        select: {
+          id: true,
+          employeeNo: true,
+          name: true,
+          active: true,
+          leavePolicyCodes: true,
+          department: { select: { id: true, name: true } },
+        },
+      }),
+      this.db.employee.count({ where: employeeWhere }),
+      this.db.leavePolicy.findMany({
+        where: {
+          companyId: m.companyId,
+          active: true,
+          effectiveFrom: { lte: asAt },
+          OR: [{ effectiveTo: null }, { effectiveTo: { gte: asAt } }],
+        },
+        orderBy: { code: 'asc' },
+        select: { id: true, code: true, name: true, paid: true, active: true },
+      }),
+    ]);
+    const employeeIds = employees.map((employee) => employee.id);
+    const [entitlements, taken, reserved, statusRows] = await Promise.all([
+      employeeIds.length
+        ? this.db.leaveLedger.groupBy({
+            by: ['employeeId', 'policyId'],
+            where: {
+              companyId: m.companyId,
+              employeeId: { in: employeeIds },
+              year,
+              kind: { in: ['ACCRUAL', 'ADJUSTMENT', 'CARRY_FORWARD'] },
+              createdAt: { lt: periodEnd },
+            },
+            _sum: { days: true },
+          })
+        : [],
+      employeeIds.length
+        ? this.db.leaveRequest.groupBy({
+            by: ['employeeId', 'policyId'],
+            where: {
+              companyId: m.companyId,
+              employeeId: { in: employeeIds },
+              paid: true,
+              status: { in: ['APPROVED', 'PAID'] },
+              startDate: { gte: yearStart, lt: periodEnd },
+            },
+            _sum: { days: true },
+          })
+        : [],
+      employeeIds.length
+        ? this.db.leaveRequest.groupBy({
+            by: ['employeeId', 'policyId'],
+            where: {
+              companyId: m.companyId,
+              employeeId: { in: employeeIds },
+              paid: true,
+              status: {
+                in: ['PENDING_MANAGER', 'PENDING_HR', 'PENDING_FINANCE'],
+              },
+              startDate: { gte: yearStart, lt: periodEnd },
+            },
+            _sum: { days: true },
+          })
+        : [],
+      this.db.leaveRequest.groupBy({
+        by: ['status'],
+        where: {
+          companyId: m.companyId,
+          employee: employeeWhere,
+          startDate: { gte: yearStart, lt: periodEnd },
+        },
+        _count: { _all: true },
+      }),
+    ]);
+    const entitlementMap = new Map<string, Prisma.Decimal>(
+      entitlements.map(
+        (row) =>
+          [
+            `${row.employeeId}:${row.policyId}`,
+            new Prisma.Decimal(row._sum.days ?? 0),
+          ] as [string, Prisma.Decimal],
+      ),
+    );
+    const takenMap = new Map<string, Prisma.Decimal>(
+      taken.map(
+        (row) =>
+          [
+            `${row.employeeId}:${row.policyId}`,
+            new Prisma.Decimal(row._sum.days ?? 0),
+          ] as [string, Prisma.Decimal],
+      ),
+    );
+    const reservedMap = new Map<string, Prisma.Decimal>(
+      reserved.map(
+        (row) =>
+          [
+            `${row.employeeId}:${row.policyId}`,
+            new Prisma.Decimal(row._sum.days ?? 0),
+          ] as [string, Prisma.Decimal],
+      ),
+    );
+    const statusCounts = makeStatusCounts(
+      REQUEST_STATUS_VALUES,
+      REQUEST_STATUS_VALUES.map(
+        (status) =>
+          statusRows.find((row) => row.status === status)?._count._all ?? 0,
+      ),
+    );
+    const policyMeta = policies.map((policy) => ({
+      id: policy.id,
+      code: policy.code,
+      name: policy.name,
+      paid: policy.paid,
+      active: policy.active,
+    }));
+    const data = employees.map((employee) => {
+      const selectedCodes = Array.isArray(employee.leavePolicyCodes)
+        ? new Set(
+            employee.leavePolicyCodes
+              .filter((code): code is string => typeof code === 'string')
+              .map((code) => code.trim().toUpperCase())
+              .filter(Boolean),
+          )
+        : null;
+      const balances: Record<
+        string,
+        Record<string, unknown>
+      > = Object.fromEntries(
+        policies
+          .filter(
+            (policy) =>
+              selectedCodes === null ||
+              selectedCodes.has(policy.code.toUpperCase()),
+          )
+          .map((policy) => {
+            const key = `${employee.id}:${policy.id}`;
+            const entitled = entitlementMap.get(key) ?? new Prisma.Decimal(0);
+            const used = takenMap.get(key) ?? new Prisma.Decimal(0);
+            const held = reservedMap.get(key) ?? new Prisma.Decimal(0);
+            const balance = entitled.minus(used);
+            return [
+              policy.code,
+              {
+                policyId: policy.id,
+                code: policy.code,
+                name: policy.name,
+                year,
+                paid: policy.paid,
+                active: policy.active,
+                entitled: entitled.toNumber(),
+                taken: used.toNumber(),
+                reserved: held.toNumber(),
+                balance: balance.toNumber(),
+                available: policy.paid ? balance.minus(held).toNumber() : null,
+              },
+            ] as const;
+          }),
+      ) as Record<string, Record<string, unknown>>;
+      return {
+        id: employee.id,
+        employeeNo: employee.employeeNo,
+        name: employee.name,
+        active: employee.active,
+        department: employee.department,
+        balances,
+      };
+    });
+    return paginated(data, total, q, {
+      year,
+      month,
+      asAt: dateString(asAt),
+      policies: policyMeta,
+      summary: { statusCounts },
+    });
   }
   async eligibility(
     tx: Prisma.TransactionClient,
