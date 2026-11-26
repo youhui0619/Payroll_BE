@@ -37,11 +37,17 @@ function database() {
       findFirst: jest.fn(),
       findMany: jest.fn(),
       aggregate: jest.fn(),
+      groupBy: jest.fn(),
       update: jest.fn(),
     },
     overtimeRequest: { findMany: jest.fn() },
     publicHoliday: { findMany: jest.fn() },
-    leaveLedger: { aggregate: jest.fn(), create: jest.fn() },
+    leaveLedger: {
+      aggregate: jest.fn(),
+      create: jest.fn(),
+      groupBy: jest.fn(),
+    },
+    leavePolicy: { findMany: jest.fn() },
     payrollRun: { count: jest.fn().mockResolvedValue(0) },
     leaveEvent: { create: jest.fn() },
     claim: { findUnique: jest.fn(), update: jest.fn() },
@@ -200,6 +206,44 @@ const leave = {
   managerId: 'manager',
 };
 describe('leave balances and decisions', () => {
+  it('returns only the leave policies selected for the employee', async () => {
+    const db = database();
+    db.employee.findFirst.mockResolvedValue({
+      id: 'employee',
+      active: true,
+      leavePolicyCodes: ['AL', 'ML'],
+    });
+    db.leavePolicy.findMany.mockResolvedValue([
+      {
+        id: 'annual',
+        code: 'AL',
+        name: 'Annual Leave',
+        paid: true,
+        active: true,
+      },
+      {
+        id: 'medical',
+        code: 'ML',
+        name: 'Medical Leave',
+        paid: true,
+        active: true,
+      },
+    ]);
+    db.leaveLedger.groupBy.mockResolvedValue([]);
+    db.leaveRequest.groupBy.mockResolvedValue([]);
+
+    const result = await new LeaveService(db).balance(member, { year: 2026 });
+
+    expect(db.leavePolicy.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          code: { in: ['AL', 'ML'] },
+        }),
+      }),
+    );
+    expect(result.data.map((policy) => policy.code)).toEqual(['AL', 'ML']);
+  });
+
   it('blocks cancellation and approval in a calculated payroll month', async () => {
     const db = database();
     db.payrollRun.count.mockResolvedValue(1);

@@ -736,9 +736,18 @@ export class LeaveService {
           q.year ?? Number(localDate(new Date(), company.timezone).slice(0, 4));
         const start = new Date(Date.UTC(year, 0, 1)),
           next = new Date(Date.UTC(year + 1, 0, 1));
+        const selectedPolicyCodes = Array.isArray(e.leavePolicyCodes)
+          ? e.leavePolicyCodes
+              .filter((code): code is string => typeof code === 'string')
+              .map((code) => code.trim().toUpperCase())
+              .filter(Boolean)
+          : [];
         const policies = await tx.leavePolicy.findMany({
           where: {
             companyId: m.companyId,
+            ...(selectedPolicyCodes.length > 0
+              ? { code: { in: selectedPolicyCodes } }
+              : {}),
             OR: [
               {
                 active: true,
