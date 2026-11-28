@@ -141,7 +141,6 @@ describe('WorkforceService', () => {
       {
         id: 'holiday',
         active: false,
-        status: 'INACTIVE',
         states: ['JOHOR'],
         regions: ['JOHOR'],
       },
@@ -154,7 +153,7 @@ describe('WorkforceService', () => {
     const result = await new WorkforceService(db).holidays(membership, {
       page: 1,
       pageSize: 20,
-      isActive: false,
+      active: false,
     } as any);
 
     expect(db.publicHoliday.findMany).toHaveBeenCalledWith({
@@ -348,7 +347,6 @@ describe('WorkforceService', () => {
       code: 1,
       scope: 'NATIONAL',
       active: true,
-      status: 'ACTIVE',
     });
 
     await new WorkforceService(db).createHoliday(membership, {
@@ -367,7 +365,6 @@ describe('WorkforceService', () => {
         states: [],
         regions: [],
         active: true,
-        status: 'ACTIVE',
       }),
     });
   });

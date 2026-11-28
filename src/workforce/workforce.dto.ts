@@ -297,16 +297,6 @@ export class HolidayDto {
   @IsOptional()
   @Transform(emptyStringAsUndefined)
   @IsBoolean()
-  isActive?: boolean;
-
-  @ApiPropertyOptional({
-    default: true,
-    deprecated: true,
-    description: 'Legacy alias for isActive.',
-  })
-  @IsOptional()
-  @Transform(emptyStringAsUndefined)
-  @IsBoolean()
   active?: boolean;
 }
 export class UpdateHolidayDto extends PartialType(HolidayDto) {}
@@ -338,7 +328,7 @@ export class HolidayQueryDto extends PageDto {
     return value;
   })
   @IsBoolean()
-  isActive?: boolean;
+  active?: boolean;
 
   @ApiPropertyOptional({ enum: HOLIDAY_REGIONS })
   @IsOptional()

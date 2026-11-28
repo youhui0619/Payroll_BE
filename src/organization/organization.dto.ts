@@ -84,18 +84,7 @@ export class DepartmentDto {
   @IsOptional()
   @Transform(emptyStringAsUndefined)
   @IsBoolean()
-  isActive?: boolean;
-
-  @ApiPropertyOptional({
-    enum: ['ACTIVE', 'INACTIVE'],
-    default: 'ACTIVE',
-    deprecated: true,
-    description: 'Legacy alias; omit on create to default to isActive=true.',
-  })
-  @IsOptional()
-  @Transform(emptyStringAsUndefined)
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  active?: boolean;
 }
 
 export class UpdateDepartmentDto extends PartialType(DepartmentDto) {}
@@ -139,11 +128,11 @@ export class PositionDto {
   @Length(1, 120)
   reportsTo?: string | null;
 
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
+  @ApiPropertyOptional({ default: true })
   @IsOptional()
   @Transform(emptyStringAsUndefined)
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @IsBoolean()
+  active?: boolean;
 
   @ApiPropertyOptional({ example: '2026-01-01', nullable: true })
   @IsOptional()
@@ -175,7 +164,7 @@ export class DepartmentQueryDto extends PageDto {
     return value;
   })
   @IsBoolean()
-  isActive?: boolean;
+  active?: boolean;
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   @IsOptional()
@@ -211,7 +200,7 @@ export class PositionQueryDto extends PageDto {
     return value;
   })
   @IsBoolean()
-  isActive?: boolean;
+  active?: boolean;
 }
 
 export class CompanyDto {

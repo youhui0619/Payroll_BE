@@ -160,11 +160,11 @@ export class LeavePolicyDto {
   @IsString()
   @Length(1, 1000)
   description?: string | null;
-  @ApiPropertyOptional({ enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' })
+  @ApiPropertyOptional({ default: true })
   @IsOptional()
   @Transform(emptyStringAsUndefined)
-  @IsIn(['ACTIVE', 'INACTIVE'])
-  status?: 'ACTIVE' | 'INACTIVE';
+  @IsBoolean()
+  active?: boolean;
   @ApiProperty({ default: true }) @IsBoolean() paid = true;
   @ApiPropertyOptional({ enum: ['DAILY', 'HOURLY'] })
   @IsOptional()
@@ -309,7 +309,7 @@ export class LeavePolicyQueryDto extends PageDto {
     return value;
   })
   @IsBoolean()
-  isActive?: boolean;
+  active?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -61,7 +61,6 @@ describe('organization and employee tenant boundaries', () => {
       code: 'HR',
       name: 'Human Resources',
       active: true,
-      status: 'ACTIVE',
     });
 
     await org.createDepartment('company-a', {
@@ -73,7 +72,6 @@ describe('organization and employee tenant boundaries', () => {
       data: expect.objectContaining({
         companyId: 'company-a',
         active: true,
-        status: 'ACTIVE',
       }),
     });
   });

@@ -88,7 +88,7 @@ export class OrganizationService {
     };
     const where = {
       ...baseWhere,
-      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
+      ...(q.active !== undefined ? { active: q.active } : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.department.findMany({
@@ -140,16 +140,12 @@ export class OrganizationService {
     };
   }
   async createDepartment(companyId: string, dto: DepartmentDto) {
-    const { effectiveFrom, effectiveTo, status, isActive, ...rest } = dto;
-    const active =
-      isActive ?? (status ? status.toUpperCase() !== 'INACTIVE' : true);
-    const normalizedStatus = active ? 'ACTIVE' : 'INACTIVE';
+    const { effectiveFrom, effectiveTo, active, ...rest } = dto;
     const data = await this.db.department.create({
       data: {
         ...rest,
         companyId,
-        status: normalizedStatus,
-        active: normalizedStatus !== 'INACTIVE',
+        active: active ?? true,
         ...(effectiveFrom !== undefined
           ? {
               effectiveFrom: effectiveFrom
@@ -173,20 +169,12 @@ export class OrganizationService {
     id: string,
     dto: UpdateDepartmentDto,
   ) {
-    const { effectiveFrom, effectiveTo, status, isActive, ...rest } = dto;
-    const active =
-      isActive ??
-      (status !== undefined ? status.toUpperCase() !== 'INACTIVE' : undefined);
+    const { effectiveFrom, effectiveTo, active, ...rest } = dto;
     const data = await this.db.department.update({
       where: { companyId_id: { companyId, id } },
       data: {
         ...rest,
-        ...(active !== undefined
-          ? {
-              status: active ? 'ACTIVE' : 'INACTIVE',
-              active,
-            }
-          : {}),
+        ...(active !== undefined ? { active } : {}),
         ...(effectiveFrom !== undefined
           ? {
               effectiveFrom: effectiveFrom
@@ -233,7 +221,7 @@ export class OrganizationService {
     };
     const where = {
       ...baseWhere,
-      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
+      ...(q.active !== undefined ? { active: q.active } : {}),
     };
     const [rows, total] = await this.db.$transaction([
       this.db.position.findMany({
@@ -267,7 +255,7 @@ export class OrganizationService {
   async createPosition(companyId: string, dto: PositionDto) {
     return this.db.$transaction(
       async (tx) => {
-        const { effectiveFrom, effectiveTo, status, departmentId, ...rest } =
+        const { effectiveFrom, effectiveTo, active, departmentId, ...rest } =
           dto;
         if (departmentId) {
           const department = await tx.department.findUnique({
@@ -282,7 +270,7 @@ export class OrganizationService {
               ...rest,
               companyId,
               departmentId: departmentId ?? null,
-              active: status !== 'INACTIVE',
+              active: active ?? true,
               ...(effectiveFrom !== undefined
                 ? {
                     effectiveFrom: effectiveFrom
@@ -319,13 +307,13 @@ export class OrganizationService {
     };
   }
   async updatePosition(companyId: string, id: string, dto: UpdatePositionDto) {
-    const { effectiveFrom, effectiveTo, status, departmentId, ...rest } = dto;
+    const { effectiveFrom, effectiveTo, active, departmentId, ...rest } = dto;
     const data = await this.db.position.update({
       where: { companyId_id: { companyId, id } },
       data: {
         ...rest,
         ...(departmentId !== undefined ? { departmentId } : {}),
-        ...(status !== undefined ? { active: status !== 'INACTIVE' } : {}),
+        ...(active !== undefined ? { active } : {}),
         ...(effectiveFrom !== undefined
           ? {
               effectiveFrom: effectiveFrom
@@ -383,7 +371,7 @@ export class OrganizationService {
           kind === 'department'
             ? await tx.department.update({
                 where,
-                data: { active, status: active ? 'ACTIVE' : 'INACTIVE' },
+                data: { active },
               })
             : await tx.position.update({ where, data: { active } });
         return {
@@ -409,6 +397,6 @@ export class OrganizationService {
   }
 
   private positionView<T extends { active: boolean }>(data: T) {
-    return { ...data, status: data.active ? 'ACTIVE' : 'INACTIVE' };
+    return data;
   }
 }

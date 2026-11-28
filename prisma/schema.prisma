@@ -268,7 +268,6 @@ model Department {
   headOfDepartmentId String?           @db.Uuid
   effectiveFrom      DateTime?         @db.Date
   effectiveTo        DateTime?         @db.Date
-  status             String?
   active             Boolean           @default(true)
   company            Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
   parentDepartment   Department?       @relation("DepartmentHierarchy", fields: [companyId, parentDepartmentId], references: [companyId, id], onDelete: Restrict)
@@ -393,7 +392,6 @@ model PublicHoliday {
   states      String[]
   active      Boolean  @default(true)
   regions     String[] @default([])
-  status      String   @default("ACTIVE")
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Restrict)
 
   @@unique([companyId, code])

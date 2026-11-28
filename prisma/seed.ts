@@ -187,7 +187,6 @@ async function seed() {
           create: {
             companyId: company.id,
             ...row,
-            status: 'ACTIVE',
             active: true,
             effectiveFrom: day('2026-01-01'),
           },
@@ -586,7 +585,6 @@ async function seed() {
           endDate: day('2026-02-18'),
           states: [],
           regions: [],
-          status: 'ACTIVE',
           active: true,
         },
         {
@@ -598,7 +596,6 @@ async function seed() {
           endDate: day('2026-03-22'),
           states: [],
           regions: [],
-          status: 'ACTIVE',
           active: true,
         },
         {
@@ -610,7 +607,6 @@ async function seed() {
           endDate: day('2026-05-01'),
           states: [],
           regions: [],
-          status: 'ACTIVE',
           active: true,
         },
         {
@@ -630,7 +626,6 @@ async function seed() {
             'Putrajaya',
             'Selangor',
           ],
-          status: 'ACTIVE',
           active: true,
         },
         {
@@ -642,7 +637,6 @@ async function seed() {
           endDate: day('2026-06-02'),
           states: [],
           regions: ['Sarawak'],
-          status: 'ACTIVE',
           active: true,
         },
         {
@@ -654,7 +648,6 @@ async function seed() {
           endDate: day('2026-08-31'),
           states: [],
           regions: [],
-          status: 'ACTIVE',
           active: true,
         },
       ];
@@ -1079,7 +1072,6 @@ async function seed() {
             endDate: demoHolidayDate,
             states: [],
             regions: [],
-            status: 'ACTIVE',
             active: true,
           },
         });

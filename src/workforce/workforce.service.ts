@@ -50,12 +50,9 @@ function nextPublicHolidayCode(codes: number[]) {
   return codes.reduce((max, code) => Math.max(max, code), 0) + 1;
 }
 
-function publicHolidayResponse<
-  T extends { states?: unknown; status?: unknown },
->(data: T) {
-  const { states, status, ...response } = data;
+function publicHolidayResponse<T extends { states?: unknown }>(data: T) {
+  const { states, ...response } = data;
   void states;
-  void status;
   return response;
 }
 
@@ -178,7 +175,7 @@ export class WorkforceService {
     };
     const where = {
       ...baseWhere,
-      ...(q.isActive !== undefined ? { active: q.isActive } : {}),
+      ...(q.active !== undefined ? { active: q.active } : {}),
     };
     const [data, total] = await this.db.$transaction([
       this.db.publicHoliday.findMany({
@@ -432,7 +429,7 @@ export class WorkforceService {
         ? 'NATIONAL'
         : 'STATE';
     const regions = scope === 'NATIONAL' ? [] : requestedRegions;
-    const isActive = dto.isActive ?? dto.active ?? true;
+    const isActive = dto.active ?? true;
     return this.db.$transaction(
       async (tx) => {
         await tx.$executeRaw`
@@ -479,7 +476,6 @@ export class WorkforceService {
             states: regions,
             regions,
             active: isActive,
-            status: isActive ? 'ACTIVE' : 'INACTIVE',
           },
         });
         await audit(tx, m, 'HOLIDAY_CREATED', data.id);
@@ -508,7 +504,7 @@ export class WorkforceService {
         ? 'NATIONAL'
         : 'STATE';
     const regions = scope === 'NATIONAL' ? [] : requestedRegions;
-    const isActive = dto.isActive ?? dto.active ?? existing.active;
+    const isActive = dto.active ?? existing.active;
     return this.db.$transaction(
       async (tx) => {
         const overlaps = await tx.publicHoliday.findMany({
@@ -542,14 +538,12 @@ export class WorkforceService {
           states: ignoredStates,
           regions: ignoredRegions,
           scope: ignoredScope,
-          isActive: ignoredIsActive,
           active: ignoredActive,
           ...rest
         } = dto;
         void ignoredStates;
         void ignoredRegions;
         void ignoredScope;
-        void ignoredIsActive;
         void ignoredActive;
         const data = await tx.publicHoliday.update({
           where: { id },
@@ -562,12 +556,7 @@ export class WorkforceService {
             dto.states !== undefined
               ? { scope, states: regions, regions }
               : {}),
-            ...(dto.isActive !== undefined || dto.active !== undefined
-              ? {
-                  active: isActive,
-                  status: isActive ? 'ACTIVE' : 'INACTIVE',
-                }
-              : {}),
+            ...(dto.active !== undefined ? { active: isActive } : {}),
           },
         });
         await audit(tx, m, 'HOLIDAY_UPDATED', id);
@@ -585,7 +574,7 @@ export class WorkforceService {
       const active = !existing.active;
       const data = await tx.publicHoliday.update({
         where: { id },
-        data: { active, status: active ? 'ACTIVE' : 'INACTIVE' },
+        data: { active },
       });
       await audit(
         tx,

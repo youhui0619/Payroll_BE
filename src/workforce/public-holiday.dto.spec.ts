@@ -28,7 +28,7 @@ describe('HolidayDto', () => {
       scope: 'STATE',
       regions: ['Johor'],
       states: ['JOHOR'],
-      isActive: true,
+      active: true,
     });
     const invalid = plainToInstance(HolidayDto, {
       name: 'Legacy State Code',
@@ -36,7 +36,7 @@ describe('HolidayDto', () => {
       endDate: '2026-03-23',
       scope: 'STATE',
       states: ['MY-01'],
-      isActive: true,
+      active: true,
     });
 
     expect(await validate(valid)).toHaveLength(0);

@@ -249,7 +249,7 @@ export class LeaveService {
   }
   async policies(m: Membership, q: LeavePolicyQueryDto) {
     const search = q.search?.trim();
-    const active = q.isActive;
+    const active = q.active;
     const baseWhere = {
       companyId: m.companyId,
       ...(q.paid !== undefined ? { paid: q.paid } : {}),
@@ -319,7 +319,6 @@ export class LeaveService {
       defaultEntitlement,
       maximumCarryForward,
       active,
-      status,
       leaveType,
       approvalOverflow,
       minimumAdvanceNotice,
@@ -339,11 +338,7 @@ export class LeaveService {
       ...(noticeDays !== undefined || minimumAdvanceNotice !== undefined
         ? { noticeDays: minimumAdvanceNotice ?? noticeDays }
         : {}),
-      ...(status !== undefined
-        ? { active: status === 'ACTIVE' }
-        : active !== undefined
-          ? { active }
-          : {}),
+      ...(active !== undefined ? { active } : {}),
       ...(serviceEntitlementTiers !== undefined
         ? {
             serviceEntitlementTiers: serviceEntitlementTiers.map((tier) => ({
@@ -444,7 +439,7 @@ export class LeaveService {
           companyId: m.companyId,
           code: d.code,
           name: d.name,
-          active: d.status !== 'INACTIVE',
+          active: d.active ?? true,
           ...(d.description !== undefined
             ? { description: d.description }
             : {}),
@@ -529,7 +524,6 @@ export class LeaveService {
       ...data,
       defaultEntitlement: decimalNumber(data.defaultEntitlement),
       maximumCarryForward: decimalNumber(data.maximumCarryForward),
-      status: data.active ? 'ACTIVE' : 'INACTIVE',
       leaveType: data.paid ? 'PAID' : 'UNPAID',
       minimumAdvanceNotice: data.noticeDays,
       approvalOverflow: data.approval,
@@ -1133,7 +1127,6 @@ export class LeaveService {
       schedule.workingDays,
       holidays.filter(
         (h) =>
-          h.status === 'ACTIVE' &&
           (!(h.regions?.length ? h.regions : h.states).length ||
             (location &&
               (h.regions?.length ? h.regions : h.states).includes(
